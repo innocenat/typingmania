@@ -1,3 +1,10 @@
+/**
+ * TypingMania Complement File
+ * ----------------------------------------------
+ * Copyright 2013 (c) Nat Pavasant
+ * Available under the term of MIT License
+ * See LICENSE file for more detail
+ */
 var Kana = (function() {
     /**
      * This table contains all possible Romaji-Kana pair that will be used in the game.

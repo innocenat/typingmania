@@ -1,5 +1,9 @@
 /**
- * MameType Main File
+ * TypingMania Main File
+ * ----------------------------------------------
+ * Copyright 2013 (c) Nat Pavasant
+ * Available under the term of MIT License
+ * See LICENSE file for more detail
  */
 
 /**
