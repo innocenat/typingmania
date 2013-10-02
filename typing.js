@@ -210,9 +210,13 @@ var Song = (function() {
             case 220: input = '\\'; break;
             case 221: input = ')'; break;
             case 222: input = '\''; break;
+            case  27: input = 'Esc'; break;
+            case  38: input = 'Up'; break;
+            case  40: input = 'Down'; break;
+            case  37: input = 'Left'; break;
+            case  39: input = 'Right'; break;
         }
 
-        //FIXME
         if (Song.currentTyping != null) {
             Song.currentTyping.accept(input);
         }
@@ -349,13 +353,111 @@ var Song = (function() {
     return Song;
 })();
 
+/// ///////////////////////
+/// Graphical
 
-// Initial DOM works
+// Viewport for auto-resizing
+var Viewport = (function() {
+    function Viewport() {}
+
+    // This is width and height the game component will be located at.
+    Viewport.STD_WIDTH = 1280;
+    Viewport.STD_HEIGHT = 720;
+
+    Viewport.elements = {};
+    Viewport.width = 800;
+    Viewport.height = 600;
+    Viewport.top = 0;
+    Viewport.left = 0
+
+    Viewport.onResize = function () {
+        var widthToHeight = Viewport.STD_WIDTH / Viewport.STD_HEIGHT;
+        var newWidth = window.innerWidth * 0.95;
+        var newHeight = window.innerHeight * 0.95;
+        var newWidthToHeight = newWidth / newHeight;
+
+        if (newWidthToHeight > widthToHeight) {
+            newWidth = newHeight * widthToHeight;
+        } else {
+            newHeight = newWidth / widthToHeight;
+        }
+
+        Viewport.width = newWidth;
+        Viewport.height = newHeight;
+
+        Viewport.left = (window.innerWidth - newWidth) / 2;
+        Viewport.top = (window.innerHeight - newHeight) / 2;
+
+        Viewport.resizeAll();
+    };
+
+    Viewport.position = function (c, x, y, w, h, fs) {
+        if (w == undefined)
+            w = 0;
+        if (h == undefined)
+            h = 0;
+        var obj = {};
+        if (c in Viewport.elements)
+            obj = Viewport.elements[c];
+        else {
+            var obj = {
+                x: x,
+                y: y,
+                w: w,
+                h: h,
+                fs: fs
+            };
+            Viewport.elements[c] = obj;
+        }
+
+        var css = {
+            position: "absolute"
+        };
+        css.left = "" + (Viewport.left + x * Viewport.width / Viewport.STD_WIDTH) + "px";
+        css.top  = "" + (Viewport.top + y * Viewport.height / Viewport.STD_HEIGHT) + "px";
+        css["font-size"] = "" + (fs * Viewport.height / Viewport.STD_HEIGHT) + "px";
+        if (w != 0 && h != 0) {
+            css.overflow = "hidden";
+            css.width = "" + (w * Viewport.width / Viewport.STD_WIDTH) + "px";
+            css.height = "" + (h * Viewport.height / Viewport.STD_HEIGHT) + "px";
+        }
+        $(c).css(css);
+    };
+
+    Viewport.resizeAll = function () {
+        for (c in Viewport.elements) {
+            var cc = Viewport.elements[c];
+            Viewport.position(c, cc.x, cc.y, cc.w, cc.h, cc.fs)
+        }
+    };
+
+    (function($) {
+        $.pos = Viewport.position;
+    })(jQuery);
+
+    return Viewport;
+})();
+
+
+// Hacking DOM WORK
 $(window).keydown(Song.handleKey);
-$('body').append('' +
+$('body').append('<div class="box">&nbsp;</div>' +
     'Next: <span id="lyrics-next"></span><br/>' +
     'Current: <span id="lyrics"></span>' +
     '<div id="typing"></div>');
+
+$.pos('#typing', 400, 300, 0, 0, 24);
+$.pos('.box', 0,0,1280,720);
+
+var Graphics = (function() {
+
+})();
+
+/// ////////////////////////
+/// Startup
+Viewport.onResize();
+$(window).on("resize", Viewport.onResize);
+
 
 var s = new Song("songs/Real World (TV ver.)", "real-world.json");
 Song.setSong(s);
