@@ -283,11 +283,11 @@ var Song = (function() {
 
     Song.prototype.getAudioURL = function () {
         return this.basePath + '/' + this.data['file'];
-    }
+    };
 
     Song.prototype.getLoadProgress  = function () {
         return this.loadingProgress;
-    }
+    };
 
     Song.prototype.isReady = function() {
         return this.audio != null && this.isLoaded;
@@ -339,7 +339,7 @@ var Song = (function() {
     Song.prototype.loadImage = function () {
         var _this = this;
         AssetManager.load(this.id + "_image", this.getAudioURL(), function (id) {
-            _this.image = new Image(_this.id + "_image", 0, 0, 1280, 720);
+            _this.image = new Image(id, 0, 0, 1280, 720);
             _this.image.z(10);
         });
     };
@@ -445,7 +445,7 @@ var State = (function() {
                 break;
             // TODO other state
         }
-    }
+    };
 
     return State;
 })();
@@ -545,7 +545,7 @@ var AssetManager = (function() {
             AssetManager.status[id].progress(id, event.progress);
     };
 
-    AssetManager.onComplete = function (event) {
+    AssetManager.onComplete = function () {
         AssetManager.complete = true;
     };
 
@@ -590,8 +590,8 @@ var Viewport = (function() {
 
     Viewport.onResize = function () {
         var widthToHeight = Viewport.STD_WIDTH / Viewport.STD_HEIGHT;
-        var newWidth = window.innerWidth * 0.95;
-        var newHeight = window.innerHeight * 0.95;
+        var newWidth = window.innerWidth - 3;
+        var newHeight = window.innerHeight - 3;
         var newWidthToHeight = newWidth / newHeight;
 
         if (newWidthToHeight > widthToHeight) {
@@ -1019,6 +1019,8 @@ var SongScreen = (function() {
 
     SongScreen.typingText = new Text("", 40, 50, 650, "white", false, 'y');
     SongScreen.typingText.z(1000);
+    SongScreen.typingText.$.css('font-family', 'monda')
+        .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
     SongScreen.onIn = function () {
         setTimeout(function () {
@@ -1027,7 +1029,7 @@ var SongScreen = (function() {
         SongScreen.typingText.$.fadeIn();
     };
 
-    SongScreen.onOut = function () {
+    SongScreen.onOut = function (callback) {
         SongManager.getSong().stop(callback);
         SongScreen.typingText.$.fadeOut('slow', callback);
     };
