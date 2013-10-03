@@ -19,6 +19,8 @@ var TypingChar = (function() {
     function TypingChar(character) {
         this.input = "";
         this.possible = Kana.getPossibleRomaji(character.toLowerCase());
+        console.log(character);
+        console.log(this.possible[0]);
         this.complete = false;
         this.display = this.possible[0];
     }
@@ -160,70 +162,44 @@ var Typing = (function() {
 })();
 
 var Song = (function() {
-    function Song(basePath, file) {
-        this.song = null;
-        this.data = null;
-
+    function Song(json, basePath) {
+        this.data = json;
         this.basePath = basePath;
-        this.currentVerse = -1;
-        this.isInVerse = true;
-        this.isLoading = false;
-        this.isPlaying = false;
+        this.audio = null;
         this.image = null;
 
-        var _this = this;
-        jQuery.getJSON(basePath + "/" + file, function(data) {
-            _this.setData(data);
-        });
+        this.id = json.id;
+
+        this.currentVerse = -1;
+        this.isInVerse = false;
+
+        this.isLoading = false;
+        this.isLoaded = false;
+        this.isPlaying = false;
+        this.loadingProgress = 0;
+
+        this.typing = null;
     }
 
-    Song.queue = new createjs.LoadQueue();
-    Song.queue.installPlugin(createjs.Sound);
-    Song.currentSong = null;
-    Song.currentTyping = null;
-
-    Song.setSong = function (song) {
-        if (this.currentSong != null)
-            Song.closeSong();
-        this.currentSong = song;
-    };
-
-    Song.closeSong = function () {
-        if (this.currentSong != null) {
-            this.currentSong.stop();
-            this.currentSong.isLoading = false;
-            this.currentSong.isPlaying = false;
+    Song.prototype.handleKey = function (input) {
+        if (this.typing != null) {
+            return this.typing.accept(input);
         }
-        Song.queue.removeAll();
-        Song.queue.removeAllEventListeners("complete");
-        // TODO clear playing song too
+        return false;
     };
 
-    Song.handleKey = function (input) {
-        if (Song.currentTyping != null) {
-            Song.currentTyping.accept(input);
-        }
+    Song.prototype.getDisplay = function () {
+        if (this.typing != null)
+            return this.typing.getDisplay();
+        return "";
     };
 
-    Song.mainLoop = function () {
-        if (this.currentSong != null && this.currentSong.isPlaying) {
-            var changed = this.currentSong.process(this.currentSong.getTime());
-            var cur = this.currentSong.getCurrentVerse();
-            if (changed) {
-                Song.currentTyping = new Typing(cur['typing']);
-            }
-        }
-    };
+    Song.prototype.tick = function () {
+        if (!this.isPlaying)
+            return false;
 
-    Song.getDisplay = function () {
-        if (Song.currentTyping != null)
-            return Song.currentTyping.getDisplay();
-        else
-            return "";
-    }
-
-    Song.prototype.process = function (time) {
         var ret = false;
+        var time = this.getTime();
 
         if (this.currentVerse+1 < this.getLineCount() && time >= this.data['event'][this.currentVerse+1]["start"]) {
             this.currentVerse++;
@@ -240,6 +216,10 @@ var Song = (function() {
                 this.isInVerse = false;
                 ret = true;
             }
+        }
+
+        if (ret) {
+            this.typing = new Typing(this.getCurrentVerse()['typing']);
         }
 
         return ret;
@@ -272,12 +252,16 @@ var Song = (function() {
     };
 
     Song.prototype.getTime = function () {
-        return this.song.getPosition();
+        return this.audio.getPosition();
     };
 
     Song.prototype.getDuration = function() {
-        return this.song.getDuration();
+        return this.audio.getDuration();
     };
+
+    Song.prototype.getProgress = function () {
+        return this.getTime() / this.getDuration();
+    }
 
     Song.prototype.getLineCount = function() {
         return this.data["event"].length;
@@ -293,47 +277,71 @@ var Song = (function() {
         return [this.data["event"][line]["lyric"]];
     };
 
-    Song.prototype.play = function () {
-        if (!this.isPlaying)
-            this.song.play();
-        this.isPlaying = true;
-    };
-
-    Song.prototype.beginLoading = function () {
-        if (!this.isInit() || this.isLoading)
-            return false;
-        var _this = this;
-        Song. queue.loadFile({
-            id: _this.key,
-            src: _this.basePath + "/" + _this.data['file']
-        });
-        Song.queue.on("complete", function() {
-            _this.downloadComplete();
-        });
-        this.isLoading = true;
-        return true;
-    };
-
-    Song.prototype.downloadComplete = function () {
-        this.song = createjs.Sound.createInstance(this.key);
-        Song.queue.off("complete", this.downloadComplete);
-    };
-
-    Song.prototype.setData = function (data) {
-        this.data = data;
-        this.key = data["key"];
-    };
-
     Song.prototype.getData = function (info) {
         return this.data['info-' + info];
     };
 
+    Song.prototype.getAudioURL = function () {
+        return this.basePath + '/' + this.data['file'];
+    }
+
+    Song.prototype.getLoadProgress  = function () {
+        return this.loadingProgress;
+    }
+
     Song.prototype.isReady = function() {
-        return this.song != null && this.data != null;
+        return this.audio != null && this.isLoaded;
     };
 
-    Song.prototype.isInit = function() {
-        return this.data != null;
+    Song.prototype.play = function () {
+        if (!this.isLoaded || this.audio == null)
+            return false;
+
+        if (!this.isPlaying)
+            this.audio.play();
+
+        this.isPlaying = true;
+        return true;
+    };
+
+    Song.prototype.stop = function () {
+        if (this.isPlaying)
+            this.audio.stop();
+        if (this.isLoading)
+            this.cancel();
+
+        this.isPlaying = false;
+        this.isLoading = false;
+    };
+
+    Song.prototype.load = function () {
+        if (this.isLoading)
+            return false;
+
+        var _this = this;
+        AssetManager.load(this.id + "_audio", this.getAudioURL(), function (id) {
+            _this.isLoaded = true;
+            _this.isLoading = false;
+            _this.loadingProgress = 1;
+            _this.audio = createjs.Sound.createInstance(id);
+        }, true, function (_, progress) {
+            _this.loadingProgress = progress;
+        });
+
+        this.isLoading = true;
+        return true;
+    };
+
+    Song.prototype.cancel = function () {
+        AssetManager.remove(this.key + "_audio");
+    };
+
+    Song.prototype.loadImage = function () {
+        var _this = this;
+        AssetManager.load(this.id + "_image", this.getAudioURL(), function (id) {
+            _this.image = new Image(_this.id + "_image", 0, 0, 1280, 720);
+            _this.image.z(10);
+        });
     };
 
     return Song;
@@ -385,6 +393,16 @@ var State = (function() {
             case State.PRELOAD:
                 PreloadScreen.handleKey(input);
                 break;
+            case State.MENU:
+                break;
+            case State.PRESONG:
+                PresongScreen.handleKey(input);
+                break;
+            case State.SONG:
+                SongScreen.handleKey(input);
+                break;
+            case State.SCORE:
+                break;
             // TODO other state
         }
     };
@@ -397,6 +415,16 @@ var State = (function() {
         var callback = function () {
             State.current = state;
             switch (state) {
+                case State.MENU:
+                    break;
+                case State.PRESONG:
+                    PresongScreen.onIn();
+                    break;
+                case State.SONG:
+                    SongScreen.onIn();
+                    break;
+                case State.SCORE:
+                    break;
                 // TODO other state
             }
         };
@@ -404,6 +432,17 @@ var State = (function() {
         switch (State.current) {
             case State.PRELOAD:
                 PreloadScreen.onOut(callback);
+                break;
+            case State.MENU:
+                break;
+            case State.PRESONG:
+                PresongScreen.onOut(callback);
+                break;
+            case State.SONG:
+                SongScreen.onOut(callback);
+                break;
+            case State.SCORE:
+                break;
             // TODO other state
         }
     }
@@ -416,15 +455,42 @@ var SongManager = (function() {
 
     SongManager.songData = null;
     SongManager.songs = {};
+    SongManager.song = null;
+    SongManager.imgTransitioning = false;
+    SongManager.currentImage = null;
 
     SongManager.initSongData = function (songData) {
         SongManager.songData = songData;
 
         songData.forEach(function (c) {
             PreloadScreen.loadFile(c[0] + "_data", c[1] + '/' + c[2], function(_, result) {
-                SongManager.songs[c[0]] = result;
+                SongManager.songs[c[0]] = new Song(result, c[1]);
             });
         });
+    };
+
+    SongManager.tick = function () {
+        if (SongManager.song != null) {
+            SongManager.song.tick();
+
+            var song = SongManager.song;
+
+//            if (!SongManager.imgTransitioning && !song.image.visible()) {
+//
+//            }
+        }
+    };
+
+    SongManager.getSong = function (id) {
+        if (id == undefined)
+            return SongManager.song;
+        return SongManager.songs[id];
+    };
+
+    SongManager.setSong = function (song) {
+        if (SongManager.song != null)
+            SongManager.song.stop();
+        SongManager.song = song;
     };
 
     return SongManager;
@@ -491,6 +557,7 @@ var AssetManager = (function() {
     }
 
     AssetManager.queue.on("fileload", AssetManager.onFileDownloaded);
+    AssetManager.queue.on("fileprogress", AssetManager.onFileProgressed);
     AssetManager.queue.on("complete", AssetManager.onComplete);
 
     return AssetManager;
@@ -499,7 +566,13 @@ var AssetManager = (function() {
 /// ///////////////////////
 /// Graphical
 
-// Viewport for auto-resizing
+/**
+ * Viewport for auto resizing of of element
+ * based on browser size.
+ *
+ * Supports limited to font-size for text
+ * and width/height for image only.
+ */
 var Viewport = (function() {
     function Viewport() {}
 
@@ -634,18 +707,33 @@ var Text = (function() {
         this.$.appendTo('body');
         $.pos('#' + this.id, x, y, 0, 0, fs, mode);
 
-        if (display != undefined && display)
+        if (display != undefined && display) {
             this.$.css('display', 'block');
+        }
     }
 
     Text._uniqid = 0;
 
     Text.prototype.txt = function (text) {
-        return this.$.html(text);
+        var ret = this.$.html(text);
+        Viewport.resizeAll();
+        return ret;
     };
 
     Text.prototype.z = function (z) {
         return this.$.css('z-index', z);
+    };
+
+    Text.prototype.show = function () {
+        return this.$.show();
+    };
+
+    Text.prototype.hide = function () {
+        return this.$.hide();
+    };
+
+    Text.prototype.visible = function () {
+        return this.$.css('display') != 'none';
     };
 
     return Text;
@@ -687,6 +775,18 @@ var Image = (function() {
 
     Image.prototype.z = function (z) {
         return this.$.css('z-index', z);
+    };
+
+    Image.prototype.show = function () {
+        return this.$.show();
+    };
+
+    Image.prototype.hide = function () {
+        return this.$.hide();
+    };
+
+    Image.prototype.visible = function () {
+        return this.$.css('display') != 'none';
     };
 
     return Image;
@@ -736,19 +836,27 @@ var Progressbar = (function() {
         return this.$.css('z-index', z);
     };
 
+    Progressbar.prototype.show = function () {
+        return this.$.show();
+    };
+
+    Progressbar.prototype.hide = function () {
+        return this.$.hide();
+    };
+
+    Progressbar.prototype.visible = function () {
+        return this.$.css('display') != 'none';
+    };
+
     return Progressbar;
 })();
 
 var Graphics = (function() {
     function Graphics() {}
 
-    Graphics.queue = new createjs.LoadQueue();
-    Graphics.backgroundImage = null;
     Graphics.fontLoaded = false;
 
     Graphics.init = function () {
-        // TODO make loading screen and use preloadJS to preload everything
-
         // Global setting
         $('body').css('background-color', 'black');
         var NUMBER_OF_FONT = 1;
@@ -762,32 +870,9 @@ var Graphics = (function() {
             }
         });
         PreloadScreen.numberOfItem += NUMBER_OF_FONT;
-
-//        AssetManager.load('__background', 'data/background.jpg', function (id) {
-//            (new Image('__background', 0, 0, 1280, 720, false)).$.fadeIn('slow');
-//        });
     };
 
     return Graphics;
-})();
-
-var SongScreen = (function() {
-    function SongScreen() {}
-
-    SongScreen.currentSong = null;
-    SongScreen.typingText = new Text("", 36, 0, 0, "white", true);
-    SongScreen.typingText.z(1000);
-
-    SongScreen.set = function (song) {
-        SongScreen.currentSong = song;
-    };
-
-    SongScreen.process = function () {
-        Song.mainLoop();
-        SongScreen.typingText.txt(Song.getDisplay());
-    };
-
-    return SongScreen;
 })();
 
 var PreloadScreen = (function() {
@@ -826,14 +911,14 @@ var PreloadScreen = (function() {
             Viewport.resizeAll();
         }
         if (Graphics.fontLoaded && !PreloadScreen.displayed) {
-            PreloadScreen.loadingText.$.show();
+            PreloadScreen.loadingText.show();
             PreloadScreen.displayed = true;
         }
     };
 
     PreloadScreen.handleKey = function (input) {
         if (PreloadScreen.isDone && input == ' ') {
-            State.to(State.MENU);
+            State.to(State.PRESONG); // FIXME should be menu, but presong for testing
         }
     };
 
@@ -842,32 +927,121 @@ var PreloadScreen = (function() {
         PreloadScreen.loadingText.$.fadeOut('slow', callback);
     };
 
-    PreloadScreen.loadingText = new Text("Loading...", 60, 640, 355, "white", false, 'xy');
-    PreloadScreen.loadingText.z(10);
-    PreloadScreen.loadingText.$.css('font-family', 'monda')
-                               .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
+    PreloadScreen.onIn = function () {
+        PreloadScreen.loadingText = new Text("Loading...", 60, 640, 355, "white", false, 'xy');
+        PreloadScreen.loadingText.z(5);
+        PreloadScreen.loadingText.$.css('font-family', 'monda')
+                                   .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
-    PreloadScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(100, 255, 100, 0.3)');
-    PreloadScreen.progressbar.z(1);
+        PreloadScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(100, 255, 100, 0.3)');
+        PreloadScreen.progressbar.z(1);
 
-    // TODO add more information to loading screen
+        // TODO add more information to loading screen
 
-    PreloadScreen.progressbar.$.show();
+        PreloadScreen.progressbar.show();
 
-    PreloadScreen.loadFile('__background', BACKGROUND, function(id) {
-        Graphics.backgroundImage = new Image(id, 0, 0, 1280, 720);
-        Graphics.backgroundImage.z(-1000);
-        Graphics.backgroundImage.$.fadeIn('slow');
-    }, false);
+        PreloadScreen.loadFile('__background', BACKGROUND, function(id) {
+            Graphics.backgroundImage = new Image(id, 0, 0, 1280, 720);
+            Graphics.backgroundImage.z(-1000);
+            Graphics.backgroundImage.$.fadeIn('slow');
+        }, false);
 
-    PreloadScreen.loadFile('__songlist', SONGLIST, function(_, result) {
-        SongManager.initSongData(result.songs);
-        PreloadScreen.donnable = true;
-    }, false);
+        PreloadScreen.loadFile('__songlist', SONGLIST, function(_, result) {
+            SongManager.initSongData(result.songs);
+            PreloadScreen.donnable = true;
+        }, false);
 
-    AssetManager.queue.load();
+        AssetManager.queue.load();
+    };
 
     return PreloadScreen;
+})();
+
+var MenuScreen = (function() {
+    function MenuScreen() {}
+
+    return MenuScreen;
+});
+
+var PresongScreen = (function() {
+    function PresongScreen() {}
+
+    PresongScreen.txtStatus = new Text("Standby", 60, 640, 355, "white", false, "xy");
+    PresongScreen.txtStatus.z(15);
+    PresongScreen.txtStatus.$.css('font-family', 'monda')
+                             .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
+
+    PresongScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(100, 255, 100, 0.3)');
+    PresongScreen.progressbar.z(14);
+
+    PresongScreen.onIn = function () {
+        // FIXME this hardcoded song is for checking prior to completion of menu
+        SongManager.setSong(SongManager.getSong('real-world'));
+        SongManager.getSong().load();
+
+        PresongScreen.txtStatus.txt("Standby");
+        PresongScreen.progressbar.progress(0);
+
+        PresongScreen.txtStatus.$.fadeIn('slow');
+        PresongScreen.progressbar.$.fadeIn('slow');
+    };
+
+    PresongScreen.onOut = function (callback) {
+        PresongScreen.txtStatus.$.fadeOut('slow');
+        PresongScreen.progressbar.$.fadeOut('slow', callback);
+    };
+
+    PresongScreen.tick = function () {
+        var song = SongManager.getSong();
+        if (song.isReady()) {
+            PresongScreen.txtStatus.txt("Ready");
+            PresongScreen.progressbar.progress(1);
+        } else {
+            PresongScreen.progressbar.progress(song.getLoadProgress());
+        }
+    };
+
+    PresongScreen.handleKey = function (input) {
+        if (SongManager.getSong().isReady() && input == ' ') {
+            State.to(State.SONG);
+        }
+
+        if (input == 'Esc') {
+            State.to(State.MENU);
+        }
+    };
+
+    return PresongScreen;
+})();
+
+var SongScreen = (function() {
+    function SongScreen() {}
+
+    SongScreen.typingText = new Text("", 40, 50, 650, "white", false, 'y');
+    SongScreen.typingText.z(1000);
+
+    SongScreen.onIn = function () {
+        setTimeout(function () {
+            SongManager.getSong().play();
+        }, 1000);
+        SongScreen.typingText.$.fadeIn();
+    };
+
+    SongScreen.onOut = function () {
+        SongManager.getSong().stop(callback);
+        SongScreen.typingText.$.fadeOut('slow', callback);
+    };
+
+    SongScreen.tick = function () {
+        SongManager.tick();
+        SongScreen.typingText.txt(SongManager.getSong().getDisplay());
+    };
+
+    SongScreen.handleKey = function (input) {
+        SongManager.getSong().handleKey(input);
+    };
+
+    return SongScreen;
 })();
 
 /// ////////////////////////
@@ -875,14 +1049,19 @@ var PreloadScreen = (function() {
 
 (function() {
 
-    $(window).keydown(State.onKeyDown);
-
+    // Graphics Initialization
     Graphics.init();
     Viewport.onResize();
+
+    // Set window event
+    $(window).on("keydown", State.onKeyDown);
     $(window).on("resize", Viewport.onResize);
 
-    var s = new Song("songs/Real World (TV ver.)", "real-world.json");
-    Song.setSong(s);
+    // Start preloading screen
+    PreloadScreen.onIn();
+
+    console.log("Initialized");
+
     setInterval(function() {
         switch (State.current) {
             case State.PRELOAD:
@@ -891,20 +1070,15 @@ var PreloadScreen = (function() {
             case State.MENU:
                 break;
             case State.PRESONG:
+                PresongScreen.tick();
                 break;
             case State.SONG:
-                //SongScreen.process();
+                SongScreen.tick();
                 break;
             case State.SCORE:
                 break;
         }
-
-//        if (!s.isReady())
-//            s.beginLoading();
-//        else if (!s.isPlaying)
-//            s.play();
-//        SongScreen.process();
-    }, 20);
+    }, 100);
 
 })();
 

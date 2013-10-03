@@ -50,7 +50,7 @@ def convert(fi, fo, key):
 
     output = {
         "event": [],
-        "key": key,
+        "id": key,
         "file": key + ".mp3",
         "image": key + ".jpg"
     }
@@ -78,7 +78,7 @@ def convert(fi, fo, key):
             else:
                 output[dtype] = data
 
-    fo.write(json.dumps(output, sort_keys=False, ensure_ascii=False, indent=4, separators=(',', ': ')))
+    fo.write(json.dumps(output, sort_keys=False, ensure_ascii=True, indent=4, separators=(',', ': ')))
     fo.write("\n")
 
 def toMillisec(time):
