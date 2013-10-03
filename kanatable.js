@@ -5,6 +5,8 @@
  * Available under the term of MIT License
  * See LICENSE file for more detail
  */
+
+    // TODO make this table actually correct
 var Kana = (function() {
     /**
      * This table contains all possible Romaji-Kana pair that will be used in the game.

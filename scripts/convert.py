@@ -51,7 +51,8 @@ def convert(fi, fo, key):
     output = {
         "event": [],
         "key": key,
-        "file": key + ".mp3"
+        "file": key + ".mp3",
+        "image": key + ".jpg"
     }
 
     # TODO calculate level

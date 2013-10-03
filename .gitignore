@@ -2,4 +2,5 @@
 cache/*
 *.db
 songs/*
+data/*
 *.iml
