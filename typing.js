@@ -161,6 +161,24 @@ var Typing = (function() {
         return ret;
     };
 
+    Typing.prototype.getCharLeft = function () {
+        var ret = 0;
+        this.typingWords.forEach(function (i) {
+            if (!i.isComplete())
+                ret += i.getDisplay().length;
+        });
+        return ret;
+    };
+
+    Typing.prototype.getNextChar = function () {
+        var ret = 0;
+        this.typingWords.forEach(function (i) {
+            if (!i.isComplete() && ret == 0)
+                ret = i.getDisplay().charAt(0);
+        });
+        return ret;
+    };
+
     return Typing;
 })();
 
@@ -409,28 +427,7 @@ var State = (function() {
 
     State.onKeyDown = function (event) {
         var code = event.which;
-        var input = '';
-        if (code == '32') {
-            input = ' ';
-        } else if ((code >= 65 && code <= 90) || (code >= 48 && code <= 57)) {
-            input = String.fromCharCode(code).toLowerCase();
-        } else if (code >= 96 && code <= 105) { // Numpad
-            input = String.fromCharCode(code-48).toLowerCase();
-        } else switch (code) {
-            case 188: input = ','; break;
-            case 189: input = '-'; break;
-            case 190: input = '.'; break;
-            case 191: input = '/'; break;
-            case 219: input = '('; break;
-            case 220: input = '\\'; break;
-            case 221: input = ')'; break;
-            case 222: input = '\''; break;
-            case  27: input = 'Esc'; break;
-            case  38: input = 'Up'; break;
-            case  40: input = 'Down'; break;
-            case  37: input = 'Left'; break;
-            case  39: input = 'Right'; break;
-        }
+        var input = KeyCode.fromKeyCode(code);
 
         switch (State.current) {
             case State.PRELOAD:
@@ -649,6 +646,115 @@ var AssetManager = (function() {
     AssetManager.queue.on("complete", AssetManager.onComplete);
 
     return AssetManager;
+})();
+
+var KeyCode = (function() {
+    function KeyCode() {}
+
+    KeyCode.map = [
+        [188, ','    ],
+        [189, '-'    ],
+        [190, '.'    ],
+        [191, '/'    ],
+        [219, '('    ],
+        [220, '\\'   ],
+        [221, ')'    ],
+        [222, '\''   ],
+        [ 27, 'Esc'  ],
+        [ 38, 'Up'   ],
+        [ 40, 'Down' ],
+        [ 37, 'Left' ],
+        [ 39, 'Right']
+    ];
+
+    KeyCode.fromKeyCode = function (code) {
+        var input = '';
+        if (code == 32) {
+            input = ' ';
+        } else if ((code >= 65 && code <= 90) || (code >= 48 && code <= 57)) {
+            input = String.fromCharCode(code).toLowerCase();
+        } else if (code >= 96 && code <= 105) { // Numpad
+            input = String.fromCharCode(code-48).toLowerCase();
+        } else KeyCode.map.forEach(function (c) {
+            if (c[0] == code)
+                input = c[1];
+        });
+
+        return input;
+    };
+
+    KeyCode.toKeyCode = function (input) {
+        input = input.toUpperCase();
+        var code = input.charCodeAt(0);
+        if (input == ' ') {
+            code = 32;
+        } else if ((code >= 65 && code <= 90) || (code >= 48 && code <= 57)) {
+            // input = input
+        } else KeyCode.map.forEach(function (c) {
+            if (c[1] == input)
+                code = c[0];
+        });
+        return code;
+    };
+
+    return KeyCode;
+})();
+
+/**
+ * Replacement in case the setup didn't include kanatable.js
+ */
+var Kana = Kana || (function() {
+    function KanaR() {}
+
+    KanaR.splitKana = function (kana) {
+        return [kana];
+    };
+
+    KanaR.getPossibleRomaji = function (kana) {
+        return [kana];
+    };
+
+    return KanaR;
+})();
+
+var AutoPlay = (function() {
+    function AutoPlay() {}
+
+    AutoPlay.active = false;
+    AutoPlay.lastType = 0;
+    AutoPlay.interval = 1000;
+    AutoPlay.currentVerse = -1;
+
+    AutoPlay.begin = function () {
+        AutoPlay.active = true;
+    };
+
+    AutoPlay.stop = function () {
+        AutoPlay.active = false;
+    };
+
+    AutoPlay.tick = function () {
+        if (!AutoPlay.active || SongManager.getSong() == null || SongManager.getSong().typing == null) {
+            return;
+        }
+
+        var song = SongManager.getSong();
+
+        if (AutoPlay.currentVerse != song.currentVerse) {
+            AutoPlay.currentVerse = song.currentVerse;
+            this.interval = song.getTimeUntilNext()*0.8 / (song.typing.getCharLeft()+1);
+            // This is to prevent too fast to see typing of first character
+            AutoPlay.lastType = song.getTime();
+        }
+
+        if (song.getTime()-AutoPlay.lastType >= AutoPlay.interval && !song.typing.isComplete()) {
+            AutoPlay.lastType = song.getTime();
+            var event = $.Event( 'keydown', { which: KeyCode.toKeyCode(song.typing.getNextChar()) } );
+            $(window).trigger(event);
+        }
+    };
+
+    return AutoPlay;
 })();
 
 /// ///////////////////////
@@ -1177,6 +1283,7 @@ var SongScreen = (function() {
 
     SongScreen.tick = function () {
         SongManager.tick();
+        AutoPlay.tick();
 
         var song = SongManager.getSong();
 
