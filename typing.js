@@ -305,6 +305,10 @@ var Song = (function() {
         return this.data["event"][line]["lyric"];
     };
 
+    Song.prototype.isComplete = function () {
+        return this.currentVerse == this.getLineCount();
+    };
+
     Song.prototype.getTyping = function (line) {
         if ("typing" in this.data["event"][line])
             return this.data["event"][line]["typing"];
@@ -397,6 +401,7 @@ var State = (function() {
     State.SCORE   = 4;
 
     State.current = State.PRELOAD;
+    State.transitioning = false;
 
     State.is = function (c) {
         return c == State.current;
@@ -451,7 +456,11 @@ var State = (function() {
             return;
         }
 
+        if (State.transitioning)
+            return;
+
         var callback = function () {
+            State.transitioning = false;
             State.current = state;
             switch (state) {
                 case State.MENU:
@@ -469,6 +478,7 @@ var State = (function() {
             }
         };
 
+        State.transitioning = true;
         switch (State.current) {
             case State.PRELOAD:
                 PreloadScreen.onOut(callback);
@@ -1184,6 +1194,10 @@ var SongScreen = (function() {
         var line = song.getCurrentVerse();
         if (song.typing != null && song.typing.isComplete()) {
             line = song.getNextVerse();
+        }
+
+        if (song.isComplete()) {
+            State.to(State.SCORE);
         }
 
         SongScreen.txtLineTyping.txt(SongManager.combineTyping(line.typing));
