@@ -13,6 +13,8 @@ var SONGLIST   = 'data/songs.json';
 // TODO Create MENU Screen
 // TODO Beautify the screen
 // TODO Add scoring system (with local storage)
+// TODO error report
+// TODO Add Kanami code for enabling of autotype
 
 /// ///////////////////////
 /// Song Engine
@@ -374,12 +376,15 @@ var Song = (function() {
         if (this.isLoading)
             return false;
 
+        console.log("Begin loading song...");
+
         var _this = this;
         AssetManager.load(this.id + "_audio", this.getAudioURL(), function (id) {
             _this.isLoaded = true;
             _this.isLoading = false;
             _this.loadingProgress = 1;
             _this.audio = createjs.Sound.createInstance(id);
+            console.log("Song " + _this.id + "loaded.");
         }, true, function (_, progress) {
             _this.loadingProgress = progress;
         });
@@ -644,6 +649,9 @@ var AssetManager = (function() {
     AssetManager.queue.on("fileload", AssetManager.onFileDownloaded);
     AssetManager.queue.on("fileprogress", AssetManager.onFileProgressed);
     AssetManager.queue.on("complete", AssetManager.onComplete);
+    AssetManager.queue.on("error", function (event) {
+        console.log(event);
+    });
 
     return AssetManager;
 })();
@@ -1194,7 +1202,7 @@ var PresongScreen = (function() {
 
     PresongScreen.onIn = function () {
         // FIXME this hardcoded song is for checking prior to completion of menu
-        SongManager.setSong(SongManager.getSong('real-world'));
+        SongManager.setSong(SongManager.getSong('blue-flow'));
         SongManager.getSong().load();
 
         PresongScreen.txtStatus.txt("Standby");
