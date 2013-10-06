@@ -86,6 +86,7 @@ var TypingChar = (function() {
 
         var ret = 0;
 
+        // TODO make sure this is bug-free
         if (accept && this.complete) {
             var toEnd = this.possibleInput[0].length - this.input.length + 1;
             if (toEnd >= 0)
