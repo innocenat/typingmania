@@ -929,6 +929,13 @@ var Viewport = (function() {
         }
     };
 
+    Viewport.resizeElement = function (id) {
+        if (id in Viewport.elements) {
+            var cc = Viewport.elements[id];
+            Viewport.position(id, cc, true);
+        }
+    };
+
     return Viewport;
 })();
 
@@ -962,6 +969,10 @@ var ControlBase = (function() {
         return 'ControlBase';
     };
 
+    ControlBase.prototype.shouldResize = function () {
+        Viewport.resizeElement('#' + this.id);
+    };
+
     ControlBase.prototype.getID = function () {
         if (this.id != undefined) {
             return this.id
@@ -986,7 +997,7 @@ var ControlBase = (function() {
             ret = this.$.html();
         else
             ret = this.$.html(html);
-        Viewport.resizeAll();
+        this.shouldResize();
         return ret;
     };
 
@@ -996,7 +1007,7 @@ var ControlBase = (function() {
             ret = this.$.text();
         else
             ret = this.$.text(text);
-        Viewport.resizeAll();
+        this.shouldResize();
         return ret;
     };
 
@@ -1006,7 +1017,7 @@ var ControlBase = (function() {
             ret = this.$.css(css);
         else
             ret = this.$.css(css, data);
-        Viewport.resizeAll();
+        this.shouldResize();
         return ret;
     };
 
@@ -1016,7 +1027,7 @@ var ControlBase = (function() {
             ret = this.$.attr(attr);
         else
             ret = this.$.attr(attr, data);
-        Viewport.resizeAll();
+        this.shouldResize();
         return ret;
     };
 
@@ -1144,7 +1155,7 @@ var Progressbar = (function() {
         this.$.appendTo('body');
         this.$b.appendTo(this.$);
 
-        $.pos('#' + this.id, {
+        Viewport.position('#' + this.id, {
             x: x,
             y: y,
             w: w,
