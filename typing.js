@@ -16,7 +16,6 @@ var SONGLIST   = 'data/songs.json';
 // Default to 20ms, which translated to 50fps
 var INTERVAL   = 20;
 
-// TODO Create control group class to group many text label together
 // TODO Create MENU Screen
 // TODO Beautify the screen
 // TODO Add scoring system (with local storage)
@@ -946,6 +945,7 @@ var ControlBase = (function() {
     function ControlBase($, position) {
         this.$ = $;
         this.id = this.getID();
+        this.parent = null;
 
         this.attr('id', this.id);
         this.css('display', 'none');
@@ -960,13 +960,51 @@ var ControlBase = (function() {
             fs: 0,
             align: ''
         }, position || {});
-        Viewport.position('#' + this.id, this.position);
+        this.drawPosition = $.extend({}, this.position);
+        Viewport.position('#' + this.id, this.drawPosition);
     }
 
     ControlBase._uniqueid = {};
 
     ControlBase.prototype.getControlName = function () {
         return 'ControlBase';
+    };
+
+    ControlBase.prototype.setPosition = function (x, y) {
+        this.position.x = x;
+        this.position.y = y;
+
+        this.recalculate();
+    };
+
+    ControlBase.prototype.setSize = function (w, h) {
+        var ratio;
+        if (w == 0 && h == 0) {
+            return false;
+        } else if (w == 0) {
+            ratio = h / this.position.h;
+            this.position.w *= ratio;
+            this.position.h = h;
+        } else if (h == 0) {
+            ratio = w / this.position.w;
+            this.position.w = w;
+            this.position.h *= ratio;
+        } else {
+            this.position.w = w;
+            this.position.h = h;
+        }
+
+        this.recalculate();
+        return true;
+    };
+
+    ControlBase.prototype.recalculate = function () {
+        if (this.parent != null) {
+            this.parent.recalculateChild(this);
+        } else {
+            $.extend(this.drawPosition, this.position);
+        }
+        this.shouldResize();
     };
 
     ControlBase.prototype.shouldResize = function () {
@@ -1060,6 +1098,161 @@ var ControlBase = (function() {
 })();
 
 /**
+ * Group of control that can be resized and relocated together.
+ */
+var ControlGroup = (function($super) {
+    $extends(ControlGroup, $super);
+
+    function ControlGroup(x, y, w, h) {
+        this.id = this.getID();
+
+        this.parent = null;
+        this.children = [];
+
+        this.position = {
+            w: w,
+            h: h,
+            x: x,
+            y: y,
+            fs: 0,
+            align: ''
+        };
+
+        this.drawPosition = $.extend({}, this.position);
+    }
+
+    ControlGroup.prototype.getControlName = function () {
+        return "ControlGroup";
+    };
+
+    ControlGroup.prototype.add = function (c) {
+        c.parent = this;
+        this.children.push(c);
+        this.recalculateChild(c);
+    };
+
+    ControlGroup.prototype.recalculate = function () {
+        $super.prototype.recalculate.call(this);
+        this.recalculateChildren();
+    };
+
+    ControlGroup.prototype.recalculateChildren = function () {
+        this.children.forEach(function (c) {
+            c.recalculate();
+        });
+    };
+
+    ControlGroup.prototype.recalculateChild = function (c) {
+        c.drawPosition.x = c.position.x + this.position.x;
+        c.drawPosition.y = c.position.y + this.position.y;
+
+        var hRatio = this.drawPosition.h / this.position.h;
+        var wRatio = this.drawPosition.w / this.position.w;
+
+        c.drawPosition.h = c.position.h * hRatio;
+        c.drawPosition.w = c.position.w * wRatio;
+        c.drawPosition.fs = c.position.fs * Math.min(hRatio, wRatio);
+
+        c.shouldResize();
+    };
+
+    ControlGroup.prototype.shouldResize = function () {
+        // Nothing, but must override parent method
+    };
+
+    ControlGroup.prototype.html = function (html) {
+        this.children.forEach(function (c) {
+            c.html(html);
+        });
+        this.recalculateChildren();
+        return this;
+    };
+
+    ControlGroup.prototype.txt = function (text) {
+        this.children.forEach(function (c) {
+            c.txt(text);
+        });
+        this.recalculateChildren();
+        return this;
+    };
+
+    ControlGroup.prototype.css = function (css, data) {
+        this.children.forEach(function (c) {
+            if (data == undefined)
+                c.css(css);
+            else
+                c.css(css, data);
+        });
+        this.recalculateChildren();
+        return this;
+    };
+
+    ControlGroup.prototype.attr = function (attr, data) {
+        this.children.forEach(function (c) {
+            if (data == undefined)
+                c.attr(attr);
+            else
+                c.attr(attr, data);
+        });
+        this.recalculateChildren();
+        return this;
+    };
+
+    ControlGroup.prototype.z = function (z) {
+        this.css('z-index', z);
+        return this;
+    };
+
+    ControlGroup.prototype.show = function () {
+        this.children.forEach(function (c) {
+            c.show();
+        });
+        return this;
+    };
+
+    ControlGroup.prototype.hide = function () {
+        this.children.forEach(function (c) {
+            c.hide();
+        });
+        return this;
+    };
+
+    ControlGroup.prototype.fadeIn = function (speed, complete) {
+        var count = 0;
+        var target = this.children.length;
+        var callback = function () {
+            count++;
+            if (count == target && complete != undefined)
+                complete();
+        };
+        this.children.forEach(function (c) {
+            c.fadeIn(speed, callback);
+        });
+        return this;
+    };
+
+    ControlGroup.prototype.fadeOut = function (speed, complete) {
+        var count = 0;
+        var target = this.children.length;
+        var callback = function () {
+            count++;
+            if (count == target && complete != undefined)
+                complete();
+        };
+        this.children.forEach(function (c) {
+            c.fadeOut(speed, callback);
+        });
+        return this;
+    };
+
+    ControlGroup.prototype.visible = function () {
+        return true;
+    };
+
+    return ControlGroup;
+})(ControlBase);
+
+/**
  * Text label object
  */
 var Text = (function($super) {
@@ -1125,72 +1318,55 @@ var Image = (function($super) {
 })(ControlBase);
 
 /**
- * Progressbar
- * TODO rewrite this with controlgroup
+ * Just simple DIV block
  */
-var Progressbar = (function() {
-    function Progressbar(x, y, w, h, color_bar, color_back) {
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
+var Block = (function($super) {
+    $extends(Block, $super);
 
-        if (color_back == undefined) {
-            color_back = 'rgba(0, 0, 0, 0)';
-        }
-
-        this.id = 'progress_unique_' + Progressbar._uniqid + '_back';
-        this.id_inside = 'progress_unique_' + Progressbar._uniqid + '_bar';
-        Progressbar._uniqid++;
-
-        this.$ = $('<div></div>');
-        this.$.attr('id', this.id);
-        this.$.css('background-color', color_back);
-
-        this.$b = $('<div></div>');
-        this.$b.attr('id', this.id_inside);
-        this.$b.css('background-color', color_bar);
-
-        this.$.css('display', 'none');
-        this.$.appendTo('body');
-        this.$b.appendTo(this.$);
-
-        Viewport.position('#' + this.id, {
+    function Block(x, y, w, h, color) {
+        $super.call(this, $('<div></div>'), {
             x: x,
             y: y,
             w: w,
             h: h
         });
-        this.$b.css({
-            width: "0%",
-            height: "100%"
-        })
+
+        if (color != undefined)
+            this.css('background-color', color);
     }
 
-    Progressbar._uniqid = 0;
+    Block.prototype.getControlName = function () {
+        return "Block";
+    };
+
+    return Block;
+})(ControlBase);
+
+/**
+ * Progressbar
+ */
+var Progressbar = (function($super){
+    $extends(Progressbar, $super);
+
+    function Progressbar(x, y, w, h, color_bar, color_back) {
+        $super.call(this, x, y, w, h);
+        this.back = new Block(0, 0, w, h, color_back || 'rgba(0, 0, 0, 0)');
+        this.bar = new Block(0, 0, 0.0000001*w, h, color_bar);
+        this.add(this.back);
+        this.add(this.bar);
+    }
+
+    Progressbar.prototype.getControlName = function () {
+        return "Progressbar";
+    };
 
     Progressbar.prototype.progress = function (p) {
-        this.$b.css('width', "" + (100*p) + "%");
-    };
-
-    Progressbar.prototype.z = function (z) {
-        return this.$.css('z-index', z);
-    };
-
-    Progressbar.prototype.show = function () {
-        return this.$.show();
-    };
-
-    Progressbar.prototype.hide = function () {
-        return this.$.hide();
-    };
-
-    Progressbar.prototype.visible = function () {
-        return this.$.css('display') != 'none';
+        this.bar.setSize(Math.max(0.0000001, p)*this.back.position.w, this.back.position.h);
+        this.recalculateChildren();
     };
 
     return Progressbar;
-})();
+})(ControlGroup);
 
 /**
  * Main (shared) graphic component, like font and windows background
@@ -1234,6 +1410,7 @@ var PreloadScreen = (function() {
     PreloadScreen.currentItem = 0;
     PreloadScreen.donnable = false;
     PreloadScreen.displayed = false;
+    PreloadScreen.currentProgress = 0;
 
     PreloadScreen.loadFile = function (id, src, callback, start) {
         PreloadScreen.numberOfItem++;
@@ -1256,7 +1433,11 @@ var PreloadScreen = (function() {
     };
 
     PreloadScreen.tick = function () {
-        PreloadScreen.progressbar.progress(PreloadScreen.getPercent());
+        if (PreloadScreen.currentProgress != PreloadScreen.getPercent()) {
+            PreloadScreen.currentProgress = PreloadScreen.getPercent();
+            PreloadScreen.progressbar.progress(PreloadScreen.currentProgress);
+        }
+
         if (PreloadScreen.isDone() && PreloadScreen.loadingText.txt() != "Ready" && Graphics.fontLoaded) {
             PreloadScreen.loadingText.txt("Ready");
             Viewport.resizeAll();
@@ -1273,7 +1454,7 @@ var PreloadScreen = (function() {
     };
 
     PreloadScreen.onOut = function (callback) {
-        PreloadScreen.progressbar.$.fadeOut('slow');
+        PreloadScreen.progressbar.fadeOut('slow');
         PreloadScreen.loadingText.fadeOut('slow', callback);
     };
 
@@ -1351,7 +1532,7 @@ var PresongScreen = (function() {
         PresongScreen.progressbar.progress(0);
 
         PresongScreen.txtStatus.fadeIn('slow');
-        PresongScreen.progressbar.$.fadeIn('slow');
+        PresongScreen.progressbar.fadeIn('slow');
     };
 
     PresongScreen.onOut = function (callback) {
@@ -1417,8 +1598,8 @@ var SongScreen = (function() {
         SongScreen.txtTimecode.fadeIn();
         SongScreen.txtLineTyping.fadeIn();
         SongScreen.txtLineLyrics.fadeIn();
-        SongScreen.prgOverall.$.fadeIn();
-        SongScreen.prgCurrent.$.fadeIn();
+        SongScreen.prgOverall.fadeIn();
+        SongScreen.prgCurrent.fadeIn();
     };
 
     SongScreen.onOut = function (callback) {
