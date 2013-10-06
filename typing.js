@@ -20,7 +20,6 @@ var INTERVAL   = 20;
 // TODO Beautify the screen
 // TODO Add scoring system (with local storage)
 // TODO error report
-// TODO Add Kanami code for enabling of autotype
 
 /// ///////////////////////
 // Helper
@@ -790,12 +789,35 @@ var AutoPlay = (function() {
     AutoPlay.interval = 1000;
     AutoPlay.currentVerse = -1;
 
+    AutoPlay.konami = ["Up", "Down", "Down", "Left", "Right", "Left", "Right", "b", "a"];
+    AutoPlay.current = 0;
+
     AutoPlay.begin = function () {
         AutoPlay.active = true;
+        AutoPlay.current = 0;
     };
 
     AutoPlay.stop = function () {
         AutoPlay.active = false;
+        AutoPlay.current = 0;
+    };
+
+    // Test for konami code
+    AutoPlay.handleInput = function (input) {
+        if (AutoPlay.current < AutoPlay.konami.length && AutoPlay.konami[AutoPlay.current] == input) {
+            AutoPlay.current++;
+        } else if (AutoPlay.konami[0] == input) {
+            AutoPlay.current = 1;
+        } else {
+            AutoPlay.current = 0;
+        }
+
+        if (AutoPlay.current >= AutoPlay.konami.length) {
+            AutoPlay.begin();
+            console.log("AutoPlay activated.");
+        }
+
+        return AutoPlay.current != 0;
     };
 
     AutoPlay.tick = function () {
@@ -807,14 +829,14 @@ var AutoPlay = (function() {
 
         if (AutoPlay.currentVerse != song.currentVerse) {
             AutoPlay.currentVerse = song.currentVerse;
-            this.interval = song.getTimeUntilNextLine()*0.8 / (song.typing.getCharLeft()+1);
+            this.interval = Math.min(song.getTimeUntilNextLine()*0.8 / (song.typing.getCharLeft()+1), 200);
             // This is to prevent typing first character too fast
             AutoPlay.lastType = song.getTime();
         }
 
         if (song.getTime()-AutoPlay.lastType >= AutoPlay.interval && !song.typing.isComplete()) {
             AutoPlay.lastType = song.getTime();
-            var event = $.Event( 'keydown', { which: KeyCode.toKeyCode(song.typing.getNextChar()) } );
+            var event = $.Event('keydown', { which: KeyCode.toKeyCode(song.typing.getNextChar()) } );
             $(window).trigger(event);
         }
     };
@@ -1610,6 +1632,9 @@ var SongScreen = (function() {
             SongManager.getSong().play();
         }, 1000);
         SongScreen.control.fadeIn();
+
+        // Stop Autoplay if active
+        AutoPlay.stop();
     };
 
     SongScreen.onOut = function (callback) {
@@ -1650,6 +1675,10 @@ var SongScreen = (function() {
     SongScreen.handleKey = function (input) {
         if (input == 'Esc') {
             State.to(State.SCORE);
+            return;
+        }
+
+        if (AutoPlay.handleInput(input)) {
             return;
         }
 
