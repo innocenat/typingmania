@@ -6,8 +6,15 @@
  * See LICENSE file for more detail
  */
 
+// Default background image used during game preloading.
 var BACKGROUND = 'data/background.jpg';
+
+// Song list and main configuration file.
 var SONGLIST   = 'data/songs.json';
+
+// Interval to draw game. In millisecond.
+// Default to 20ms, which translated to 50fps
+var INTERVAL   = 20;
 
 // TODO Create control group class to group many text label together
 // TODO Create MENU Screen
@@ -18,6 +25,14 @@ var SONGLIST   = 'data/songs.json';
 
 /// ///////////////////////
 // Helper
+
+/**
+ * This is utilities for class extending. It's copied from
+ * TypeScript-generated file.
+ *
+ * @param d   descendant class
+ * @param b   base class
+ */
 var $extends = function (d, b) {
     for (var p in b)
         if (b.hasOwnProperty(p))
@@ -34,22 +49,25 @@ var $extends = function (d, b) {
 /// ///////////////////////
 /// Song Engine
 /**
- * This class is specifically to handle
- * japanese Kana that can be entered in multiple way
+ * Handle each character specifically Japanese Kana
+ * that can be input multiple ways.
  */
 var TypingChar = (function() {
     function TypingChar(character) {
         this.input = "";
-        this.possible = Kana.getPossibleRomaji(character.toLowerCase());
+        // TODO Add sanitization
+        this.possibleInput = Kana.getPossibleRomaji(character.toLowerCase());
         this.complete = false;
-        this.display = this.possible[0];
+        this.remainingText = this.possibleInput[0];
     }
 
     TypingChar.prototype.accept = function (character) {
-        var tmpText = this.input + character;
         var accept = false;
         var _this = this;
-        this.possible.forEach(function (c) {
+
+        // Loop through each possible input to see if current input fits.
+        var tmpText = this.input + character;
+        this.possibleInput.forEach(function (c) {
             if (c.length == tmpText.length && c == tmpText) {
                 accept = true;
                 _this.complete = true;
@@ -60,28 +78,31 @@ var TypingChar = (function() {
 
         if (accept) {
             this.input += character;
-            this.recalculateDisplay();
+            this.recalculateRemainingText();
         }
 
+        // TODO return whether this count as correct input or not, and if it is, then return number of character
+        // (Will be used for score calculation)
         return accept;
     };
 
-    TypingChar.prototype.getDisplay = function () {
-        return this.display;
+    TypingChar.prototype.getRemainingText = function () {
+        return this.remainingText;
     };
 
     TypingChar.prototype.isComplete = function () {
         return this.complete;
     };
 
-    TypingChar.prototype.recalculateDisplay = function() {
+    TypingChar.prototype.recalculateRemainingText = function() {
         if (this.complete) {
-            this.display = "";
+            this.remainingText = "";
             return;
         }
-        var tmp = this.possible[0];
+
+        var tmp = this.possibleInput[0];
         var _this = this;
-        this.possible.forEach(function (c) {
+        this.possibleInput.forEach(function (c) {
             if (_this.input.length <= c.length && _this.input == c.substring(0, _this.input.length)) {
                 var t = c.substring(_this.input.length, c.length);
                 if (t.length < tmp.length) {
@@ -89,15 +110,16 @@ var TypingChar = (function() {
                 }
             }
         });
-        this.display = tmp;
+
+        this.remainingText = tmp;
     };
 
     return TypingChar;
 })();
 
 /**
- * This class is to handle Japanese word that need to be group and
- * display in word using CSS
+ * Handle each typing group that will be separated by a non-typing
+ * space. Basically this just proxy to {@link TypingChar}.
  */
 var TypingWord = (function() {
     function TypingWord(typingWord) {
@@ -114,13 +136,18 @@ var TypingWord = (function() {
     TypingWord.prototype.accept = function (c) {
         if (this.isComplete())
             return false;
+
+        // TODO make backward fallback too for sequence of same character
         var accept = this.typingItem[this.currentItem].accept(c);
+
         if (accept && this.typingItem[this.currentItem].isComplete()) {
             this.currentItem++;
         }
+
         if (!accept && this.currentItem > 0) {
             accept = this.typingItem[this.currentItem-1].accept(c);
         }
+
         return accept;
     };
 
@@ -128,10 +155,10 @@ var TypingWord = (function() {
         return this.currentItem >= this.typingItem.length;
     };
 
-    TypingWord.prototype.getDisplay = function () {
+    TypingWord.prototype.getRemainingText = function () {
         var ret = "";
         this.typingItem.forEach(function (i) {
-            ret += i.getDisplay();
+            ret += i.getRemainingText();
         });
         return ret;
     };
@@ -140,8 +167,9 @@ var TypingWord = (function() {
 })();
 
 /**
- * This is typing item class. English songs only need this, but
- * to handle Japanese nicely it need two classes about too.
+ * Main typing class, but basically just proxy to {@link TypingWord}.
+ * The reason we need three classes for this is because Japanese IME
+ * input is complex.
  */
 var Typing = (function() {
     function Typing(typing) {
@@ -157,10 +185,13 @@ var Typing = (function() {
     Typing.prototype.accept = function (c) {
         if (this.isComplete())
             return false;
+
+        // TODO make the input across word boundary like in TypingWord
         var accept = this.typingWords[this.currentWord].accept(c);
         if (accept && this.typingWords[this.currentWord].isComplete()) {
             this.currentWord++;
         }
+
         return accept;
     };
 
@@ -173,7 +204,7 @@ var Typing = (function() {
         this.typingWords.forEach(function (i) {
             if (!i.isComplete())
                 // TODO make it more pretty and maybe dom-based only
-                ret += '<span class="word">' + i.getDisplay().replace(/ /g, "_").toUpperCase() + '</span>';
+                ret += '<span class="word">' + i.getRemainingText().replace(/ /g, "_").toUpperCase() + '</span>';
         });
         return ret;
     };
@@ -182,7 +213,7 @@ var Typing = (function() {
         var ret = 0;
         this.typingWords.forEach(function (i) {
             if (!i.isComplete())
-                ret += i.getDisplay().length;
+                ret += i.getRemainingText().length;
         });
         return ret;
     };
@@ -191,7 +222,7 @@ var Typing = (function() {
         var ret = 0;
         this.typingWords.forEach(function (i) {
             if (!i.isComplete() && ret == 0)
-                ret = i.getDisplay().charAt(0);
+                ret = i.getRemainingText().charAt(0);
         });
         return ret;
     };
@@ -199,6 +230,9 @@ var Typing = (function() {
     return Typing;
 })();
 
+/**
+ * Handle everything song-related
+ */
 var Song = (function() {
     function Song(json, basePath) {
         this.data = json;
@@ -298,7 +332,7 @@ var Song = (function() {
         };
     };
 
-    Song.prototype.getTimeUntilNext = function () {
+    Song.prototype.getTimeUntilNextLine = function () {
         if (this.isInVerse) {
             return this.data["event"][this.currentVerse]["end"] - this.getTime();
         } else if (this.currentVerse+1 < this.getLineCount()) {
@@ -399,7 +433,7 @@ var Song = (function() {
             _this.isLoading = false;
             _this.loadingProgress = 1;
             _this.audio = createjs.Sound.createInstance(id);
-            console.log("Song " + _this.id + "loaded.");
+            console.log("Song " + _this.id + " loaded.");
         }, true, function (_, progress) {
             _this.loadingProgress = progress;
         });
@@ -429,9 +463,14 @@ var Song = (function() {
 
 /// ///////////////////////
 /// Other Engine
+
+/**
+ * Store current game state and facilitate the state transition.
+ */
 var State = (function() {
     function State() {}
 
+    // List of available states
     State.PRELOAD = 0;
     State.MENU    = 1;
     State.PRESONG = 2;
@@ -443,29 +482,6 @@ var State = (function() {
 
     State.is = function (c) {
         return c == State.current;
-    };
-
-    State.onKeyDown = function (event) {
-        var code = event.which;
-        var input = KeyCode.fromKeyCode(code);
-
-        switch (State.current) {
-            case State.PRELOAD:
-                PreloadScreen.handleKey(input);
-                break;
-            case State.MENU:
-                MenuScreen.handleKey(input);
-                break;
-            case State.PRESONG:
-                PresongScreen.handleKey(input);
-                break;
-            case State.SONG:
-                SongScreen.handleKey(input);
-                break;
-            case State.SCORE:
-                ScoreScreen.handleKey(input);
-                break;
-        }
     };
 
     State.to = function (state) {
@@ -480,6 +496,8 @@ var State = (function() {
             State.transitioning = false;
             State.current = state;
             switch (state) {
+                // No State.PRELOAD because nothing should transit to
+                // that state
                 case State.MENU:
                     MenuScreen.onIn();
                     break;
@@ -518,12 +536,23 @@ var State = (function() {
     return State;
 })();
 
+/**
+ * Manage songs list and various utilities
+ */
 var SongManager = (function() {
     function SongManager() {}
 
+    // Main game data
     SongManager.songData = null;
+
+    // List of available song
     SongManager.songs = {};
+
+    // Current song
     SongManager.song = null;
+
+    // Related to automatic background changing
+    // TODO move this to dedicated class
     SongManager.imgTransitioning = false;
     SongManager.currentImage = null;
 
@@ -531,6 +560,7 @@ var SongManager = (function() {
         SongManager.songData = songData;
 
         songData.forEach(function (c) {
+            // TODO make this more elegant
             PreloadScreen.loadFile(c[0] + "_data", c[1] + '/' + c[2], function(_, result) {
                 SongManager.songs[c[0]] = new Song(result, c[1]);
             });
@@ -566,6 +596,8 @@ var SongManager = (function() {
         }
     };
 
+    // Return current song if no id is specified,
+    // or return song with provided id.
     SongManager.getSong = function (id) {
         if (id == undefined)
             return SongManager.song;
@@ -601,6 +633,9 @@ var SongManager = (function() {
     return SongManager;
 })();
 
+/**
+ * Manage assets preloading and callback
+ */
 var AssetManager = (function() {
     function AssetManager() {}
 
@@ -609,6 +644,7 @@ var AssetManager = (function() {
     AssetManager.status = {};
     this.complete = true;
 
+    // TODO add error callback
     AssetManager.load = function (id, src, callback, start, progressCallback) {
         if (start == undefined)
             start = true;
@@ -671,6 +707,9 @@ var AssetManager = (function() {
     return AssetManager;
 })();
 
+/**
+ * Keycode mapping utilities
+ */
 var KeyCode = (function() {
     function KeyCode() {}
 
@@ -712,7 +751,7 @@ var KeyCode = (function() {
         if (input == ' ') {
             code = 32;
         } else if ((code >= 65 && code <= 90) || (code >= 48 && code <= 57)) {
-            // input = input
+            // code = code
         } else KeyCode.map.forEach(function (c) {
             if (c[1] == input)
                 code = c[0];
@@ -724,7 +763,8 @@ var KeyCode = (function() {
 })();
 
 /**
- * Replacement in case the setup didn't include kanatable.js
+ * Replacement in case the setup didn't include kanatable.js.
+ * For example in case of English-song only setup
  */
 var Kana = Kana || (function() {
     function KanaR() {}
@@ -740,6 +780,9 @@ var Kana = Kana || (function() {
     return KanaR;
 })();
 
+/**
+ * Autoplay class --- for cheating since every game need one
+ */
 var AutoPlay = (function() {
     function AutoPlay() {}
 
@@ -765,8 +808,8 @@ var AutoPlay = (function() {
 
         if (AutoPlay.currentVerse != song.currentVerse) {
             AutoPlay.currentVerse = song.currentVerse;
-            this.interval = song.getTimeUntilNext()*0.8 / (song.typing.getCharLeft()+1);
-            // This is to prevent too fast to see typing of first character
+            this.interval = song.getTimeUntilNextLine()*0.8 / (song.typing.getCharLeft()+1);
+            // This is to prevent typing first character too fast
             AutoPlay.lastType = song.getTime();
         }
 
@@ -784,11 +827,9 @@ var AutoPlay = (function() {
 /// Graphical
 
 /**
- * Viewport for auto resizing of of element
- * based on browser size.
+ * Viewport for auto resizing of of element based on browser size.
  *
- * Supports limited to font-size for text
- * and width/height for image only.
+ * Supports limited to font-size for text and width/height for image only.
  */
 var Viewport = (function() {
     function Viewport() {}
@@ -888,13 +929,12 @@ var Viewport = (function() {
         }
     };
 
-    (function($) {
-        $.pos = Viewport.position;
-    })(jQuery);
-
     return Viewport;
 })();
 
+/**
+ * Base class for all control
+ */
 var ControlBase = (function() {
     function ControlBase($, position) {
         this.$ = $;
@@ -1008,6 +1048,9 @@ var ControlBase = (function() {
     return ControlBase;
 })();
 
+/**
+ * Text label object
+ */
 var Text = (function($super) {
     $extends(Text, $super);
 
@@ -1033,6 +1076,9 @@ var Text = (function($super) {
     return Text;
 })(ControlBase);
 
+/**
+ * Image object
+ */
 var Image = (function($super) {
     $extends(Image, $super);
 
@@ -1067,6 +1113,10 @@ var Image = (function($super) {
     return Image;
 })(ControlBase);
 
+/**
+ * Progressbar
+ * TODO rewrite this with controlgroup
+ */
 var Progressbar = (function() {
     function Progressbar(x, y, w, h, color_bar, color_back) {
         this.x = x;
@@ -1131,6 +1181,9 @@ var Progressbar = (function() {
     return Progressbar;
 })();
 
+/**
+ * Main (shared) graphic component, like font and windows background
+ */
 var Graphics = (function() {
     function Graphics() {}
 
@@ -1159,6 +1212,9 @@ var Graphics = (function() {
     return Graphics;
 })();
 
+
+/// ///////////////////////
+/// Game Screen
 var PreloadScreen = (function() {
     function PreloadScreen() {}
 
@@ -1377,7 +1433,7 @@ var SongScreen = (function() {
         SongScreen.txtTimecode.txt(SongManager.formatTime(song.getTime()) + " / " + SongManager.formatTime(song.getDuration()));
         SongScreen.prgOverall.progress(song.getProgress());
 
-        var tun = song.getTimeUntilNext();
+        var tun = song.getTimeUntilNextLine();
         var tcl = song.getCurrentSectionTime();
         SongScreen.prgCurrent.progress((tcl-tun)/tcl);
 
@@ -1429,7 +1485,7 @@ var ScoreScreen = (function() {
     return ScoreScreen;
 })();
 
-/// ////////////////////////
+/// ///////////////////////
 /// Startup
 
 (function() {
@@ -1438,13 +1494,32 @@ var ScoreScreen = (function() {
     Graphics.init();
     Viewport.onResize();
 
-    // Set window event
-    $(window).on("keydown", State.onKeyDown);
+    // Window event
     $(window).on("resize", Viewport.onResize);
+    $(window).on("keydown", function (event) {
+        var code = event.which;
+        var input = KeyCode.fromKeyCode(code);
 
-    // Start preloading screen
-    PreloadScreen.onIn();
+        switch (State.current) {
+            case State.PRELOAD:
+                PreloadScreen.handleKey(input);
+                break;
+            case State.MENU:
+                MenuScreen.handleKey(input);
+                break;
+            case State.PRESONG:
+                PresongScreen.handleKey(input);
+                break;
+            case State.SONG:
+                SongScreen.handleKey(input);
+                break;
+            case State.SCORE:
+                ScoreScreen.handleKey(input);
+                break;
+        }
+    });
 
+    // Main game loop
     setInterval(function() {
         switch (State.current) {
             case State.PRELOAD:
@@ -1464,6 +1539,9 @@ var ScoreScreen = (function() {
                 break;
         }
     }, 20);
+
+    // Start game
+    PreloadScreen.onIn();
 
 })();
 
