@@ -1676,7 +1676,8 @@ var ScoreScreen = (function() {
     };
 
     ScoreScreen.handleKey = function (input) {
-        State.to(Screen.MENU);
+        if (input == ' ' || input == 'Esc')
+            State.to(Screen.MENU);
     };
 
     return ScoreScreen;
