@@ -1635,7 +1635,7 @@ var SongScreen = (function() {
         SongScreen.prgCurrent.progress((tcl-tun)/tcl);
 
         var line = song.getCurrentVerse();
-        if (song.typing != null && song.typing.isComplete()) {
+        if ((song.typing != null && song.typing.isComplete()) || song.currentVerse == -1) {
             line = song.getNextVerse();
         }
 
