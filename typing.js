@@ -53,8 +53,13 @@ var $extends = function (d, b) {
 var TypingChar = (function() {
     function TypingChar(character) {
         this.input = "";
-        // TODO Add sanitization
         this.possibleInput = Kana.getPossibleRomaji(character.toLowerCase());
+
+        // Sanitation
+        for (var i = 0; i < this.possibleInput.length; i++) {
+            this.possibleInput[i] = this.possibleInput[i].replace(/[^A-Za-z0-9 \.',/\\\-\(\)]/g, ' ');
+        }
+
         this.complete = false;
         this.remainingText = this.possibleInput[0];
     }
