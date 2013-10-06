@@ -840,7 +840,7 @@ var AutoPlay = (function() {
         }
 
         if (song.getTime()-AutoPlay.lastType >= AutoPlay.interval && !song.typing.isComplete()) {
-            AutoPlay.lastType = song.getTime();
+            AutoPlay.lastType += AutoPlay.interval;
             var event = $.Event('keydown', { which: KeyCode.toKeyCode(song.typing.getNextChar()) } );
             $(window).trigger(event);
         }
@@ -1560,7 +1560,7 @@ var PresongScreen = (function() {
 
     PresongScreen.onIn = function () {
         // FIXME this hardcoded song is for checking prior to completion of menu
-        SongManager.setSong(SongManager.getSong('blue-flow'));
+        SongManager.setSong(SongManager.getSong('real-world'));
         SongManager.getSong().load();
 
         PresongScreen.txtStatus.txt("Standby");
