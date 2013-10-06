@@ -84,9 +84,22 @@ var TypingChar = (function() {
             this.recalculateRemainingText();
         }
 
-        // TODO return whether this count as correct input or not, and if it is, then return number of character
-        // (Will be used for score calculation)
-        return accept;
+        var ret = 0;
+
+        if (accept && this.complete) {
+            var toEnd = this.possibleInput[0].length - this.input.length + 1;
+            if (toEnd >= 0)
+                ret = toEnd;
+            else
+                ret = 0;
+        } else if (accept) {
+            if (this.input.length <= this.possibleInput[0].length)
+                ret = 1;
+        } else if (!accept) {
+            ret = -1;
+        }
+
+        return ret;
     };
 
     TypingChar.prototype.getRemainingText = function () {
