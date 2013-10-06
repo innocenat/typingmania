@@ -1730,7 +1730,7 @@ var ScoreScreen = (function() {
                 ScoreScreen.tick();
                 break;
         }
-    }, 20);
+    }, INTERVAL);
 
     // Start game
     PreloadScreen.onIn();
