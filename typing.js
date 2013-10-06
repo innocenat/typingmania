@@ -17,6 +17,21 @@ var SONGLIST   = 'data/songs.json';
 // TODO Add Kanami code for enabling of autotype
 
 /// ///////////////////////
+// Helper
+var $extends = function (d, b) {
+    for (var p in b)
+        if (b.hasOwnProperty(p))
+            d[p] = b[p];
+
+    function __() {
+        this.constructor = d;
+    }
+
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+
+/// ///////////////////////
 /// Song Engine
 /**
  * This class is specifically to handle
@@ -536,12 +551,12 @@ var SongManager = (function() {
                 song.image.z(10);
                 if (SongManager.currentImage != null) {
                     SongManager.currentImage.z(15);
-                    SongManager.currentImage.$.fadeOut('slow', function() {
+                    SongManager.currentImage.fadeOut('slow', function() {
                         SongManager.imgTransitioning = false;
                     });
                     song.image.show();
                 } else {
-                    song.image.$.fadeIn('slow', function() {
+                    song.image.fadeIn('slow', function() {
                         SongManager.imgTransitioning = false;
                     });
                 }
@@ -813,65 +828,53 @@ var Viewport = (function() {
         Viewport.resizeAll();
     };
 
-    Viewport.position = function (c, x, y, w, h, fs, mode, subsequent) {
-        if (w == undefined)
-            w = 0;
-        if (h == undefined)
-            h = 0;
-
+    Viewport.position = function (c, data, resizing) {
         if (!(c in Viewport.elements)) {
-            Viewport.elements[c] = {
-                x: x,
-                y: y,
-                w: w,
-                h: h,
-                fs: fs,
-                mode: mode
-            };
+            Viewport.elements[c] = data;
         }
 
         var dx = 0, dy = 0;
-        if (mode != undefined) {
-            dx = $(c).css('width');
-            dy = $(c).css('height');
 
-            dx = dx.substring(0, dx.length-2);
-            dy = dy.substring(0, dy.length-2);
-            dx /= (Viewport.sketchPercent * 2);
-            dy /= (Viewport.sketchPercent * 2);
+        if (typeof data.align == "string") {
+            var w = $(c).css('width');
+            var h = $(c).css('height');
 
-            if (subsequent == undefined) {
-                dx *= Viewport.sketchPercent;
-                dy *= Viewport.sketchPercent;
+            w = w.substring(0, w.length-2);
+            h = h.substring(0, h.length-2);
+
+            if (resizing != undefined && resizing) {
+                w /= (Viewport.sketchPercent);
+                h /= (Viewport.sketchPercent);
             }
-            if (mode == "x") {
-                // dx = dx;
-                dy = 0;
-            } else if (mode == 'y') {
-                dx = 0;
-                // dy = dy;
-            } else if (mode == 'xy') {
-                // dx = dx;
-                // dy = dy;
-            } else if (mode == 'bx') {
-                dx *= 2;
-                dy = 0;
-            } else {
-                dx = 0;
-                dy = 0;
-            }
+
+            data.align.split(',').forEach(function (c) {
+                switch (c) {
+                    case 'cx':
+                        dx = w/2;
+                        break;
+                    case 'cy':
+                        dy = h/2;
+                        break;
+                    case 'bx':
+                        dx = w;
+                        break;
+                    case 'by':
+                        dy = h;
+                        break;
+                }
+            });
         }
 
         var css = {
             position: "absolute"
         };
-        css.left = "" + (Viewport.left + (x-dx) * Viewport.width / Viewport.STD_WIDTH) + "px";
-        css.top  = "" + (Viewport.top + (y-dy) * Viewport.height / Viewport.STD_HEIGHT) + "px";
-        css["font-size"] = "" + (fs * Viewport.height / Viewport.STD_HEIGHT) + "px";
-        if (w != 0 && h != 0) {
+        css.left = "" + (Viewport.left + (data.x-dx) * Viewport.sketchPercent) + "px";
+        css.top  = "" + (Viewport.top  + (data.y-dy) * Viewport.sketchPercent) + "px";
+        css["font-size"] = "" + (data.fs * Viewport.sketchPercent) + "px";
+        if (data.w != 0 && data.h != 0) {
             css.overflow = "hidden";
-            css.width = "" + (w * Viewport.width / Viewport.STD_WIDTH) + "px";
-            css.height = "" + (h * Viewport.height / Viewport.STD_HEIGHT) + "px";
+            css.width  = "" + (data.w * Viewport.sketchPercent) + "px";
+            css.height = "" + (data.h * Viewport.sketchPercent) + "px";
         }
         $(c).css(css);
     };
@@ -880,7 +883,7 @@ var Viewport = (function() {
         for (var c in Viewport.elements) {
             if (Viewport.elements.hasOwnProperty(c)) {
                 var cc = Viewport.elements[c];
-                Viewport.position(c, cc.x, cc.y, cc.w, cc.h, cc.fs, cc.mode, true);
+                Viewport.position(c, cc, true);
             }
         }
     };
@@ -892,110 +895,177 @@ var Viewport = (function() {
     return Viewport;
 })();
 
-var Text = (function() {
-    function Text(text, fs, x, y, color, display, mode) {
-        this.text = text;
-        this.fs = fs;
-        this.x = x;
-        this.y = y;
-        this.id = 'txt_unique_' + Text._uniqid;
-        Text._uniqid++;
+var ControlBase = (function() {
+    function ControlBase($, position) {
+        this.$ = $;
+        this.id = this.getID();
 
-        this.$ = $('<span></span>');
-        this.$.attr('id', this.id);
-        this.txt(text);
+        this.attr('id', this.id);
+        this.css('display', 'none');
 
-        if (color != undefined)
-            this.$.css('color', color);
-
-        this.$.css('display', 'none');
         this.$.appendTo('body');
-        $.pos('#' + this.id, x, y, 0, 0, fs, mode);
 
-        if (display != undefined && display) {
-            this.$.css('display', 'block');
-        }
+        this.position = $.extend({}, {
+            x: 0,
+            y: 0,
+            w: 0,
+            h: 0,
+            fs: 0,
+            align: ''
+        }, position || {});
+        Viewport.position('#' + this.id, this.position);
     }
 
-    Text._uniqid = 0;
+    ControlBase._uniqueid = {};
 
-    Text.prototype.txt = function (text) {
-        var ret = this.$.html(text);
+    ControlBase.prototype.getControlName = function () {
+        return 'ControlBase';
+    };
+
+    ControlBase.prototype.getID = function () {
+        if (this.id != undefined) {
+            return this.id
+        }
+
+        var controlName = this.getControlName();
+        var controlUnique = 0;
+
+        if (controlName in ControlBase._uniqueid) {
+            controlUnique = ControlBase._uniqueid[controlName];
+            ControlBase._uniqueid[controlName]++;
+        } else {
+            ControlBase._uniqueid[controlName] = controlUnique+1;
+        }
+
+        return "control_" + controlName + "_unique_" + controlUnique;
+    };
+
+    ControlBase.prototype.html = function (html) {
+        var ret;
+        if (html == undefined)
+            ret = this.$.html();
+        else
+            ret = this.$.html(html);
         Viewport.resizeAll();
         return ret;
     };
 
-    Text.prototype.z = function (z) {
-        return this.$.css('z-index', z);
+    ControlBase.prototype.txt = function (text) {
+        var ret;
+        if (text == undefined)
+            ret = this.$.text();
+        else
+            ret = this.$.text(text);
+        Viewport.resizeAll();
+        return ret;
     };
 
-    Text.prototype.show = function () {
+    ControlBase.prototype.css = function (css, data) {
+        var ret;
+        if (data == undefined)
+            ret = this.$.css(css);
+        else
+            ret = this.$.css(css, data);
+        Viewport.resizeAll();
+        return ret;
+    };
+
+    ControlBase.prototype.attr = function (attr, data) {
+        var ret;
+        if (data == undefined)
+            ret = this.$.attr(attr);
+        else
+            ret = this.$.attr(attr, data);
+        Viewport.resizeAll();
+        return ret;
+    };
+
+    ControlBase.prototype.z = function (z) {
+        this.$.css('z-index', z);
+        return this;
+    };
+
+    ControlBase.prototype.show = function () {
         return this.$.show();
     };
 
-    Text.prototype.hide = function () {
+    ControlBase.prototype.hide = function () {
         return this.$.hide();
     };
 
-    Text.prototype.visible = function () {
-        return this.$.css('display') != 'none';
+    ControlBase.prototype.fadeIn = function (speed, complete) {
+        return this.$.fadeIn(speed, complete);
+    };
+
+    ControlBase.prototype.fadeOut = function (speed, complete) {
+        return this.$.fadeOut(speed, complete);
+    };
+
+    ControlBase.prototype.visible = function () {
+        return this.css('display') != 'none';
+    };
+
+    return ControlBase;
+})();
+
+var Text = (function($super) {
+    $extends(Text, $super);
+
+    function Text(text, fs, x, y, color, mode) {
+        $super.call(this, $('<span></span>'), {
+            x: x,
+            y: y,
+            fs: fs,
+            align: mode
+        });
+
+        this.text = text;
+        this.txt(text);
+
+        if (color != undefined)
+            this.css('color', color);
+    }
+
+    Text.prototype.getControlName = function () {
+        return "Text";
     };
 
     return Text;
-})();
+})(ControlBase);
 
-var Image = (function() {
-    function Image(src, x, y, w, h, display) {
+var Image = (function($super) {
+    $extends(Image, $super);
+
+    function Image(src, x, y, w, h) {
+        var img = null;
         this.src = src;
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
 
         // If id is provided, load from preloaded queue
         if (src in AssetManager.status && AssetManager.status[src].status == 1) {
-            this.$ = $(AssetManager.queue.getResult(src));
+            img = $(AssetManager.queue.getResult(src));
         } else {
-            this.$ = $('<img />');
-            this.src(src);
+            img = $('<img />');
+            img.attr('src', src);
         }
 
-        this.id = 'image_unique_' + Image._uniqid;
-        Image._uniqid++;
-
-        this.$.attr('id', this.id);
-
-        this.$.css('display', 'none');
-        this.$.appendTo('body');
-        $.pos('#' + this.id, x, y, w, h);
-        if (display != undefined && display)
-            this.$.css('display', 'block');
+        $super.call(this, img, {
+            x: x,
+            y: y,
+            w: w,
+            h: h
+        });
     }
-
-    Image._uniqid = 0;
 
     Image.prototype.src = function (src) {
         return this.$.attr('src', src);
     };
 
-    Image.prototype.z = function (z) {
-        return this.$.css('z-index', z);
-    };
-
-    Image.prototype.show = function () {
-        return this.$.show();
-    };
-
-    Image.prototype.hide = function () {
-        return this.$.hide();
-    };
-
-    Image.prototype.visible = function () {
-        return this.$.css('display') != 'none';
+    Image.prototype.getControlName = function () {
+        return "Image";
     };
 
     return Image;
-})();
+})(ControlBase);
 
 var Progressbar = (function() {
     function Progressbar(x, y, w, h, color_bar, color_back) {
@@ -1024,7 +1094,12 @@ var Progressbar = (function() {
         this.$.appendTo('body');
         this.$b.appendTo(this.$);
 
-        $.pos('#' + this.id, x, y, w, h);
+        $.pos('#' + this.id, {
+            x: x,
+            y: y,
+            w: w,
+            h: h
+        });
         this.$b.css({
             width: "0%",
             height: "100%"
@@ -1115,7 +1190,7 @@ var PreloadScreen = (function() {
 
     PreloadScreen.tick = function () {
         PreloadScreen.progressbar.progress(PreloadScreen.getPercent());
-        if (PreloadScreen.isDone() && PreloadScreen.loadingText.$.text() != "Ready" && Graphics.fontLoaded) {
+        if (PreloadScreen.isDone() && PreloadScreen.loadingText.txt() != "Ready" && Graphics.fontLoaded) {
             PreloadScreen.loadingText.txt("Ready");
             Viewport.resizeAll();
         }
@@ -1132,14 +1207,14 @@ var PreloadScreen = (function() {
 
     PreloadScreen.onOut = function (callback) {
         PreloadScreen.progressbar.$.fadeOut('slow');
-        PreloadScreen.loadingText.$.fadeOut('slow', callback);
+        PreloadScreen.loadingText.fadeOut('slow', callback);
     };
 
     PreloadScreen.onIn = function () {
-        PreloadScreen.loadingText = new Text("Loading...", 60, 640, 355, "white", false, 'xy');
+        PreloadScreen.loadingText = new Text("Loading...", 60, 640, 355, "white", 'cx,cy');
         PreloadScreen.loadingText.z(5);
-        PreloadScreen.loadingText.$.css('font-family', 'Junge')
-                                   .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
+        PreloadScreen.loadingText.css('font-family', 'Junge')
+                                 .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
         PreloadScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(100, 255, 100, 0.5)');
         PreloadScreen.progressbar.z(1);
@@ -1151,7 +1226,7 @@ var PreloadScreen = (function() {
         PreloadScreen.loadFile('__background', BACKGROUND, function(id) {
             Graphics.backgroundImage = new Image(id, 0, 0, 1280, 720);
             Graphics.backgroundImage.z(-1000);
-            Graphics.backgroundImage.$.fadeIn('slow');
+            Graphics.backgroundImage.fadeIn('slow');
         }, false);
 
         PreloadScreen.loadFile('__songlist', SONGLIST, function(_, result) {
@@ -1192,10 +1267,10 @@ var MenuScreen = (function() {
 var PresongScreen = (function() {
     function PresongScreen() {}
 
-    PresongScreen.txtStatus = new Text("Standby", 60, 640, 355, "white", false, "xy");
+    PresongScreen.txtStatus = new Text("Standby", 60, 640, 355, "white", "cx,cy");
     PresongScreen.txtStatus.z(15);
-    PresongScreen.txtStatus.$.css('font-family', 'Junge')
-                             .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9, 0px 0px 15px #000');
+    PresongScreen.txtStatus.css('font-family', 'Junge')
+                           .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9, 0px 0px 15px #000');
 
     PresongScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(100, 255, 100, 0.5)');
     PresongScreen.progressbar.z(14);
@@ -1208,7 +1283,7 @@ var PresongScreen = (function() {
         PresongScreen.txtStatus.txt("Standby");
         PresongScreen.progressbar.progress(0);
 
-        PresongScreen.txtStatus.$.fadeIn('slow');
+        PresongScreen.txtStatus.fadeIn('slow');
         PresongScreen.progressbar.$.fadeIn('slow');
     };
 
@@ -1246,19 +1321,19 @@ var PresongScreen = (function() {
 var SongScreen = (function() {
     function SongScreen() {}
 
-    SongScreen.typingText = new Text("", 40, 50, 650, "white", false, 'y');
+    SongScreen.typingText = new Text("", 40, 50, 650, "white", 'cy');
     SongScreen.typingText.z(1000);
-    SongScreen.typingText.$.css('font-family', 'Droid Sans')
-                           .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
+    SongScreen.typingText.css('font-family', 'Droid Sans')
+                         .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
-    SongScreen.txtTimecode = new Text("0:00 / 0:00", 28, 1200, 600, "white", false, 'bx');
+    SongScreen.txtTimecode = new Text("0:00 / 0:00", 28, 1200, 600, "white", 'bx');
     SongScreen.txtTimecode.z(1000);
-    SongScreen.txtTimecode.$.css('font-family', 'Open Sans').css('font-weight', '600');
+    SongScreen.txtTimecode.css('font-family', 'Open Sans').css('font-weight', '600');
 
-    SongScreen.txtLineTyping = new Text("", 20, 100, 480, "white", false);
+    SongScreen.txtLineTyping = new Text("", 20, 100, 480, "white");
     SongScreen.txtLineTyping.z(1000);
 
-    SongScreen.txtLineLyrics = new Text("", 24, 100, 500, "white", false);
+    SongScreen.txtLineLyrics = new Text("", 24, 100, 500, "white");
     SongScreen.txtLineLyrics.z(1000);
 
     SongScreen.prgOverall = new Progressbar(300, 400, 850, 5, 'blue', 'gray');
@@ -1271,10 +1346,10 @@ var SongScreen = (function() {
         setTimeout(function () {
             SongManager.getSong().play();
         }, 1000);
-        SongScreen.typingText.$.fadeIn();
-        SongScreen.txtTimecode.$.fadeIn();
-        SongScreen.txtLineTyping.$.fadeIn();
-        SongScreen.txtLineLyrics.$.fadeIn();
+        SongScreen.typingText.fadeIn();
+        SongScreen.txtTimecode.fadeIn();
+        SongScreen.txtLineTyping.fadeIn();
+        SongScreen.txtLineLyrics.fadeIn();
         SongScreen.prgOverall.$.fadeIn();
         SongScreen.prgCurrent.$.fadeIn();
     };
@@ -1298,7 +1373,7 @@ var SongScreen = (function() {
         if (song == null)
             return;
 
-        SongScreen.typingText.txt(song.getDisplay());
+        SongScreen.typingText.html(song.getDisplay());
         SongScreen.txtTimecode.txt(SongManager.formatTime(song.getTime()) + " / " + SongManager.formatTime(song.getDuration()));
         SongScreen.prgOverall.progress(song.getProgress());
 
@@ -1315,8 +1390,8 @@ var SongScreen = (function() {
             State.to(State.SCORE);
         }
 
-        SongScreen.txtLineTyping.txt(SongManager.combineTyping(line.typing));
-        SongScreen.txtLineLyrics.txt(line.lyrics);
+        SongScreen.txtLineTyping.html(SongManager.combineTyping(line.typing));
+        SongScreen.txtLineLyrics.html(line.lyrics);
     };
 
     SongScreen.handleKey = function (input) {
