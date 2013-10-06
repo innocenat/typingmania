@@ -1129,6 +1129,8 @@ var ControlGroup = (function($super) {
         c.parent = this;
         this.children.push(c);
         this.recalculateChild(c);
+
+        return this;
     };
 
     ControlGroup.prototype.recalculate = function () {
@@ -1399,7 +1401,6 @@ var Graphics = (function() {
     return Graphics;
 })();
 
-
 /// ///////////////////////
 /// Game Screen
 var PreloadScreen = (function() {
@@ -1411,6 +1412,8 @@ var PreloadScreen = (function() {
     PreloadScreen.donnable = false;
     PreloadScreen.displayed = false;
     PreloadScreen.currentProgress = 0;
+
+    PreloadScreen.control = new ControlGroup(0, 0, 1280, 720);
 
     PreloadScreen.loadFile = function (id, src, callback, start) {
         PreloadScreen.numberOfItem++;
@@ -1442,9 +1445,6 @@ var PreloadScreen = (function() {
             PreloadScreen.loadingText.txt("Ready");
             Viewport.resizeAll();
         }
-//        if (Graphics.fontLoaded && !PreloadScreen.displayed) {
-//            PreloadScreen.displayed = true;
-//        }
     };
 
     PreloadScreen.handleKey = function (input) {
@@ -1454,8 +1454,7 @@ var PreloadScreen = (function() {
     };
 
     PreloadScreen.onOut = function (callback) {
-        PreloadScreen.progressbar.fadeOut('slow');
-        PreloadScreen.loadingText.fadeOut('slow', callback);
+        PreloadScreen.control.fadeOut('slow', callback);
     };
 
     PreloadScreen.onIn = function () {
@@ -1465,11 +1464,16 @@ var PreloadScreen = (function() {
                                  .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
         PreloadScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(100, 255, 100, 0.5)');
+        PreloadScreen.progressbar.bar.css('box-shadow', '0px 0px 20px 3px rgba(100, 255, 100, 0.5)');
         PreloadScreen.progressbar.z(1);
+
+        PreloadScreen.control
+            .add(PreloadScreen.loadingText)
+            .add(PreloadScreen.progressbar);
 
         // TODO add more information to loading screen
 
-        PreloadScreen.progressbar.show();
+        PreloadScreen.control.show();
 
         PreloadScreen.loadFile('__background', BACKGROUND, function(id) {
             Graphics.backgroundImage = new Image(id, 0, 0, 1280, 720);
@@ -1483,8 +1487,6 @@ var PreloadScreen = (function() {
         }, false);
 
         AssetManager.queue.load();
-
-        PreloadScreen.loadingText.show();
     };
 
     return PreloadScreen;
@@ -1518,10 +1520,16 @@ var PresongScreen = (function() {
     PresongScreen.txtStatus = new Text("Standby", 60, 640, 355, "white", "cx,cy");
     PresongScreen.txtStatus.z(15);
     PresongScreen.txtStatus.css('font-family', 'Junge')
-                           .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9, 0px 0px 15px #000');
+                           .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
-    PresongScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(100, 255, 100, 0.5)');
+    PresongScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(255, 255, 255, 0.5)');
+    PresongScreen.progressbar.bar.css('box-shadow', '0px 0px 20px 3px rgba(153, 153, 153, 0.5)');
     PresongScreen.progressbar.z(14);
+
+    PresongScreen.control = new ControlGroup(0, 0, 1280, 720);
+    PresongScreen.control
+        .add(PresongScreen.txtStatus)
+        .add(PresongScreen.progressbar);
 
     PresongScreen.onIn = function () {
         // FIXME this hardcoded song is for checking prior to completion of menu
@@ -1531,13 +1539,11 @@ var PresongScreen = (function() {
         PresongScreen.txtStatus.txt("Standby");
         PresongScreen.progressbar.progress(0);
 
-        PresongScreen.txtStatus.fadeIn('slow');
-        PresongScreen.progressbar.fadeIn('slow');
+        PresongScreen.control.fadeIn('slow');
     };
 
     PresongScreen.onOut = function (callback) {
-        PresongScreen.txtStatus.hide();
-        PresongScreen.progressbar.hide();
+        PresongScreen.control.hide();
         callback();
     };
 
@@ -1590,25 +1596,24 @@ var SongScreen = (function() {
     SongScreen.prgCurrent = new Progressbar(300, 420, 850, 5, 'blue', 'gray');
     SongScreen.prgCurrent.z(1000);
 
+    SongScreen.control = new ControlGroup(0, 0, 1280, 720);
+    SongScreen.control
+        .add(SongScreen.typingText)
+        .add(SongScreen.txtTimecode)
+        .add(SongScreen.txtLineTyping)
+        .add(SongScreen.txtLineLyrics)
+        .add(SongScreen.prgOverall)
+        .add(SongScreen.prgCurrent);
+
     SongScreen.onIn = function () {
         setTimeout(function () {
             SongManager.getSong().play();
         }, 1000);
-        SongScreen.typingText.fadeIn();
-        SongScreen.txtTimecode.fadeIn();
-        SongScreen.txtLineTyping.fadeIn();
-        SongScreen.txtLineLyrics.fadeIn();
-        SongScreen.prgOverall.fadeIn();
-        SongScreen.prgCurrent.fadeIn();
+        SongScreen.control.fadeIn();
     };
 
     SongScreen.onOut = function (callback) {
-        SongScreen.txtTimecode.hide();
-        SongScreen.prgOverall.hide();
-        SongScreen.prgCurrent.hide();
-        SongScreen.typingText.hide();
-        SongScreen.txtLineTyping.hide();
-        SongScreen.txtLineLyrics.hide();
+        SongScreen.control.hide();
         callback();
     };
 
