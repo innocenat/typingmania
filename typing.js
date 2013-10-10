@@ -949,8 +949,9 @@ var Viewport = (function() {
         var css = {
             position: "absolute"
         };
-        css.left = "" + (Viewport.left + (data.x-dx) * Viewport.sketchPercent) + "px";
-        css.top  = "" + (Viewport.top  + (data.y-dy) * Viewport.sketchPercent) + "px";
+        var shifted = data.shifted || true;
+        css.left = "" + ((shifted ? Viewport.left : 0) + (data.x-dx) * Viewport.sketchPercent) + "px";
+        css.top  = "" + ((shifted ? Viewport.top  : 0) + (data.y-dy) * Viewport.sketchPercent) + "px";
         css["font-size"] = "" + (data.fs * Viewport.sketchPercent) + "px";
         if (data.w != 0 && data.h != 0) {
             css.overflow = "hidden";
@@ -1135,6 +1136,15 @@ var ControlBase = (function() {
         return this.css('display') != 'none';
     };
 
+    ControlBase.prototype.detach = function () {
+        return this.$.detach();
+    };
+
+    ControlBase.prototype.attach = function ($) {
+        this.$.appendTo($);
+        return this;
+    };
+
     return ControlBase;
 })();
 
@@ -1292,8 +1302,50 @@ var ControlGroup = (function($super) {
         return true;
     };
 
+    ControlGroup.prototype.detach = function () {
+        this.children.forEach(function (c) {
+            c.detach();
+        });
+        return this;
+    };
+
+    ControlGroup.prototype.attach = function ($) {
+        this.children.forEach(function (c) {
+            c.attach($);
+        });
+        return this;
+    };
+
     return ControlGroup;
 })(ControlBase);
+
+var LimitedControlGroup = (function ($super) {
+    $extends(LimitedControlGroup, $super);
+
+    function LimitedControlGroup(x, y, w, h) {
+        $super.call(this, 0, 0, w, h);
+        this.block = new Block(x, y, w, h);
+        this.block.css("display", "block").css('overflow', 'hidden');
+    }
+
+    LimitedControlGroup.prototype.setPosition = function (x, y) {
+        return this.block.setPosition(x, y);
+    };
+
+    LimitedControlGroup.prototype.setSize = function (w, h) {
+        this.block.setSize(w, h);
+        return $super.prototype.setSize.call(w, h);
+    };
+
+    LimitedControlGroup.prototype.add = function (c) {
+        c.detach();
+        c.attach(this.block.$);
+        c.drawPosition.shifted = false;
+        return $super.prototype.add.call(this, c);
+    };
+
+    return LimitedControlGroup;
+})(ControlGroup);
 
 /**
  * Text label object
@@ -1310,7 +1362,7 @@ var Text = (function($super) {
         });
 
         this.text = text;
-        this.txt(text);
+        this.html(text);
 
         if (color != undefined)
             this.css('color', color);
@@ -1453,6 +1505,7 @@ var PreloadScreen = (function() {
     PreloadScreen.donnable = false;
     PreloadScreen.displayed = false;
     PreloadScreen.currentProgress = 0;
+    PreloadScreen.done = false;
 
     PreloadScreen.control = new ControlGroup(0, 0, 1280, 720);
 
@@ -1482,19 +1535,23 @@ var PreloadScreen = (function() {
             PreloadScreen.progressbar.progress(PreloadScreen.currentProgress);
         }
 
-        if (PreloadScreen.isDone() && PreloadScreen.loadingText.txt() != "Ready" && Graphics.fontLoaded) {
+        // TODO firefox bug here and never show "Ready"
+        if (PreloadScreen.isDone() && !PreloadScreen.done) {
             PreloadScreen.loadingText.txt("Ready");
+            PreloadScreen.detailText.show();
+            PreloadScreen.done = true;
             Viewport.resizeAll();
         }
     };
 
     PreloadScreen.handleKey = function (input) {
-        if (PreloadScreen.isDone && input == ' ') {
+        if (PreloadScreen.isDone() && input == ' ') {
             State.to(State.PRESONG); // FIXME should be menu, but presong for testing
         }
     };
 
     PreloadScreen.onOut = function (callback) {
+        PreloadScreen.detailText.fadeOut("slow");
         PreloadScreen.control.fadeOut('slow', callback);
     };
 
@@ -1508,9 +1565,32 @@ var PreloadScreen = (function() {
         PreloadScreen.progressbar.bar.css('box-shadow', '0px 0px 20px 3px rgba(100, 255, 100, 0.5)');
         PreloadScreen.progressbar.z(1);
 
+        PreloadScreen.detailText = new Text("Press Spacebar to Continue", 28, 640, 430, "white", "cx,cy");
+        PreloadScreen.detailText.z(5);
+        PreloadScreen.detailText.css('font-family', 'Junge')
+                                .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
+
+        PreloadScreen.creditText = new Text("TypingMania Game Engine &copy; 2013 under the term of MIT License. " +
+            "All medias are properties of the original owners, and are available here for entertainment purpose only. ", 10, 10, 720-25, "white", "by");
+        PreloadScreen.creditText.z(5);
+        PreloadScreen.creditText.css('font-family', 'Droid Sans');
+
+        PreloadScreen.creditText2 = new Text("" +
+            "By entering the game, you agree to be held responsible for anything action you do, including, but not limit to, downloading of illegal music file. " +
+            "The author of this website cannot be claimed responsible on any case.", 10, 10, 720-10, "white", "by");
+        PreloadScreen.creditText2.z(5);
+        PreloadScreen.creditText2.css('font-family', 'Droid Sans');
+
+        PreloadScreen.creditText3 = new Text("For more information please see about page.", 10, 10, 720-40, "white", "by");
+        PreloadScreen.creditText3.z(5);
+        PreloadScreen.creditText3.css('font-family', 'Droid Sans');
+
         PreloadScreen.control
             .add(PreloadScreen.loadingText)
-            .add(PreloadScreen.progressbar);
+            .add(PreloadScreen.progressbar)
+            .add(PreloadScreen.creditText)
+            .add(PreloadScreen.creditText2)
+            .add(PreloadScreen.creditText3);
 
         // TODO add more information to loading screen
 
@@ -1637,7 +1717,7 @@ var SongScreen = (function() {
     SongScreen.prgCurrent = new Progressbar(300, 420, 850, 5, 'blue', 'gray');
     SongScreen.prgCurrent.z(1000);
 
-    SongScreen.control = new ControlGroup(0, 0, 1280, 720);
+    SongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     SongScreen.control
         .add(SongScreen.typingText)
         .add(SongScreen.txtTimecode)
