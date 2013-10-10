@@ -949,7 +949,7 @@ var Viewport = (function() {
         var css = {
             position: "absolute"
         };
-        var shifted = data.shifted || true;
+        var shifted = data.shifted == undefined ? true : data.shifted;
         css.left = "" + ((shifted ? Viewport.left : 0) + (data.x-dx) * Viewport.sketchPercent) + "px";
         css.top  = "" + ((shifted ? Viewport.top  : 0) + (data.y-dy) * Viewport.sketchPercent) + "px";
         css["font-size"] = "" + (data.fs * Viewport.sketchPercent) + "px";
@@ -1206,6 +1206,11 @@ var ControlGroup = (function($super) {
         c.drawPosition.w = c.position.w * wRatio;
         c.drawPosition.fs = c.position.fs * Math.min(hRatio, wRatio);
 
+        if (this.position.shifted === false) {
+            c.drawPosition.shifted = false;
+            c.position.shifted = false;
+        }
+
         c.shouldResize();
     };
 
@@ -1326,6 +1331,7 @@ var LimitedControlGroup = (function ($super) {
         $super.call(this, 0, 0, w, h);
         this.block = new Block(x, y, w, h);
         this.block.css("display", "block").css('overflow', 'hidden');
+        this.position.shifted = false;
     }
 
     LimitedControlGroup.prototype.setPosition = function (x, y) {
@@ -1340,7 +1346,6 @@ var LimitedControlGroup = (function ($super) {
     LimitedControlGroup.prototype.add = function (c) {
         c.detach();
         c.attach(this.block.$);
-        c.drawPosition.shifted = false;
         return $super.prototype.add.call(this, c);
     };
 
