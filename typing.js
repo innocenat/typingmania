@@ -20,6 +20,8 @@ var INTERVAL   = 20;
 // TODO Beautify the screen
 // TODO Add scoring system (with local storage)
 // TODO error report
+// TODO detach unused part
+// TODO not resizing unused part
 
 /// ///////////////////////
 // Helper
@@ -602,10 +604,12 @@ var SongManager = (function() {
                         SongManager.imgTransitioning = false;
                     });
                     song.image.show();
+                    SongManager.currentImage = song.image;
                 } else {
                     song.image.fadeIn('slow', function() {
                         SongManager.imgTransitioning = false;
                     });
+                    SongManager.currentImage = song.image;
                 }
 
                 SongManager.imgTransitioning = true;
@@ -743,7 +747,9 @@ var KeyCode = (function() {
         [ 38, 'Up'   ],
         [ 40, 'Down' ],
         [ 37, 'Left' ],
-        [ 39, 'Right']
+        [ 39, 'Right'],
+        [ 13, 'Enter'],
+        [  8, 'Backspace']
     ];
 
     KeyCode.fromKeyCode = function (code) {
@@ -1019,6 +1025,11 @@ var ControlBase = (function() {
         this.recalculate();
     };
 
+    ControlBase.prototype.setAlign = function (align) {
+        this.position.align = align;
+        this.recalculate();
+    };
+
     ControlBase.prototype.setSize = function (w, h) {
         var ratio;
         if (w == 0 && h == 0) {
@@ -1178,6 +1189,11 @@ var ControlGroup = (function($super) {
 
     ControlGroup.prototype.add = function (c) {
         c.parent = this;
+
+        // HACK
+        if (c instanceof LimitedControlGroup)
+            c.block.parent = this;
+
         this.children.push(c);
         this.recalculateChild(c);
 
@@ -1330,9 +1346,17 @@ var LimitedControlGroup = (function ($super) {
     function LimitedControlGroup(x, y, w, h) {
         $super.call(this, 0, 0, w, h);
         this.block = new Block(x, y, w, h);
-        this.block.css("display", "block").css('overflow', 'hidden');
+        this.block.css('overflow', 'hidden');
         this.position.shifted = false;
     }
+
+    LimitedControlGroup.prototype.recalculate = function () {
+        $super.prototype.recalculate.call(this);
+    };
+
+    LimitedControlGroup.prototype.setAlign = function (align) {
+        this.block.setAlign(align);
+    };
 
     LimitedControlGroup.prototype.setPosition = function (x, y) {
         return this.block.setPosition(x, y);
@@ -1340,13 +1364,54 @@ var LimitedControlGroup = (function ($super) {
 
     LimitedControlGroup.prototype.setSize = function (w, h) {
         this.block.setSize(w, h);
-        return $super.prototype.setSize.call(w, h);
+        return $super.prototype.setSize.call(this, w, h);
     };
 
     LimitedControlGroup.prototype.add = function (c) {
         c.detach();
         c.attach(this.block.$);
+        c.show();
         return $super.prototype.add.call(this, c);
+    };
+
+    LimitedControlGroup.prototype.z = function (z) {
+        $super.prototype.z.call(this, z);
+        this.block.css('z-index', z);
+        return this;
+    };
+
+    LimitedControlGroup.prototype.show = function () {
+        this.block.show();
+        return this;
+    };
+
+    LimitedControlGroup.prototype.hide = function () {
+        this.block.hide();
+        return this;
+    };
+
+    LimitedControlGroup.prototype.fadeIn = function (speed, complete) {
+        this.block.fadeIn(speed, complete);
+        return this;
+    };
+
+    LimitedControlGroup.prototype.fadeOut = function (speed, complete) {
+        this.block.fadeOut(speed, complete);
+        return this;
+    };
+
+    LimitedControlGroup.prototype.visible = function () {
+        return this.block.css('display') != 'none';
+    };
+
+    LimitedControlGroup.prototype.detach = function () {
+        this.block.detach();
+        return this;
+    };
+
+    LimitedControlGroup.prototype.attach = function ($) {
+        this.block.attach($);
+        return this;
     };
 
     return LimitedControlGroup;
@@ -1551,7 +1616,7 @@ var PreloadScreen = (function() {
 
     PreloadScreen.handleKey = function (input) {
         if (PreloadScreen.isDone() && input == ' ') {
-            State.to(State.PRESONG); // FIXME should be menu, but presong for testing
+            State.to(State.MENU);
         }
     };
 
@@ -1621,20 +1686,89 @@ var PreloadScreen = (function() {
 var MenuScreen = (function() {
     function MenuScreen() {}
 
-    MenuScreen.onIn = function () {
+    MenuScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
 
+    MenuScreen.currentSong = 0;
+    MenuScreen.songDisplay = [];
+
+    MenuScreen.onIn = function () {
+        this.control.fadeIn();
+
+        if (this.songDisplay.length == 0)
+            MenuScreen.makeSongDisplay();
+
+        this.repositionSong();
     };
 
     MenuScreen.onOut = function (callback) {
-
+        MenuScreen.control.fadeOut(400, callback);
     };
 
     MenuScreen.tick = function () {
-
+        SongManager.tick();
     };
 
     MenuScreen.handleKey = function (input) {
+        if (input == 'Up') {
+            MenuScreen.currentSong = Math.max(0, MenuScreen.currentSong-1);
+            this.repositionSong();
+        } else if (input == 'Down') {
+            MenuScreen.currentSong = Math.min(MenuScreen.songDisplay.length-1, MenuScreen.currentSong+1);
+            this.repositionSong();
+        } else if (input == 'Esc') {
 
+        } else if (input == 'Enter' || input == ' ') {
+            State.to(State.PRESONG);
+        } else if (input == 'Backspace') {
+
+        } else {
+
+        }
+    };
+
+    MenuScreen.makeSongDisplay = function () {
+        for (var k in SongManager.songs) {
+            if (!SongManager.songs.hasOwnProperty(k))
+                continue;
+
+            var c = SongManager.songs[k];
+            var dat = new LimitedControlGroup(0, 0, 400, 100);
+            dat.block.css('border', '1px solid #000');
+            dat.z(1000);
+
+            dat.song = c;
+
+            var txtTitle = new Text(c.getData('title-en'), 25, 10, 10, "white");
+            dat.add(txtTitle);
+
+            MenuScreen.songDisplay.push(dat);
+            MenuScreen.control.add(dat);
+        }
+
+        MenuScreen.songDisplay.sort(MenuScreen.songSorter);
+    };
+
+    MenuScreen.repositionSong = function () {
+        for (var i = 0; i < MenuScreen.songDisplay.length; i++) {
+            var diff = i - MenuScreen.currentSong;
+            if (Math.abs(diff) >= 5) {
+                MenuScreen.songDisplay[i].hide();
+                continue;
+            }
+            var c = MenuScreen.songDisplay[i];
+            c.show();
+            c.setPosition(500 + (diff == 0 ? 0 : 50), 300 + 120*diff);
+            if (diff != 0)
+                c.setSize(350, 0);
+            else {
+                c.setSize(400, 0);
+                SongManager.setSong(c.song);
+            }
+        }
+    };
+
+    MenuScreen.songSorter = function (a, b) {
+        return a.song.getData('title-en').localeCompare(b.song.getData('title-en'));
     };
 
     return MenuScreen;
@@ -1655,17 +1789,18 @@ var PresongScreen = (function() {
     PresongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     PresongScreen.control
         .add(PresongScreen.txtStatus)
-        .add(PresongScreen.progressbar);
+        .add(PresongScreen.progressbar)
+        .z(500);
 
     PresongScreen.onIn = function () {
-        // FIXME this hardcoded song is for checking prior to completion of menu
-        SongManager.setSong(SongManager.getSong('real-world'));
-        SongManager.getSong().load();
-
         PresongScreen.txtStatus.txt("Standby");
         PresongScreen.progressbar.progress(0);
 
         PresongScreen.control.fadeIn('slow');
+        // HACK b/c fuck browser
+        PresongScreen.txtStatus.shouldResize();
+
+        SongManager.getSong().load();
     };
 
     PresongScreen.onOut = function (callback) {
@@ -1816,7 +1951,7 @@ var ScoreScreen = (function() {
 
     ScoreScreen.handleKey = function (input) {
         if (input == ' ' || input == 'Esc')
-            State.to(Screen.MENU);
+            State.to(State.MENU);
     };
 
     return ScoreScreen;
