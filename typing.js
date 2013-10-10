@@ -1512,7 +1512,7 @@ var PreloadScreen = (function() {
     PreloadScreen.currentProgress = 0;
     PreloadScreen.done = false;
 
-    PreloadScreen.control = new ControlGroup(0, 0, 1280, 720);
+    PreloadScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
 
     PreloadScreen.loadFile = function (id, src, callback, start) {
         PreloadScreen.numberOfItem++;
@@ -1652,7 +1652,7 @@ var PresongScreen = (function() {
     PresongScreen.progressbar.bar.css('box-shadow', '0px 0px 20px 3px rgba(153, 153, 153, 0.5)');
     PresongScreen.progressbar.z(14);
 
-    PresongScreen.control = new ControlGroup(0, 0, 1280, 720);
+    PresongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     PresongScreen.control
         .add(PresongScreen.txtStatus)
         .add(PresongScreen.progressbar);
@@ -1795,12 +1795,18 @@ var SongScreen = (function() {
 var ScoreScreen = (function() {
     function ScoreScreen() {}
 
-    ScoreScreen.onIn = function () {
+    ScoreScreen.txtTemp = new Text("Press any key to return to menu.", 60, 640, 355, "white", 'cx,cy');
+    ScoreScreen.txtTemp.z(15);
+    ScoreScreen.txtTemp.css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
+    ScoreScreen.onIn = function () {
+        ScoreScreen.txtTemp.show();
     };
 
     ScoreScreen.onOut = function (callback) {
         SongManager.getSong().stop();
+        ScoreScreen.txtTemp.hide();
         callback();
     };
 
