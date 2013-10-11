@@ -270,7 +270,6 @@ var Song = (function() {
         this.id = json.id;
 
         this.currentVerse = -1;
-        this.isInVerse = false;
 
         this.isPlaying = false;
         this.isLoaded = false;
@@ -308,34 +307,18 @@ var Song = (function() {
         var ret = false;
         var time = this.getTime();
 
-        if (this.currentVerse+1 < this.getLineCount() && time >= this.event[this.currentVerse+1]["start"]) {
+        if (this.currentVerse == -1 || (this.currentVerse < this.getLineCount() && time >= this.event[this.currentVerse]["end"])) {
             this.currentVerse++;
+            if (!this.isBlank(this.currentVerse))
+                this.typing = new Typing(this.getCurrentVerse()['typing']);
             ret = true;
-        } else if (this.currentVerse == this.getLineCount()-1 && time >= this.event[this.currentVerse]["end"]) {
-            this.currentVerse++;
-            ret = true;
-        }
-
-        if (this.currentVerse >= 0 && this.currentVerse < this.getLineCount()) {
-            if (time >= this.event[this.currentVerse]["start"] && time < this.event[this.currentVerse]["end"]) {
-                this.isInVerse = true;
-            } else {
-                this.isInVerse = false;
-                ret = true;
-            }
-        } else {
-            this.isInVerse = false;
-        }
-
-        if (ret) {
-            this.typing = new Typing(this.getCurrentVerse()['typing']);
         }
 
         return ret;
     };
 
     Song.prototype.getCurrentVerse = function () {
-        if (this.currentVerse < 0 || this.currentVerse >= this.getLineCount() || !this.isInVerse) {
+        if (!this.isInSong(this.currentVerse) || this.isBlank(this.currentVerse)) {
             return {
                 "lyrics": "",
                 "typing": []
@@ -349,43 +332,30 @@ var Song = (function() {
     };
 
     Song.prototype.getNextVerse = function () {
-        if (this.currentVerse+1 >= this.getLineCount())
+        if (!this.isInSong(this.currentVerse+1) || this.isBlank(this.currentVerse+1))
             return {
                 "lyrics": "",
                 "typing": []
             };
-        else if (this.currentVerse >= 0 && this.currentVerse+1 < this.getLineCount() && this.isInVerse
-            && this.event[this.currentVerse]["end"] != this.event[this.currentVerse+1]["start"])
+        else
             return {
-                "lyrics": "",
-                "typing": []
+                "lyrics": this.getLyric(this.currentVerse+1),
+                "typing": this.getTyping(this.currentVerse+1)
             };
-        return {
-            "lyrics": this.getLyric(this.currentVerse+1),
-            "typing": this.getTyping(this.currentVerse+1)
-        };
     };
 
     Song.prototype.getTimeUntilNextLine = function () {
-        if (this.isInVerse) {
+        if (this.currentVerse < this.getLineCount()) {
             return this.event[this.currentVerse]["end"] - this.getTime();
-        } else if (this.currentVerse+1 < this.getLineCount()) {
-            return this.event[this.currentVerse+1]["start"] - this.getTime();
         } else {
             return this.getDuration() - this.getTime();
         }
     };
 
     Song.prototype.getCurrentSectionTime = function () {
-        if (this.isInVerse) {
-            return this.event[this.currentVerse]["end"] - this.event[this.currentVerse]["start"];
-        } else if (this.currentVerse == -1) {
-            return this.event[0]["start"];
-        } else if (this.currentVerse+1 < this.getLineCount()) {
-            return this.event[this.currentVerse+1]["start"] - this.event[this.currentVerse]["end"];
-        } else {
-            return this.getDuration() - this.event[this.getLineCount()-1]["end"];
-        }
+        if (this.currentVerse >= this.getLineCount())
+            return 0;
+        return this.event[this.currentVerse]["end"] - this.event[this.currentVerse]["start"];
     };
 
     Song.prototype.getTime = function () {
@@ -404,17 +374,33 @@ var Song = (function() {
         return this.event.length;
     };
 
-    Song.prototype.getLyric = function (line) {
-        return this.event[line]["lyric"];
+    Song.prototype.isBlank = function (line) {
+        return line <= this.getLineCount() && "blank" in this.event[line] && this.event[line]['blank'];
+    };
+
+    Song.prototype.isInSong = function (line) {
+        return 0 <= line && line < this.getLineCount();
     };
 
     Song.prototype.isComplete = function () {
         return this.currentVerse == this.getLineCount();
     };
 
+    Song.prototype.getLyric = function (line) {
+        if (this.isBlank(line))
+            return "";
+
+        return this.event[line]["lyric"];
+    };
+
     Song.prototype.getTyping = function (line) {
+        if (this.isBlank(line))
+            return [];
+
         if ("typing" in this.event[line])
             return this.event[line]["typing"];
+
+        // Return lyric in no typing available
         return [this.event[line]["lyric"]];
     };
 
@@ -476,7 +462,6 @@ var Song = (function() {
             this.cancel();
 
         this.currentVerse = -1;
-        this.isInVerse = false;
         this.typing = null;
         this.isPlaying = false;
         this.isLoading = false;
@@ -497,6 +482,7 @@ var Song = (function() {
             AssetManager.remove(this.id + "_audio", true);
         }
 
+        // Load Lyric if not loaded
         if (!this.isLyricsLoaded && !this.isLyricsLoading && !this.isLyricsError) {
             console.log("Begin loading lyrics...");
 
@@ -506,6 +492,7 @@ var Song = (function() {
                 _this.lyricsLoadingProgress = 1;
                 _this.event = result;
                 console.log("Lyrics " + _this.id + " loaded.");
+                console.log(result);
 
                 if (_this.isLyricsLoaded && _this.isAudioLoaded) {
                     _this.isLoaded = true;
@@ -522,6 +509,7 @@ var Song = (function() {
             this.isLyricsLoading = true;
         }
 
+        // Load Audio if not loaded
         if (!this.isAudioLoaded && !this.isAudioLoading && !this.isAudioError) {
             console.log("Begin loading song...");
 
@@ -538,7 +526,7 @@ var Song = (function() {
             }, true, function (_, progress) {
                 _this.audioLoadingProgress = progress;
             }, function () {
-                _this.isAudioError = true // error
+                _this.isAudioError = true; // error
                 _this.isAudioLoaded = false;
                 _this.isAudioLoading = false;
                 console.log("Song " + _this.id + " load error.");

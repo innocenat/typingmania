@@ -6,10 +6,7 @@ convert.py - part of TypingMania Engine
 Usage: convert.py input.ass
 
 The script convert an ASS (subtitle format) file to a JSON file recognised by
-MameType engine.
-
-The input ASS file should have versed timed to audio file, and for each verse
-has two lines: ??? (idk)
+TypingMania Engine
 
 """
 
@@ -61,6 +58,8 @@ def convert(fi, fo, fo2, key):
     }
 
     event = []
+    lyrics = []
+    typing = []
 
     # TODO calculate level
 
@@ -72,22 +71,57 @@ def convert(fi, fo, fo2, key):
             end   = match.group("end")
             data  = match.group("data")
             if dtype == "lyrics":
-                event.append({
+                lyrics.append({
                     "start":  toMillisec(start),
                     "end":    toMillisec(end),
                     "lyric":  data
                 })
             elif dtype == "typing":
-                for i in range(0, len(event)):
-                    if event[i]["start"] == toMillisec(start) and event[i]["end"] == toMillisec(end):
-                        event[i]["typing"] = parse_typing(data)
-                        break
+                typing.append({
+                    "start":  toMillisec(start),
+                    "end":    toMillisec(end),
+                    "typing":  data
+                })
             else:
                 output[dtype] = data
 
+    # Process event data
+    lyrics.sort(key=lambda s: s["start"])
+    typing.sort(key=lambda s: s["start"])
+
+    lasttime = 0;
+    for lyric in lyrics:
+        # Add blank interval
+        if lyric["start"] != lasttime:
+            event.append({
+                "start": lasttime,
+                "end": lyric["start"],
+                "blank": True
+            })
+
+        # Basic data
+        data = {
+            "start": lyric["start"],
+            "end": lyric["end"],
+            "lyric": lyric["lyric"]
+        }
+
+        ctyping = False
+        for typ in typing:
+            if typ["start"] == lyric["start"] and typ["end"] == lyric["end"]:
+                ctyping = typ
+                break
+
+        if ctyping != False:
+            data["typing"] = parse_typing(ctyping["typing"])
+        event.append(data)
+
+        lasttime = lyric["end"]
+
+
     fo.write(json.dumps(output, sort_keys=True, ensure_ascii=True, indent=4, separators=(',', ': ')))
     fo.write("\n")
-    fo2.write(json.dumps(event, sort_keys=False, ensure_ascii=True))
+    fo2.write(json.dumps(event, sort_keys=False, ensure_ascii=True, indent=4, separators=(',', ': ')))
     fo2.write("\n")
 
 def toMillisec(time):
