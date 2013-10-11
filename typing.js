@@ -22,7 +22,6 @@ var VERSION = '0.1.0';
 // TODO Create MENU Screen
 // TODO Beautify the screen
 // TODO Add scoring system (with local storage)
-// TODO error report
 
 /// ///////////////////////
 ///  Basic prerequisite checking
@@ -273,11 +272,15 @@ var Song = (function() {
         this.currentVerse = -1;
         this.isInVerse = false;
 
-        this.isLoading = false;
+        this.isPlaying = false;
         this.isLoaded = false;
+
         this.isLyricsLoaded = false;
         this.isAudioLoaded = false;
-        this.isPlaying = false;
+        this.isLyricsLoading = false;
+        this.isAudioLoading = false;
+        this.isLyricsError = false;
+        this.isAudioError = false;
         this.audioLoadingProgress = 0;
         this.lyricsLoadingProgress = 0;
         this.imageLoading = false;
@@ -447,6 +450,10 @@ var Song = (function() {
         return this.audioLoadingProgress;
     };
 
+    Song.prototype.getLyricsLoadProgress = function () {
+        return this.lyricsLoadingProgress;
+    };
+
     Song.prototype.isReady = function() {
         return this.audio != null && this.isLoaded;
     };
@@ -476,48 +483,70 @@ var Song = (function() {
     };
 
     Song.prototype.load = function () {
-        if (this.isLoading)
-            return false;
 
         var _this = this;
 
-        if (!this.isLyricsLoaded) {
+        /* Clear previous failed attempts if any */
+        if (this.isLyricsError) {
+            this.isLyricsError = false;
+            AssetManager.remove(this.id + "_lyrics", true);
+        }
+
+        if (this.isAudioError) {
+            this.isAudioError = false;
+            AssetManager.remove(this.id + "_audio", true);
+        }
+
+        if (!this.isLyricsLoaded && !this.isLyricsLoading && !this.isLyricsError) {
             console.log("Begin loading lyrics...");
 
             AssetManager.load(this.id + "_lyrics", this.getLyricsURL(), function (_, result) {
                 _this.isLyricsLoaded = true;
+                _this.isLyricsLoading = false;
                 _this.lyricsLoadingProgress = 1;
                 _this.event = result;
                 console.log("Lyrics " + _this.id + " loaded.");
 
                 if (_this.isLyricsLoaded && _this.isAudioLoaded) {
-                    _this.isLoading = false;
                     _this.isLoaded = true;
                 }
             }, true, function (_, progress) {
                 _this.lyricsLoadingProgress = progress;
+            }, function () {
+                _this.isLyricsError = true; // error
+                _this.isLyricsLoaded = false;
+                _this.isLyricsLoading = false;
+                console.log("Lyrics " + _this.id + " load error.");
             });
+
+            this.isLyricsLoading = true;
         }
 
-        if (!this.isAudioLoaded) {
+        if (!this.isAudioLoaded && !this.isAudioLoading && !this.isAudioError) {
             console.log("Begin loading song...");
 
             AssetManager.load(this.id + "_audio", this.getAudioURL(), function (id) {
                 _this.isAudioLoaded = true;
+                _this.isAudioLoading = false;
                 _this.audioLoadingProgress = 1;
                 _this.audio = createjs.Sound.createInstance(id);
                 console.log("Song " + _this.id + " loaded.");
 
                 if (_this.isLyricsLoaded && _this.isAudioLoaded) {
-                    _this.isLoading = false;
                     _this.isLoaded = true;
                 }
             }, true, function (_, progress) {
                 _this.audioLoadingProgress = progress;
+            }, function () {
+                _this.isAudioError = true // error
+                _this.isAudioLoaded = false;
+                _this.isAudioLoading = false;
+                console.log("Song " + _this.id + " load error.");
             });
+
+            this.isAudioLoading = true;
         }
 
-        this.isLoading = true;
         return true;
     };
 
@@ -636,7 +665,6 @@ var SongManager = (function() {
 
         var count = 0;
         songData.forEach(function (c) {
-            console.log("Loading : " + c);
             PreloadScreen.loadFile("song_" + (count) + "_data", c, function(_, result) {
                 var key = result.id;
                 var basePath = SongManager.basePath(c);
@@ -707,7 +735,7 @@ var AssetManager = (function() {
     this.complete = true;
 
     // TODO add error callback
-    AssetManager.load = function (id, src, callback, start, progressCallback) {
+    AssetManager.load = function (id, src, callback, start, progressCallback, errorCallback) {
         if (start == undefined)
             start = true;
         if (id in AssetManager.status) {
@@ -722,13 +750,19 @@ var AssetManager = (function() {
             status: 0,
             src: src,
             callback: callback,
-            progress: progressCallback
+            progress: progressCallback,
+            error: errorCallback
         };
         AssetManager.complete = false;
     };
 
-    AssetManager.remove = function (id) {
+    AssetManager.remove = function (id, hard) {
         if (id in AssetManager.status && AssetManager.status[id].status != 1) {
+            AssetManager.queue.remove(id);
+            delete AssetManager.status[id];
+            return true;
+        }
+        if (hard != undefined && hard) {
             AssetManager.queue.remove(id);
             delete AssetManager.status[id];
             return true;
@@ -748,6 +782,12 @@ var AssetManager = (function() {
             AssetManager.status[id].progress(id, event.progress);
     };
 
+    AssetManager.onError = function (event) {
+        var id = event.item.id;
+        if (AssetManager.status[id].error != undefined)
+            AssetManager.status[id].error(id, event.item.src);
+    };
+
     AssetManager.onComplete = function () {
         AssetManager.complete = true;
     };
@@ -762,9 +802,7 @@ var AssetManager = (function() {
     AssetManager.queue.on("fileload", AssetManager.onFileDownloaded);
     AssetManager.queue.on("fileprogress", AssetManager.onFileProgressed);
     AssetManager.queue.on("complete", AssetManager.onComplete);
-    AssetManager.queue.on("error", function (event) {
-        console.log(event);
-    });
+    AssetManager.queue.on("error", AssetManager.onError);
 
     return AssetManager;
 })();
@@ -1854,6 +1892,15 @@ var PreloadScreen = (function() {
                 callback(id, result);
         }, start, function (id, progress) { // process callback
             PreloadScreen.currentItem = progress;
+        }, function (id, url) { // error callback
+            if (id.substring(0,2) == '__') { // fatal error
+                PreloadScreen.loadingText.txt("Fatal error");
+                PreloadScreen.detailText.txt("Please contact webmaster or try again.");
+                PreloadScreen.detailText.show();
+            } else {
+                console.log("File not found: " + url);
+                PreloadScreen.numberOfItem--;
+            }
         });
     };
 
@@ -2002,6 +2049,9 @@ var PresongScreen = (function() {
         if (song.isReady()) {
             PresongScreen.txtStatus.txt("Ready");
             PresongScreen.progressbar.progress(1);
+        } else if (song.isLyricsError || song.isAudioError) {
+            PresongScreen.txtStatus.txt("Error");
+            // TODO make flag for this instead of set text every time
         } else {
             PresongScreen.progressbar.progress(song.getAudioLoadProgress());
         }
