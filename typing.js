@@ -1803,12 +1803,14 @@ var MenuScreen = (function() {
             MenuScreen.makeSongDisplay();
 
         this.control.fadeIn();
+        DynamicBackground.show();
 
         this.repositionSong();
     };
 
     MenuScreen.tick = function () {
         SongManager.tick();
+        DynamicBackground.tick();
     };
 
     MenuScreen.handleKey = function (input) {
@@ -2042,10 +2044,10 @@ var ScoreScreen = (function() {
 
     ScoreScreen.onIn = function () {
         ScoreScreen.txtTemp.show();
+        DynamicBackground.hide();
     };
 
     ScoreScreen.tick = function () {
-        DynamicBackground.tick();
     };
 
     ScoreScreen.handleKey = function (input) {
@@ -2068,6 +2070,22 @@ var DynamicBackground = (function () {
     DynamicBackground.currentImage = null;
 
     DynamicBackground.showSongInfo = false;
+    DynamicBackground.currentSongInfo = '';
+    DynamicBackground.control = new LimitedControlGroup(0, 0, 1280, 720);
+
+    DynamicBackground.txtTitleEn = new Text("", 40, 25, 100);
+
+    DynamicBackground.control
+        .add(DynamicBackground.txtTitleEn)
+        .z(15);
+
+    DynamicBackground.show = function () {
+        DynamicBackground.control.show();
+    };
+
+    DynamicBackground.hide = function () {
+        DynamicBackground.control.hide();
+    };
 
     DynamicBackground.tick = function () {
         if (SongManager.song != null) {
@@ -2081,7 +2099,7 @@ var DynamicBackground = (function () {
             if (!DynamicBackground.imgTransitioning && song.image != null && !song.image.visible()) {
                 song.image.z(10);
                 if (DynamicBackground.currentImage != null) {
-                    DynamicBackground.currentImage.z(15);
+                    DynamicBackground.currentImage.z(11);
                     DynamicBackground.currentImage.fadeOut('slow', function() {
                         DynamicBackground.imgTransitioning = false;
                     });
@@ -2098,6 +2116,10 @@ var DynamicBackground = (function () {
             }
 
             // Song Info
+            if (DynamicBackground.currentSongInfo != song.id) {
+                DynamicBackground.currentSongInfo = song.id;
+                DynamicBackground.txtTitleEn.txt(song.getData('title-en'));
+            }
         }
     };
 
