@@ -20,8 +20,6 @@ var INTERVAL   = 20;
 // TODO Beautify the screen
 // TODO Add scoring system (with local storage)
 // TODO error report
-// TODO detach unused part
-// TODO not resizing unused part
 
 /// ///////////////////////
 // Helper
@@ -915,16 +913,17 @@ var Viewport = (function() {
         Viewport.resizeAll();
     };
 
-    Viewport.position = function (c, data, resizing) {
+    Viewport.position = function (c, jq, data, resizing) {
         if (!(c in Viewport.elements)) {
+            data.object = jq;
             Viewport.elements[c] = data;
         }
 
         var dx = 0, dy = 0;
 
         if (typeof data.align == "string") {
-            var w = $(c).css('width');
-            var h = $(c).css('height');
+            var w = $(jq).css('width');
+            var h = $(jq).css('height');
 
             w = w.substring(0, w.length-2);
             h = h.substring(0, h.length-2);
@@ -964,14 +963,17 @@ var Viewport = (function() {
             css.width  = "" + (data.w * Viewport.sketchPercent) + "px";
             css.height = "" + (data.h * Viewport.sketchPercent) + "px";
         }
-        $(c).css(css);
+        $(jq).css(css);
     };
 
     Viewport.resizeAll = function () {
         for (var c in Viewport.elements) {
             if (Viewport.elements.hasOwnProperty(c)) {
                 var cc = Viewport.elements[c];
-                Viewport.position(c, cc, true);
+                if (cc.active) {
+                    Viewport.position(c, cc.object, cc, true);
+                    console.log("here");
+                }
             }
         }
     };
@@ -979,7 +981,7 @@ var Viewport = (function() {
     Viewport.resizeElement = function (id) {
         if (id in Viewport.elements) {
             var cc = Viewport.elements[id];
-            Viewport.position(id, cc, true);
+            Viewport.position(id, cc.object, cc, true);
         }
     };
 
@@ -998,7 +1000,8 @@ var ControlBase = (function() {
         this.attr('id', this.id);
         this.css('display', 'none');
 
-        this.$.appendTo('body');
+        this.parentElement = jQuery('body');
+        this.inDom = false;
 
         this.position = $.extend({}, {
             x: 0,
@@ -1006,10 +1009,11 @@ var ControlBase = (function() {
             w: 0,
             h: 0,
             fs: 0,
-            align: ''
+            align: '',
+            active: false
         }, position || {});
         this.drawPosition = $.extend({}, this.position);
-        Viewport.position('#' + this.id, this.drawPosition);
+        Viewport.position(this.id, this.$, this.drawPosition);
     }
 
     ControlBase._uniqueid = {};
@@ -1061,7 +1065,7 @@ var ControlBase = (function() {
     };
 
     ControlBase.prototype.shouldResize = function () {
-        Viewport.resizeElement('#' + this.id);
+        Viewport.resizeElement(this.id);
     };
 
     ControlBase.prototype.getID = function () {
@@ -1128,31 +1132,69 @@ var ControlBase = (function() {
     };
 
     ControlBase.prototype.show = function () {
-        return this.$.show();
+        if (!this.inDom)
+            this.attach();
+        var ret = this.$.show();
+        this.shouldResize();
+        return ret;
     };
 
     ControlBase.prototype.hide = function () {
+        if (this.inDom)
+            this.detach();
         return this.$.hide();
     };
 
     ControlBase.prototype.fadeIn = function (speed, complete) {
-        return this.$.fadeIn(speed, complete);
+        if (!this.inDom)
+            this.attach();
+        var ret = this.$.fadeIn(speed, complete);
+        this.shouldResize();
+        return ret;
     };
 
     ControlBase.prototype.fadeOut = function (speed, complete) {
-        return this.$.fadeOut(speed, complete);
+        var _this = this;
+        return this.$.fadeOut(speed, function () {
+            _this.detach();
+            if (complete != undefined)
+                complete();
+        });
     };
 
     ControlBase.prototype.visible = function () {
-        return this.css('display') != 'none';
+        return this.css('display') != 'none' && this.inDom;
+    };
+
+    ControlBase.prototype.stopResizing = function () {
+        this.drawPosition.active = false;
+    };
+
+    ControlBase.prototype.startResizing = function () {
+        this.drawPosition.active = true;
+        this.shouldResize();
     };
 
     ControlBase.prototype.detach = function () {
-        return this.$.detach();
+        if (this.inDom) {
+            this.parentElement = this.$.parent();
+            this.stopResizing();
+            this.inDom = false;
+            return this.$.detach();
+        }
+        return this;
     };
 
     ControlBase.prototype.attach = function ($) {
-        this.$.appendTo($);
+        if (!this.inDom) {
+            this.startResizing();
+            this.inDom = true;
+            if ($ == undefined)
+                this.$.appendTo(this.parentElement);
+            else
+                this.$.appendTo($);
+            return this;
+        }
         return this;
     };
 
@@ -1171,13 +1213,17 @@ var ControlGroup = (function($super) {
         this.parent = null;
         this.children = [];
 
+        this.parentElement = $('body');
+        this.inDom = false;
+
         this.position = {
             w: w,
             h: h,
             x: x,
             y: y,
             fs: 0,
-            align: ''
+            align: '',
+            active: false
         };
 
         this.drawPosition = $.extend({}, this.position);
@@ -1382,21 +1428,29 @@ var LimitedControlGroup = (function ($super) {
 
     LimitedControlGroup.prototype.show = function () {
         this.block.show();
+        this.startResizing();
         return this;
     };
 
     LimitedControlGroup.prototype.hide = function () {
         this.block.hide();
+        _this.stopResizing();
         return this;
     };
 
     LimitedControlGroup.prototype.fadeIn = function (speed, complete) {
+        this.startResizing();
         this.block.fadeIn(speed, complete);
         return this;
     };
 
     LimitedControlGroup.prototype.fadeOut = function (speed, complete) {
-        this.block.fadeOut(speed, complete);
+        var _this = this;
+        this.block.fadeOut(speed, function () {
+            _this.stopResizing();
+            if (complete != undefined)
+                complete();
+        });
         return this;
     };
 
@@ -1404,13 +1458,31 @@ var LimitedControlGroup = (function ($super) {
         return this.block.css('display') != 'none';
     };
 
+    LimitedControlGroup.prototype.stopResizing = function () {
+        this.children.forEach(function (c) {
+            c.stopResizing();
+        });
+        this.block.stopResizing();
+        console.log("stop resizing " + this.id);
+    };
+
+    LimitedControlGroup.prototype.startResizing = function () {
+        this.children.forEach(function (c) {
+            c.startResizing();
+        });
+        this.block.startResizing();
+        console.log("start resizing " + this.id);
+    };
+
     LimitedControlGroup.prototype.detach = function () {
         this.block.detach();
+        this.stopResizing();
         return this;
     };
 
     LimitedControlGroup.prototype.attach = function ($) {
         this.block.attach($);
+        this.startResizing();
         return this;
     };
 
@@ -1664,6 +1736,7 @@ var PreloadScreen = (function() {
 
         // TODO add more information to loading screen
 
+        PreloadScreen.control.attach();
         PreloadScreen.control.show();
 
         PreloadScreen.loadFile('__background', BACKGROUND, function(id) {
