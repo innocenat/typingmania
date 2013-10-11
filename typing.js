@@ -1070,6 +1070,10 @@ var ControlBase = (function() {
 
     ControlBase.prototype.shouldResize = function () {
         Viewport.resizeElement(this.id);
+        var id = this.id;
+        setTimeout(function () {
+            Viewport.resizeElement(id);
+        }, 10);
     };
 
     ControlBase.prototype.getID = function () {
@@ -1432,7 +1436,7 @@ var LimitedControlGroup = (function ($super) {
     };
 
     LimitedControlGroup.prototype.z = function (z) {
-        $super.prototype.z.call(this, z);
+        //$super.prototype.z.call(this, z);
         this.block.css('z-index', z);
         return this;
     };
@@ -1769,15 +1773,16 @@ var MenuScreen = (function() {
     function MenuScreen() {}
 
     MenuScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
+    MenuScreen.control.z(200);
 
     MenuScreen.currentSong = 0;
     MenuScreen.songDisplay = [];
 
     MenuScreen.onIn = function () {
-        this.control.fadeIn();
-
         if (this.songDisplay.length == 0)
             MenuScreen.makeSongDisplay();
+
+        this.control.fadeIn();
 
         this.repositionSong();
     };
@@ -1879,8 +1884,6 @@ var PresongScreen = (function() {
         PresongScreen.progressbar.progress(0);
 
         PresongScreen.control.fadeIn('slow');
-        // HACK b/c fuck browser
-        PresongScreen.txtStatus.shouldResize();
 
         SongManager.getSong().load();
     };
