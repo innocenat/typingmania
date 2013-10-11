@@ -1056,7 +1056,6 @@ var ControlBase = (function() {
             this.position.h = h;
         }
         this.position.fs *= ratio;
-        console.log("setsize" + this.id);
 
         this.recalculate();
         return true;
@@ -1258,7 +1257,7 @@ var ControlGroup = (function($super) {
             c.block.parent = this;
 
         this.children.push(c);
-        this.recalculateChild(c);
+        c.recalculate();
 
         return this;
     };
@@ -1269,8 +1268,8 @@ var ControlGroup = (function($super) {
 
         $super.prototype.setSize.call(this, w, h);
 
-        this.hRatio = this.position.h / oldH;
-        this.wRatio = this.position.w / oldW;
+        this.hRatio *= this.position.h / oldH;
+        this.wRatio *= this.position.w / oldW;
 
         this.recalculate();
     };
@@ -1426,6 +1425,7 @@ var LimitedControlGroup = (function ($super) {
         $super.call(this, 0, 0, w, h);
         this.block = new Block(x, y, w, h);
         this.block.css('overflow', 'hidden');
+        this.block.attr('class', this.id);
         this.position.shifted = false;
     }
 
@@ -1454,7 +1454,6 @@ var LimitedControlGroup = (function ($super) {
     };
 
     LimitedControlGroup.prototype.z = function (z) {
-        //$super.prototype.z.call(this, z);
         this.block.css('z-index', z);
         return this;
     };
@@ -1630,7 +1629,6 @@ var Progressbar = (function($super){
 
     Progressbar.prototype.progress = function (p) {
         this.bar.setSize(Math.max(0.0000001, p)*this.back.position.w, this.back.position.h);
-        this.recalculateChildren();
     };
 
     return Progressbar;
@@ -1863,9 +1861,9 @@ var MenuScreen = (function() {
             var c = MenuScreen.songDisplay[i];
             c.show();
             c.setPosition(500 + (diff == 0 ? 0 : 50), 300 + 120*diff);
-            if (diff != 0)
+            if (diff != 0) {
                 c.setSize(350, 0);
-            else {
+            } else {
                 c.setSize(400, 0);
                 SongManager.setSong(c.song);
             }
