@@ -1051,9 +1051,12 @@ var ControlBase = (function() {
             this.position.w = w;
             this.position.h *= ratio;
         } else {
+            ratio = Math.min(w / this.position.w, h / this.position.h);
             this.position.w = w;
             this.position.h = h;
         }
+        this.position.fs *= ratio;
+        console.log("setsize" + this.id);
 
         this.recalculate();
         return true;
@@ -1237,6 +1240,9 @@ var ControlGroup = (function($super) {
             active: false
         };
 
+        this.hRatio = 1;
+        this.wRatio = 1;
+
         this.drawPosition = $.extend({}, this.position);
     }
 
@@ -1257,6 +1263,18 @@ var ControlGroup = (function($super) {
         return this;
     };
 
+    ControlGroup.prototype.setSize = function (w, h) {
+        var oldW = this.position.w;
+        var oldH = this.position.h;
+
+        $super.prototype.setSize.call(this, w, h);
+
+        this.hRatio = this.position.h / oldH;
+        this.wRatio = this.position.w / oldW;
+
+        this.recalculate();
+    };
+
     ControlGroup.prototype.recalculate = function () {
         $super.prototype.recalculate.call(this);
         this.recalculateChildren();
@@ -1275,9 +1293,9 @@ var ControlGroup = (function($super) {
         var hRatio = this.drawPosition.h / this.position.h;
         var wRatio = this.drawPosition.w / this.position.w;
 
-        c.drawPosition.h = c.position.h * hRatio;
-        c.drawPosition.w = c.position.w * wRatio;
-        c.drawPosition.fs = c.position.fs * Math.min(hRatio, wRatio);
+        c.drawPosition.h = c.position.h * hRatio * this.hRatio;
+        c.drawPosition.w = c.position.w * wRatio * this.wRatio;
+        c.drawPosition.fs = c.position.fs * Math.min(hRatio, wRatio) * Math.min(this.hRatio, this.wRatio);
 
         if (this.position.shifted === false) {
             c.drawPosition.shifted = false;
