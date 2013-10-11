@@ -412,7 +412,23 @@ var Song = (function() {
     };
 
     Song.prototype.getData = function (info) {
-        return this.data['info-' + info];
+        var key = "info-" + info + "-" + Graphics.language;
+        if (key in this.data)
+            return this.data[key];
+
+        key = "info-" + info + "-en";
+        if (key in this.data)
+            return this.data[key];
+
+        key = "info-" + info + "-jp";
+        if (key in this.data)
+            return this.data[key];
+
+        key = "info-" + info;
+        if (key in this.data)
+            return this.data[key];
+
+        return "";
     };
 
     Song.prototype.getAudioURL = function () {
@@ -728,7 +744,8 @@ var KeyCode = (function() {
         [ 37, 'Left' ],
         [ 39, 'Right'],
         [ 13, 'Enter'],
-        [  8, 'Backspace']
+        [  8, 'Backspace'],
+        [  9, 'Tab'  ]
     ];
 
     KeyCode.fromKeyCode = function (code, shift) {
@@ -1630,6 +1647,7 @@ var Graphics = (function() {
     function Graphics() {}
 
     Graphics.fontLoaded = false;
+    Graphics.language   = 'en';
 
     Graphics.init = function () {
         // Global setting
@@ -2098,16 +2116,16 @@ var DynamicBackground = (function () {
     DynamicBackground.currentSongInfo = '';
     DynamicBackground.control = new LimitedControlGroup(0, 0, 1280, 720);
 
-    DynamicBackground.txtSubitleEn = new Text("", 16, 25, 90, "white");
-    DynamicBackground.txtComposerEn = new Text("", 21, 25, 115, "white");
-    DynamicBackground.txtTitleEn = new Text("", 40, 25, 150, "white");
+    DynamicBackground.txtSubitle = new Text("", 16, 25, 90, "white");
+    DynamicBackground.txtComposer = new Text("", 21, 25, 115, "white");
+    DynamicBackground.txtTitle = new Text("", 40, 25, 150, "white");
 
     DynamicBackground.control
-        .add(DynamicBackground.txtTitleEn)
-        .add(DynamicBackground.txtSubitleEn)
-        .add(DynamicBackground.txtComposerEn)
+        .add(DynamicBackground.txtTitle)
+        .add(DynamicBackground.txtSubitle)
+        .add(DynamicBackground.txtComposer)
         .z(15)
-        .css('font-family', 'Junge')
+        .css('font-family', 'Junge, serif')
         .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
     DynamicBackground.show = function () {
@@ -2149,11 +2167,16 @@ var DynamicBackground = (function () {
             // Song Info
             if (DynamicBackground.currentSongInfo != song.id) {
                 DynamicBackground.currentSongInfo = song.id;
-                DynamicBackground.txtTitleEn.txt(song.getData('title-en'));
-                DynamicBackground.txtSubitleEn.txt(song.getData('subtitle-en'));
-                DynamicBackground.txtComposerEn.txt(song.getData('composer-en'));
+                DynamicBackground.update();
             }
         }
+    };
+
+    DynamicBackground.update = function () {
+        var song = SongManager.song;
+        DynamicBackground.txtTitle.txt(song.getData('title'));
+        DynamicBackground.txtSubitle.txt(song.getData('subtitle'));
+        DynamicBackground.txtComposer.txt(song.getData('composer'));
     };
 
     return DynamicBackground;
@@ -2174,7 +2197,16 @@ var DynamicBackground = (function () {
         var code = event.which;
         var input = KeyCode.fromKeyCode(code, event.shiftKey);
 
-        switch (State.current) {
+        if (input == 'Tab') {
+            // Change language
+            if (Graphics.language == 'en')
+                Graphics.language = 'jp';
+            else
+                Graphics.language = 'en';
+
+            DynamicBackground.update();
+            // TODO Menu update
+        } else switch (State.current) {
             case State.PRELOAD:
                 PreloadScreen.handleKey(input);
                 break;
@@ -2191,6 +2223,9 @@ var DynamicBackground = (function () {
                 ScoreScreen.handleKey(input);
                 break;
         }
+
+        if (input != '')
+            event.preventDefault();
     });
 
     // Main game loop
