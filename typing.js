@@ -2117,15 +2117,16 @@ var DynamicBackground = (function () {
     DynamicBackground.control = new LimitedControlGroup(0, 0, 1280, 720);
 
     DynamicBackground.txtSubitle = new Text("", 16, 25, 90, "white");
-    DynamicBackground.txtComposer = new Text("", 21, 25, 115, "white");
-    DynamicBackground.txtTitle = new Text("", 40, 25, 150, "white");
+    DynamicBackground.txtComposer = new Text("", 21, 25, 110, "white");
+    DynamicBackground.txtTitle = new Text("", 40, 25, 140, "white");
 
     DynamicBackground.control
         .add(DynamicBackground.txtTitle)
         .add(DynamicBackground.txtSubitle)
         .add(DynamicBackground.txtComposer)
         .z(15)
-        .css('font-family', 'Junge, serif')
+        .css('font-family', 'Open Sans, serif')
+        .css('font-weight', '600')
         .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
     DynamicBackground.show = function () {
