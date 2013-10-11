@@ -1684,57 +1684,11 @@ var PreloadScreen = (function() {
 
     PreloadScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
 
-    PreloadScreen.loadFile = function (id, src, callback, start) {
-        PreloadScreen.numberOfItem++;
-        AssetManager.load(id, src, function (id, result) {
-            PreloadScreen.completedItem++;
-            PreloadScreen.currentItem = 0;
-            if (callback != undefined)
-                callback(id, result);
-        }, start, function (id, progress) {
-            PreloadScreen.currentItem = progress;
-        });
-    };
-
-    PreloadScreen.getPercent = function () {
-        return (PreloadScreen.completedItem+PreloadScreen.currentItem) / PreloadScreen.numberOfItem;
-    };
-
-    PreloadScreen.isDone = function () {
-        return PreloadScreen.donnable && PreloadScreen.numberOfItem == PreloadScreen.completedItem;
-    };
-
-    PreloadScreen.tick = function () {
-        if (PreloadScreen.currentProgress != PreloadScreen.getPercent()) {
-            PreloadScreen.currentProgress = PreloadScreen.getPercent();
-            PreloadScreen.progressbar.progress(PreloadScreen.currentProgress);
-        }
-
-        // TODO firefox bug here and never show "Ready"
-        if (PreloadScreen.isDone() && !PreloadScreen.done) {
-            PreloadScreen.loadingText.txt("Ready");
-            PreloadScreen.detailText.show();
-            PreloadScreen.done = true;
-            Viewport.resizeAll();
-        }
-    };
-
-    PreloadScreen.handleKey = function (input) {
-        if (PreloadScreen.isDone() && input == ' ') {
-            State.to(State.MENU);
-        }
-    };
-
-    PreloadScreen.onOut = function (callback) {
-        PreloadScreen.detailText.fadeOut("slow");
-        PreloadScreen.control.fadeOut('slow', callback);
-    };
-
     PreloadScreen.onIn = function () {
         PreloadScreen.loadingText = new Text("Loading...", 60, 640, 355, "white", 'cx,cy');
         PreloadScreen.loadingText.z(5);
         PreloadScreen.loadingText.css('font-family', 'Junge')
-                                 .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
+            .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
         PreloadScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(100, 255, 100, 0.5)');
         PreloadScreen.progressbar.bar.css('box-shadow', '0px 0px 20px 3px rgba(100, 255, 100, 0.5)');
@@ -1743,7 +1697,7 @@ var PreloadScreen = (function() {
         PreloadScreen.detailText = new Text("Press Spacebar to Continue", 28, 640, 430, "white", "cx,cy");
         PreloadScreen.detailText.z(5);
         PreloadScreen.detailText.css('font-family', 'Junge')
-                                .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
+            .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
         PreloadScreen.creditText = new Text("TypingMania Game Engine &copy; 2013 under the term of MIT License. " +
             "All medias are properties of the original owners, and are available here for entertainment purpose only. ", 10, 10, 720-25, "white", "by");
@@ -1786,6 +1740,52 @@ var PreloadScreen = (function() {
         AssetManager.queue.load();
     };
 
+    PreloadScreen.tick = function () {
+        if (PreloadScreen.currentProgress != PreloadScreen.getPercent()) {
+            PreloadScreen.currentProgress = PreloadScreen.getPercent();
+            PreloadScreen.progressbar.progress(PreloadScreen.currentProgress);
+        }
+
+        // TODO firefox bug here and never show "Ready"
+        if (PreloadScreen.isDone() && !PreloadScreen.done) {
+            PreloadScreen.loadingText.txt("Ready");
+            PreloadScreen.detailText.show();
+            PreloadScreen.done = true;
+            Viewport.resizeAll();
+        }
+    };
+
+    PreloadScreen.handleKey = function (input) {
+        if (PreloadScreen.isDone() && input == ' ') {
+            State.to(State.MENU);
+        }
+    };
+
+    PreloadScreen.onOut = function (callback) {
+        PreloadScreen.detailText.fadeOut("slow");
+        PreloadScreen.control.fadeOut('slow', callback);
+    };
+
+    PreloadScreen.loadFile = function (id, src, callback, start) {
+        PreloadScreen.numberOfItem++;
+        AssetManager.load(id, src, function (id, result) {
+            PreloadScreen.completedItem++;
+            PreloadScreen.currentItem = 0;
+            if (callback != undefined)
+                callback(id, result);
+        }, start, function (id, progress) {
+            PreloadScreen.currentItem = progress;
+        });
+    };
+
+    PreloadScreen.getPercent = function () {
+        return (PreloadScreen.completedItem+PreloadScreen.currentItem) / PreloadScreen.numberOfItem;
+    };
+
+    PreloadScreen.isDone = function () {
+        return PreloadScreen.donnable && PreloadScreen.numberOfItem == PreloadScreen.completedItem;
+    };
+
     return PreloadScreen;
 })();
 
@@ -1807,13 +1807,8 @@ var MenuScreen = (function() {
         this.repositionSong();
     };
 
-    MenuScreen.onOut = function (callback) {
-        MenuScreen.control.fadeOut(400, callback);
-    };
-
     MenuScreen.tick = function () {
         SongManager.tick();
-        DynamicBackground.tick();
     };
 
     MenuScreen.handleKey = function (input) {
@@ -1832,6 +1827,10 @@ var MenuScreen = (function() {
         } else {
 
         }
+    };
+
+    MenuScreen.onOut = function (callback) {
+        MenuScreen.control.fadeOut(400, callback);
     };
 
     MenuScreen.makeSongDisplay = function () {
@@ -1909,11 +1908,6 @@ var PresongScreen = (function() {
         SongManager.getSong().load();
     };
 
-    PresongScreen.onOut = function (callback) {
-        PresongScreen.control.hide();
-        callback();
-    };
-
     PresongScreen.tick = function () {
         SongManager.tick();
         var song = SongManager.getSong();
@@ -1934,6 +1928,11 @@ var PresongScreen = (function() {
             SongManager.getSong().stop();
             State.to(State.MENU);
         }
+    };
+
+    PresongScreen.onOut = function (callback) {
+        PresongScreen.control.hide();
+        callback();
     };
 
     return PresongScreen;
@@ -1982,14 +1981,8 @@ var SongScreen = (function() {
         AutoPlay.stop();
     };
 
-    SongScreen.onOut = function (callback) {
-        SongScreen.control.hide();
-        callback();
-    };
-
     SongScreen.tick = function () {
         SongManager.tick();
-        DynamicBackground.tick();
         AutoPlay.tick();
 
         var song = SongManager.getSong();
@@ -2031,6 +2024,11 @@ var SongScreen = (function() {
         SongManager.getSong().handleKey(input);
     };
 
+    SongScreen.onOut = function (callback) {
+        SongScreen.control.hide();
+        callback();
+    };
+
     return SongScreen;
 })();
 
@@ -2046,12 +2044,6 @@ var ScoreScreen = (function() {
         ScoreScreen.txtTemp.show();
     };
 
-    ScoreScreen.onOut = function (callback) {
-        SongManager.getSong().stop();
-        ScoreScreen.txtTemp.hide();
-        callback();
-    };
-
     ScoreScreen.tick = function () {
         DynamicBackground.tick();
     };
@@ -2061,6 +2053,12 @@ var ScoreScreen = (function() {
             State.to(State.MENU);
     };
 
+    ScoreScreen.onOut = function (callback) {
+        SongManager.getSong().stop();
+        ScoreScreen.txtTemp.hide();
+        callback();
+    };
+
     return ScoreScreen;
 })();
 
@@ -2068,6 +2066,8 @@ var DynamicBackground = (function () {
     function DynamicBackground () {}
     DynamicBackground.imgTransitioning = false;
     DynamicBackground.currentImage = null;
+
+    DynamicBackground.showSongInfo = false;
 
     DynamicBackground.tick = function () {
         if (SongManager.song != null) {
@@ -2096,6 +2096,8 @@ var DynamicBackground = (function () {
 
                 DynamicBackground.imgTransitioning = true;
             }
+
+            // Song Info
         }
     };
 
