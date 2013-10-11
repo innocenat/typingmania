@@ -1634,6 +1634,8 @@ var Graphics = (function() {
     Graphics.init = function () {
         // Global setting
         $('body').css('background-color', 'black');
+
+        // Font load
         var NUMBER_OF_FONT = 6;
         //noinspection JSUnusedGlobalSymbols
         WebFont.load({
@@ -1649,6 +1651,11 @@ var Graphics = (function() {
             }
         });
         PreloadScreen.numberOfItem += NUMBER_OF_FONT;
+
+        // Create overlay to prevent accidental text selection
+        var superOverlay = new Block(0, 0, 1280, 720);
+        superOverlay.z(10000);
+        superOverlay.show();
     };
 
     return Graphics;
@@ -1669,6 +1676,7 @@ var Graphics = (function() {
  * Presong Screen             50       74
  * Score Screen               75       99
  * Song Screen               100     1000
+ * Final Overlay           10000
  */
 
 var PreloadScreen = (function() {
