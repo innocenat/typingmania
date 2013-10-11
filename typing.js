@@ -16,6 +16,9 @@ var SONGLIST   = 'data/songs.json';
 // Default to 20ms, which translated to 50fps
 var INTERVAL   = 20;
 
+// Engine Version
+var VERSION = '0.1.0';
+
 // TODO Create MENU Screen
 // TODO Beautify the screen
 // TODO Add scoring system (with local storage)
@@ -675,7 +678,7 @@ var AssetManager = (function() {
         }
         AssetManager.queue.loadFile({
             id: id,
-            src: src
+            src: src + "?version=" + encodeURIComponent(VERSION)
         }, start);
         AssetManager.status[id] = {
             status: 0,
