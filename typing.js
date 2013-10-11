@@ -57,7 +57,7 @@ var TypingChar = (function() {
 
         // Sanitation
         for (var i = 0; i < this.possibleInput.length; i++) {
-            this.possibleInput[i] = this.possibleInput[i].replace(/[^A-Za-z0-9 \.',/\\\-\(\)]/g, ' ');
+            this.possibleInput[i] = this.possibleInput[i].replace(/[^A-Za-z0-9 \.',/\\\-\?]/g, ' ');
         }
 
         this.complete = false;
@@ -737,9 +737,7 @@ var KeyCode = (function() {
         [189, '-'    ],
         [190, '.'    ],
         [191, '/'    ],
-        [219, '('    ],
         [220, '\\'   ],
-        [221, ')'    ],
         [222, '\''   ],
         [ 27, 'Esc'  ],
         [ 38, 'Up'   ],
@@ -750,7 +748,7 @@ var KeyCode = (function() {
         [  8, 'Backspace']
     ];
 
-    KeyCode.fromKeyCode = function (code) {
+    KeyCode.fromKeyCode = function (code, shift) {
         var input = '';
         if (code == 32) {
             input = ' ';
@@ -758,6 +756,8 @@ var KeyCode = (function() {
             input = String.fromCharCode(code).toLowerCase();
         } else if (code >= 96 && code <= 105) { // Numpad
             input = String.fromCharCode(code-48).toLowerCase();
+        } else if (code == 191 && shift) { //special case with shift
+            input = '?';
         } else KeyCode.map.forEach(function (c) {
             if (c[0] == code)
                 input = c[1];
@@ -773,11 +773,17 @@ var KeyCode = (function() {
             code = 32;
         } else if ((code >= 65 && code <= 90) || (code >= 48 && code <= 57)) {
             // code = code
+        } else if (input == '?') {
+            code = 191;
         } else KeyCode.map.forEach(function (c) {
             if (c[1] == input)
                 code = c[0];
         });
         return code;
+    };
+
+    KeyCode.toKeyShift = function (input) {
+        return input == '?';
     };
 
     return KeyCode;
@@ -859,7 +865,7 @@ var AutoPlay = (function() {
 
         if (song.getTime()-AutoPlay.lastType >= AutoPlay.interval && !song.typing.isComplete()) {
             AutoPlay.lastType += AutoPlay.interval;
-            var event = $.Event('keydown', { which: KeyCode.toKeyCode(song.typing.getNextChar()) } );
+            var event = $.Event('keydown', { which: KeyCode.toKeyCode(song.typing.getNextChar()), shiftKey: KeyCode.toKeyShift(song.typing.getNextChar()) } );
             $(window).trigger(event);
         }
     };
@@ -2071,7 +2077,7 @@ var ScoreScreen = (function() {
     $(window).on("resize", Viewport.onResize);
     $(window).on("keydown", function (event) {
         var code = event.which;
-        var input = KeyCode.fromKeyCode(code);
+        var input = KeyCode.fromKeyCode(code, event.shiftKey);
 
         switch (State.current) {
             case State.PRELOAD:
