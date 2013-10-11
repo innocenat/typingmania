@@ -26,8 +26,8 @@ var VERSION = '0.1.0';
 
 /// ///////////////////////
 ///  Basic prerequisite checking
-if ($ == undefined || createjs == undefined || createjs.LoadQueue == undefined || createjs.Sound == undefined ||
-    WebFont == undefined || $.jStorage == undefined) {
+if ($ == undefined || WebFont == undefined || $.jStorage == undefined ||
+    createjs == undefined || createjs.LoadQueue == undefined || createjs.Sound == undefined) {
     document.write("<p style=\"font-size:300%;color: #c00;text-align:center\">Error: Prerequisite not satisfied. Please check.</p>");
     throw 'Prerequisite not satisfied.';
 }
