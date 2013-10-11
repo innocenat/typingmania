@@ -1687,7 +1687,8 @@ var PreloadScreen = (function() {
     PreloadScreen.onIn = function () {
         PreloadScreen.loadingText = new Text("Loading...", 60, 640, 355, "white", 'cx,cy');
         PreloadScreen.loadingText.z(5);
-        PreloadScreen.loadingText.css('font-family', 'Junge')
+        PreloadScreen.loadingText
+            .css('font-family', 'Junge')
             .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
         PreloadScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(100, 255, 100, 0.5)');
@@ -1696,17 +1697,21 @@ var PreloadScreen = (function() {
 
         PreloadScreen.detailText = new Text("Press Spacebar to Continue", 28, 640, 430, "white", "cx,cy");
         PreloadScreen.detailText.z(5);
-        PreloadScreen.detailText.css('font-family', 'Junge')
+        PreloadScreen.detailText
+            .css('font-family', 'Junge')
             .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
-        PreloadScreen.creditText = new Text("TypingMania Game Engine &copy; 2013 under the term of MIT License. " +
-            "All medias are properties of the original owners, and are available here for entertainment purpose only. ", 10, 10, 720-25, "white", "by");
+        PreloadScreen.creditText = new Text(
+            "TypingMania Game Engine &copy; 2013 under the term of MIT License. " +
+            "All medias are properties of the original owners, and are available here for entertainment purpose only. "
+            , 10, 10, 720-25, "white", "by");
         PreloadScreen.creditText.z(5);
         PreloadScreen.creditText.css('font-family', 'Droid Sans');
 
-        PreloadScreen.creditText2 = new Text("" +
+        PreloadScreen.creditText2 = new Text(
             "By entering the game, you agree to be held responsible for anything action you do, including, but not limit to, downloading of illegal music file. " +
-            "The author of this website cannot be claimed responsible on any case.", 10, 10, 720-10, "white", "by");
+            "The author of this website cannot be claimed responsible on any case."
+            , 10, 10, 720-10, "white", "by");
         PreloadScreen.creditText2.z(5);
         PreloadScreen.creditText2.css('font-family', 'Droid Sans');
 
@@ -1733,6 +1738,9 @@ var PreloadScreen = (function() {
         }, false);
 
         PreloadScreen.loadFile('__songlist', SONGLIST, function(_, result) {
+            // Because the number of item in this stage is dynamic,
+            // donnable variable are introduced to prevent the load to be done
+            // before new set of data are added.
             SongManager.initSongData(result.songs);
             PreloadScreen.donnable = true;
         }, false);
@@ -1746,7 +1754,6 @@ var PreloadScreen = (function() {
             PreloadScreen.progressbar.progress(PreloadScreen.currentProgress);
         }
 
-        // TODO firefox bug here and never show "Ready"
         if (PreloadScreen.isDone() && !PreloadScreen.done) {
             PreloadScreen.loadingText.txt("Ready");
             PreloadScreen.detailText.show();
@@ -1762,18 +1769,20 @@ var PreloadScreen = (function() {
     };
 
     PreloadScreen.onOut = function (callback) {
-        PreloadScreen.detailText.fadeOut("slow");
-        PreloadScreen.control.fadeOut('slow', callback);
+        PreloadScreen.detailText.hide();
+        PreloadScreen.control.hide();
+        callback();
     };
 
     PreloadScreen.loadFile = function (id, src, callback, start) {
         PreloadScreen.numberOfItem++;
-        AssetManager.load(id, src, function (id, result) {
+
+        AssetManager.load(id, src, function (id, result) { // complete callback
             PreloadScreen.completedItem++;
             PreloadScreen.currentItem = 0;
             if (callback != undefined)
                 callback(id, result);
-        }, start, function (id, progress) {
+        }, start, function (id, progress) { // process callback
             PreloadScreen.currentItem = progress;
         });
     };
@@ -1783,6 +1792,7 @@ var PreloadScreen = (function() {
     };
 
     PreloadScreen.isDone = function () {
+        // Data for each song loaded (donnable) and number of item downloaded equals to number of item to be downloaded.
         return PreloadScreen.donnable && PreloadScreen.numberOfItem == PreloadScreen.completedItem;
     };
 
@@ -1802,7 +1812,7 @@ var MenuScreen = (function() {
         if (this.songDisplay.length == 0)
             MenuScreen.makeSongDisplay();
 
-        this.control.fadeIn();
+        this.control.show();
         DynamicBackground.show();
 
         this.repositionSong();
@@ -1825,14 +1835,15 @@ var MenuScreen = (function() {
         } else if (input == 'Enter' || input == ' ') {
             State.to(State.PRESONG);
         } else if (input == 'Backspace') {
-
+            // TODO search system
         } else {
 
         }
     };
 
     MenuScreen.onOut = function (callback) {
-        MenuScreen.control.fadeOut(400, callback);
+        MenuScreen.control.hide();
+        callback();
     };
 
     MenuScreen.makeSongDisplay = function () {
@@ -1888,8 +1899,9 @@ var PresongScreen = (function() {
 
     PresongScreen.txtStatus = new Text("Standby", 60, 640, 355, "white", "cx,cy");
     PresongScreen.txtStatus.z(51);
-    PresongScreen.txtStatus.css('font-family', 'Junge')
-                           .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
+    PresongScreen.txtStatus
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
     PresongScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(255, 255, 255, 0.5)');
     PresongScreen.progressbar.bar.css('box-shadow', '0px 0px 20px 3px rgba(153, 153, 153, 0.5)');
@@ -1905,7 +1917,11 @@ var PresongScreen = (function() {
         PresongScreen.txtStatus.txt("Standby");
         PresongScreen.progressbar.progress(0);
 
-        PresongScreen.control.fadeIn('slow');
+        PresongScreen.control.show();
+
+        // Stop Autoplay if active
+        // so konami code can be (re-)entered in presong stage
+        AutoPlay.stop();
 
         SongManager.getSong().load();
     };
@@ -1930,6 +1946,8 @@ var PresongScreen = (function() {
             SongManager.getSong().stop();
             State.to(State.MENU);
         }
+
+        AutoPlay.handleInput(input);
     };
 
     PresongScreen.onOut = function (callback) {
@@ -1945,12 +1963,15 @@ var SongScreen = (function() {
 
     SongScreen.typingText = new Text("", 40, 50, 650, "white", 'cy');
     SongScreen.typingText.z(1000);
-    SongScreen.typingText.css('font-family', 'Droid Sans')
-                         .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
+    SongScreen.typingText
+        .css('font-family', 'Droid Sans')
+        .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
     SongScreen.txtTimecode = new Text("0:00 / 0:00", 28, 1200, 600, "white", 'bx');
     SongScreen.txtTimecode.z(1000);
-    SongScreen.txtTimecode.css('font-family', 'Open Sans').css('font-weight', '600');
+    SongScreen.txtTimecode
+        .css('font-family', 'Open Sans')
+        .css('font-weight', '600');
 
     SongScreen.txtLineTyping = new Text("", 20, 100, 480, "white");
     SongScreen.txtLineTyping.z(1000);
@@ -1961,8 +1982,8 @@ var SongScreen = (function() {
     SongScreen.prgOverall = new Progressbar(300, 400, 850, 5, 'blue', 'gray');
     SongScreen.prgOverall.z(1000);
 
-    SongScreen.prgCurrent = new Progressbar(300, 420, 850, 5, 'blue', 'gray');
-    SongScreen.prgCurrent.z(1000);
+    SongScreen.prgInterval = new Progressbar(300, 420, 850, 5, 'blue', 'gray');
+    SongScreen.prgInterval.z(1000);
 
     SongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     SongScreen.control
@@ -1971,16 +1992,12 @@ var SongScreen = (function() {
         .add(SongScreen.txtLineTyping)
         .add(SongScreen.txtLineLyrics)
         .add(SongScreen.prgOverall)
-        .add(SongScreen.prgCurrent);
+        .add(SongScreen.prgInterval)
+        .z(1000);
 
     SongScreen.onIn = function () {
-        setTimeout(function () {
-            SongManager.getSong().play();
-        }, 1000);
-        SongScreen.control.fadeIn();
-
-        // Stop Autoplay if active
-        AutoPlay.stop();
+        SongScreen.control.show();
+        SongManager.getSong().play();
     };
 
     SongScreen.tick = function () {
@@ -1998,7 +2015,7 @@ var SongScreen = (function() {
 
         var tun = song.getTimeUntilNextLine();
         var tcl = song.getCurrentSectionTime();
-        SongScreen.prgCurrent.progress((tcl-tun)/tcl);
+        SongScreen.prgInterval.progress((tcl-tun)/tcl);
 
         var line = song.getCurrentVerse();
         if ((song.typing != null && song.typing.isComplete()) || song.currentVerse == -1) {
