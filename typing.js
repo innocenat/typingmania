@@ -1754,7 +1754,7 @@ var Graphics = (function() {
 
         // Create overlay to prevent accidental text selection
         var superOverlay = new Block(0, 0, 1280, 720);
-        superOverlay.z(10000);
+        //superOverlay.z(10000);
         superOverlay.show();
     };
 
@@ -1969,14 +1969,22 @@ var MenuScreen = (function() {
                 continue;
 
             var c = SongManager.songs[k];
-            var dat = new LimitedControlGroup(0, 0, 400, 100);
-            dat.block.css('border', '1px solid #000');
+            var dat = new LimitedControlGroup(0, 0, 580, 60);
             dat.z(40);
 
             dat.song = c;
 
-            var txtTitle = new Text(c.getData('title-en'), 25, 10, 10, "white");
+            var txtTitle = new Text(c.getData('title'), 30, 6, 0, "white");
+            txtTitle
+                .css('font-family', 'Open Sans')
+                .css('text-shadow', '0px 0px 15px #999, 0px 0px 15px #fff');
             dat.add(txtTitle);
+
+            var txtComposer = new Text(c.getData('composer'), 17, 8, 32, "white");
+            txtComposer
+                .css('font-family', 'Open Sans')
+                .css('text-shadow', '0px 0px 15px #999, 0px 0px 15px #fff');
+            dat.add(txtComposer);
 
             MenuScreen.songDisplay.push(dat);
             MenuScreen.control.add(dat);
@@ -1994,14 +2002,21 @@ var MenuScreen = (function() {
             }
             var c = MenuScreen.songDisplay[i];
             c.show();
-            c.setPosition(500 + (diff == 0 ? 0 : 50), 300 + 120*diff);
+            c.setPosition(700 + (diff == 0 ? 0 : 30), 320 + 70*diff);
             if (diff != 0) {
-                c.setSize(350, 0);
+                c.setSize(550, 0);
             } else {
-                c.setSize(400, 0);
+                c.setSize(580, 0);
                 SongManager.setSong(c.song);
             }
         }
+    };
+
+    MenuScreen.update = function () {
+        MenuScreen.songDisplay.forEach(function (c) {
+            c.children[0].txt(c.song.getData('title'));
+            c.children[1].txt(c.song.getData('composer'));
+        });
     };
 
     MenuScreen.songSorter = function (a, b) {
@@ -2148,6 +2163,8 @@ var SongScreen = (function() {
 
         SongScreen.txtLineTyping.html(SongManager.combineTyping(line.typing));
         SongScreen.txtLineLyrics.html(line.lyrics);
+        SongScreen.txtLineTyping.css('font-family', 'Open Sans');
+        SongScreen.txtLineLyrics.css('font-family', 'Open Sans');
     };
 
     SongScreen.handleKey = function (input) {
@@ -2300,7 +2317,7 @@ var DynamicBackground = (function () {
                 Graphics.language = 'en';
 
             DynamicBackground.update();
-            // TODO Menu update
+            MenuScreen.update();
         } else switch (State.current) {
             case State.PRELOAD:
                 PreloadScreen.handleKey(input);
