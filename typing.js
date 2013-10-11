@@ -1813,7 +1813,7 @@ var MenuScreen = (function() {
 
     MenuScreen.tick = function () {
         SongManager.tick();
-        SongDisplayManager.tick();
+        DynamicBackground.tick();
     };
 
     MenuScreen.handleKey = function (input) {
@@ -1989,7 +1989,7 @@ var SongScreen = (function() {
 
     SongScreen.tick = function () {
         SongManager.tick();
-        SongDisplayManager.tick();
+        DynamicBackground.tick();
         AutoPlay.tick();
 
         var song = SongManager.getSong();
@@ -2053,7 +2053,7 @@ var ScoreScreen = (function() {
     };
 
     ScoreScreen.tick = function () {
-        SongDisplayManager.tick();
+        DynamicBackground.tick();
     };
 
     ScoreScreen.handleKey = function (input) {
@@ -2064,12 +2064,12 @@ var ScoreScreen = (function() {
     return ScoreScreen;
 })();
 
-var SongDisplayManager = (function () {
-    function SongDisplayManager () {}
-    SongDisplayManager.imgTransitioning = false;
-    SongDisplayManager.currentImage = null;
+var DynamicBackground = (function () {
+    function DynamicBackground () {}
+    DynamicBackground.imgTransitioning = false;
+    DynamicBackground.currentImage = null;
 
-    SongDisplayManager.tick = function () {
+    DynamicBackground.tick = function () {
         if (SongManager.song != null) {
             // Background Image
             var song = SongManager.song;
@@ -2078,28 +2078,28 @@ var SongDisplayManager = (function () {
                 song.loadImage();
             }
 
-            if (!SongDisplayManager.imgTransitioning && song.image != null && !song.image.visible()) {
+            if (!DynamicBackground.imgTransitioning && song.image != null && !song.image.visible()) {
                 song.image.z(10);
-                if (SongDisplayManager.currentImage != null) {
-                    SongDisplayManager.currentImage.z(15);
-                    SongDisplayManager.currentImage.fadeOut('slow', function() {
-                        SongDisplayManager.imgTransitioning = false;
+                if (DynamicBackground.currentImage != null) {
+                    DynamicBackground.currentImage.z(15);
+                    DynamicBackground.currentImage.fadeOut('slow', function() {
+                        DynamicBackground.imgTransitioning = false;
                     });
                     song.image.show();
-                    SongDisplayManager.currentImage = song.image;
+                    DynamicBackground.currentImage = song.image;
                 } else {
                     song.image.fadeIn('slow', function() {
-                        SongDisplayManager.imgTransitioning = false;
+                        DynamicBackground.imgTransitioning = false;
                     });
-                    SongDisplayManager.currentImage = song.image;
+                    DynamicBackground.currentImage = song.image;
                 }
 
-                SongDisplayManager.imgTransitioning = true;
+                DynamicBackground.imgTransitioning = true;
             }
         }
     };
 
-    return SongDisplayManager;
+    return DynamicBackground;
 })();
 
 /// ///////////////////////
