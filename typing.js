@@ -977,7 +977,6 @@ var Viewport = (function() {
                 var cc = Viewport.elements[c];
                 if (cc.active) {
                     Viewport.position(c, cc.object, cc, true);
-                    console.log("here");
                 }
             }
         }
@@ -1446,7 +1445,7 @@ var LimitedControlGroup = (function ($super) {
 
     LimitedControlGroup.prototype.hide = function () {
         this.block.hide();
-        _this.stopResizing();
+        this.stopResizing();
         return this;
     };
 
@@ -1475,7 +1474,6 @@ var LimitedControlGroup = (function ($super) {
             c.stopResizing();
         });
         this.block.stopResizing();
-        console.log("stop resizing " + this.id);
     };
 
     LimitedControlGroup.prototype.startResizing = function () {
@@ -1483,7 +1481,6 @@ var LimitedControlGroup = (function ($super) {
             c.startResizing();
         });
         this.block.startResizing();
-        console.log("start resizing " + this.id);
     };
 
     LimitedControlGroup.prototype.detach = function () {
