@@ -2098,11 +2098,17 @@ var DynamicBackground = (function () {
     DynamicBackground.currentSongInfo = '';
     DynamicBackground.control = new LimitedControlGroup(0, 0, 1280, 720);
 
-    DynamicBackground.txtTitleEn = new Text("", 40, 25, 100);
+    DynamicBackground.txtSubitleEn = new Text("", 16, 25, 90, "white");
+    DynamicBackground.txtComposerEn = new Text("", 21, 25, 115, "white");
+    DynamicBackground.txtTitleEn = new Text("", 40, 25, 150, "white");
 
     DynamicBackground.control
         .add(DynamicBackground.txtTitleEn)
-        .z(15);
+        .add(DynamicBackground.txtSubitleEn)
+        .add(DynamicBackground.txtComposerEn)
+        .z(15)
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
     DynamicBackground.show = function () {
         DynamicBackground.control.show();
@@ -2144,6 +2150,8 @@ var DynamicBackground = (function () {
             if (DynamicBackground.currentSongInfo != song.id) {
                 DynamicBackground.currentSongInfo = song.id;
                 DynamicBackground.txtTitleEn.txt(song.getData('title-en'));
+                DynamicBackground.txtSubitleEn.txt(song.getData('subtitle-en'));
+                DynamicBackground.txtComposerEn.txt(song.getData('composer-en'));
             }
         }
     };
