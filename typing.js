@@ -25,7 +25,15 @@ var VERSION = '0.1.0';
 // TODO error report
 
 /// ///////////////////////
-// Helper
+///  Basic prerequisite checking
+if ($ == undefined || createjs == undefined || createjs.LoadQueue == undefined || createjs.Sound == undefined ||
+    WebFont == undefined || $.jStorage == undefined) {
+    document.write("<p style=\"font-size:300%;color: #c00;text-align:center\">Error: Prerequisite not satisfied. Please check.</p>");
+    throw 'Prerequisite not satisfied.';
+}
+
+/// ///////////////////////
+/// Helper
 
 /**
  * This is utilities for class extending. It's copied from
