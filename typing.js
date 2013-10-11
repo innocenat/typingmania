@@ -1656,6 +1656,21 @@ var Graphics = (function() {
 
 /// ///////////////////////
 /// Game Screen
+
+/*
+ * Note on Layering of Screen (z-index)
+ * Type                    Lower    Upper
+ * ----------------------------------------
+ * Main Background                  -1000
+ * Preload Screen              1        9
+ * Dynamic Background         10       19
+ * Song Info                  20       29
+ * Menu Screen                30       49
+ * Presong Screen             50       74
+ * Score Screen               75       99
+ * Song Screen               100     1000
+ */
+
 var PreloadScreen = (function() {
     function PreloadScreen() {}
 
@@ -1778,7 +1793,7 @@ var MenuScreen = (function() {
     function MenuScreen() {}
 
     MenuScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
-    MenuScreen.control.z(200);
+    MenuScreen.control.z(30);
 
     MenuScreen.currentSong = 0;
     MenuScreen.songDisplay = [];
@@ -1827,7 +1842,7 @@ var MenuScreen = (function() {
             var c = SongManager.songs[k];
             var dat = new LimitedControlGroup(0, 0, 400, 100);
             dat.block.css('border', '1px solid #000');
-            dat.z(1000);
+            dat.z(40);
 
             dat.song = c;
 
@@ -1871,19 +1886,19 @@ var PresongScreen = (function() {
     function PresongScreen() {}
 
     PresongScreen.txtStatus = new Text("Standby", 60, 640, 355, "white", "cx,cy");
-    PresongScreen.txtStatus.z(15);
+    PresongScreen.txtStatus.z(51);
     PresongScreen.txtStatus.css('font-family', 'Junge')
                            .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
     PresongScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(255, 255, 255, 0.5)');
     PresongScreen.progressbar.bar.css('box-shadow', '0px 0px 20px 3px rgba(153, 153, 153, 0.5)');
-    PresongScreen.progressbar.z(14);
+    PresongScreen.progressbar.z(50);
 
     PresongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     PresongScreen.control
         .add(PresongScreen.txtStatus)
         .add(PresongScreen.progressbar)
-        .z(500);
+        .z(50);
 
     PresongScreen.onIn = function () {
         PresongScreen.txtStatus.txt("Standby");
@@ -2023,7 +2038,7 @@ var ScoreScreen = (function() {
     function ScoreScreen() {}
 
     ScoreScreen.txtTemp = new Text("Press any key to return to menu.", 60, 640, 355, "white", 'cx,cy');
-    ScoreScreen.txtTemp.z(15);
+    ScoreScreen.txtTemp.z(75);
     ScoreScreen.txtTemp.css('font-family', 'Junge')
         .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
