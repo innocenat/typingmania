@@ -24,6 +24,7 @@ def main(args):
 
     inputfile = args[0];
     outputfile = os.path.splitext(inputfile)[0] + ".json"
+    outputfile2 = os.path.splitext(inputfile)[0] + ".lyrics.json"
 
     # This is so assuming, but it should be okay
     key = os.path.basename(os.path.splitext(inputfile)[0])
@@ -36,24 +37,30 @@ def main(args):
         with open(inputfile, "r", encoding="UTF-8") as fi:
             try:
                 with open(outputfile, "w", encoding="UTF-8") as fo:
-                    convert(fi, fo, key);
+                    try:
+                        with open(outputfile2, "w", encoding="UTF-8") as fo2:
+                            convert(fi, fo, fo2, key);
+                    except IOError:
+                        print("Error: cannot open output file for writing!")
             except IOError:
                 print("Error: cannot open output file for writing!")
     except IOError:
         print("Error: cannot open input file for reading!")
 
-def convert(fi, fo, key):
+def convert(fi, fo, fo2, key):
     from re import compile
     import json
 
     regexp = compile(r"(Dialogue|Comment):[^,]+,(?P<start>[^,]+),(?P<end>[^,]+),[^,]+,(?P<type>[A-Za-z0-9\-]+),[^,]+,[^,]+,[^,]+,[^,]*,(?P<data>.+)")
 
     output = {
-        "event": [],
         "id": key,
         "file": key + ".mp3",
+        "lyrics": key + ".lyrics.json",
         "image": key + ".jpg"
     }
+
+    event = []
 
     # TODO calculate level
 
@@ -65,21 +72,23 @@ def convert(fi, fo, key):
             end   = match.group("end")
             data  = match.group("data")
             if dtype == "lyrics":
-                output["event"].append({
+                event.append({
                     "start":  toMillisec(start),
                     "end":    toMillisec(end),
                     "lyric":  data
                 })
             elif dtype == "typing":
-                for i in range(0, len(output["event"])):
-                    if output["event"][i]["start"] == toMillisec(start) and output["event"][i]["end"] == toMillisec(end):
-                        output["event"][i]["typing"] = parse_typing(data)
+                for i in range(0, len(event)):
+                    if event[i]["start"] == toMillisec(start) and event[i]["end"] == toMillisec(end):
+                        event[i]["typing"] = parse_typing(data)
                         break
             else:
                 output[dtype] = data
 
-    fo.write(json.dumps(output, sort_keys=False, ensure_ascii=True, indent=4, separators=(',', ': ')))
+    fo.write(json.dumps(output, sort_keys=True, ensure_ascii=True, indent=4, separators=(',', ': ')))
     fo.write("\n")
+    fo2.write(json.dumps(event, sort_keys=False, ensure_ascii=True))
+    fo2.write("\n")
 
 def toMillisec(time):
     import re

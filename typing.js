@@ -266,6 +266,7 @@ var Song = (function() {
         this.basePath = basePath;
         this.audio = null;
         this.image = null;
+        this.event = null;
 
         this.id = json.id;
 
@@ -274,8 +275,11 @@ var Song = (function() {
 
         this.isLoading = false;
         this.isLoaded = false;
+        this.isLyricsLoaded = false;
+        this.isAudioLoaded = false;
         this.isPlaying = false;
-        this.loadingProgress = 0;
+        this.audioLoadingProgress = 0;
+        this.lyricsLoadingProgress = 0;
         this.imageLoading = false;
 
         this.typing = null;
@@ -301,16 +305,16 @@ var Song = (function() {
         var ret = false;
         var time = this.getTime();
 
-        if (this.currentVerse+1 < this.getLineCount() && time >= this.data['event'][this.currentVerse+1]["start"]) {
+        if (this.currentVerse+1 < this.getLineCount() && time >= this.event[this.currentVerse+1]["start"]) {
             this.currentVerse++;
             ret = true;
-        } else if (this.currentVerse == this.getLineCount()-1 && time >= this.data['event'][this.currentVerse]["end"]) {
+        } else if (this.currentVerse == this.getLineCount()-1 && time >= this.event[this.currentVerse]["end"]) {
             this.currentVerse++;
             ret = true;
         }
 
         if (this.currentVerse >= 0 && this.currentVerse < this.getLineCount()) {
-            if (time >= this.data['event'][this.currentVerse]["start"] && time < this.data['event'][this.currentVerse]["end"]) {
+            if (time >= this.event[this.currentVerse]["start"] && time < this.event[this.currentVerse]["end"]) {
                 this.isInVerse = true;
             } else {
                 this.isInVerse = false;
@@ -348,7 +352,7 @@ var Song = (function() {
                 "typing": []
             };
         else if (this.currentVerse >= 0 && this.currentVerse+1 < this.getLineCount() && this.isInVerse
-            && this.data["event"][this.currentVerse]["end"] != this.data["event"][this.currentVerse+1]["start"])
+            && this.event[this.currentVerse]["end"] != this.event[this.currentVerse+1]["start"])
             return {
                 "lyrics": "",
                 "typing": []
@@ -361,9 +365,9 @@ var Song = (function() {
 
     Song.prototype.getTimeUntilNextLine = function () {
         if (this.isInVerse) {
-            return this.data["event"][this.currentVerse]["end"] - this.getTime();
+            return this.event[this.currentVerse]["end"] - this.getTime();
         } else if (this.currentVerse+1 < this.getLineCount()) {
-            return this.data["event"][this.currentVerse+1]["start"] - this.getTime();
+            return this.event[this.currentVerse+1]["start"] - this.getTime();
         } else {
             return this.getDuration() - this.getTime();
         }
@@ -371,13 +375,13 @@ var Song = (function() {
 
     Song.prototype.getCurrentSectionTime = function () {
         if (this.isInVerse) {
-            return this.data["event"][this.currentVerse]["end"] - this.data["event"][this.currentVerse]["start"];
+            return this.event[this.currentVerse]["end"] - this.event[this.currentVerse]["start"];
         } else if (this.currentVerse == -1) {
-            return this.data["event"][0]["start"];
+            return this.event[0]["start"];
         } else if (this.currentVerse+1 < this.getLineCount()) {
-            return this.data["event"][this.currentVerse+1]["start"] - this.data["event"][this.currentVerse]["end"];
+            return this.event[this.currentVerse+1]["start"] - this.event[this.currentVerse]["end"];
         } else {
-            return this.getDuration() - this.data["event"][this.getLineCount()-1]["end"];
+            return this.getDuration() - this.event[this.getLineCount()-1]["end"];
         }
     };
 
@@ -394,11 +398,11 @@ var Song = (function() {
     };
 
     Song.prototype.getLineCount = function() {
-        return this.data["event"].length;
+        return this.event.length;
     };
 
     Song.prototype.getLyric = function (line) {
-        return this.data["event"][line]["lyric"];
+        return this.event[line]["lyric"];
     };
 
     Song.prototype.isComplete = function () {
@@ -406,25 +410,25 @@ var Song = (function() {
     };
 
     Song.prototype.getTyping = function (line) {
-        if ("typing" in this.data["event"][line])
-            return this.data["event"][line]["typing"];
-        return [this.data["event"][line]["lyric"]];
+        if ("typing" in this.event[line])
+            return this.event[line]["typing"];
+        return [this.event[line]["lyric"]];
     };
 
     Song.prototype.getData = function (info) {
-        var key = "info-" + info + "-" + Graphics.language;
+        var key = info + "-" + Graphics.language;
         if (key in this.data)
             return this.data[key];
 
-        key = "info-" + info + "-en";
+        key = info + "-en";
         if (key in this.data)
             return this.data[key];
 
-        key = "info-" + info + "-jp";
+        key = info + "-jp";
         if (key in this.data)
             return this.data[key];
 
-        key = "info-" + info;
+        key = info;
         if (key in this.data)
             return this.data[key];
 
@@ -435,8 +439,12 @@ var Song = (function() {
         return this.basePath + '/' + this.data['file'];
     };
 
-    Song.prototype.getLoadProgress  = function () {
-        return this.loadingProgress;
+    Song.prototype.getLyricsURL = function () {
+        return this.basePath + '/' + this.data['lyrics'];
+    };
+
+    Song.prototype.getAudioLoadProgress = function () {
+        return this.audioLoadingProgress;
     };
 
     Song.prototype.isReady = function() {
@@ -471,18 +479,43 @@ var Song = (function() {
         if (this.isLoading)
             return false;
 
-        console.log("Begin loading song...");
-
         var _this = this;
-        AssetManager.load(this.id + "_audio", this.getAudioURL(), function (id) {
-            _this.isLoaded = true;
-            _this.isLoading = false;
-            _this.loadingProgress = 1;
-            _this.audio = createjs.Sound.createInstance(id);
-            console.log("Song " + _this.id + " loaded.");
-        }, true, function (_, progress) {
-            _this.loadingProgress = progress;
-        });
+
+        if (!this.isLyricsLoaded) {
+            console.log("Begin loading lyrics...");
+
+            AssetManager.load(this.id + "_lyrics", this.getLyricsURL(), function (_, result) {
+                _this.isLyricsLoaded = true;
+                _this.lyricsLoadingProgress = 1;
+                _this.event = result;
+                console.log("Lyrics " + _this.id + " loaded.");
+
+                if (_this.isLyricsLoaded && _this.isAudioLoaded) {
+                    _this.isLoading = false;
+                    _this.isLoaded = true;
+                }
+            }, true, function (_, progress) {
+                _this.lyricsLoadingProgress = progress;
+            });
+        }
+
+        if (!this.isAudioLoaded) {
+            console.log("Begin loading song...");
+
+            AssetManager.load(this.id + "_audio", this.getAudioURL(), function (id) {
+                _this.isAudioLoaded = true;
+                _this.audioLoadingProgress = 1;
+                _this.audio = createjs.Sound.createInstance(id);
+                console.log("Song " + _this.id + " loaded.");
+
+                if (_this.isLyricsLoaded && _this.isAudioLoaded) {
+                    _this.isLoading = false;
+                    _this.isLoaded = true;
+                }
+            }, true, function (_, progress) {
+                _this.audioLoadingProgress = progress;
+            });
+        }
 
         this.isLoading = true;
         return true;
@@ -490,6 +523,7 @@ var Song = (function() {
 
     Song.prototype.cancel = function () {
         AssetManager.remove(this.key + "_audio");
+        AssetManager.remove(this.key + "_lyrics");
     };
 
     Song.prototype.loadImage = function () {
@@ -600,12 +634,22 @@ var SongManager = (function() {
     SongManager.initSongData = function (songData) {
         SongManager.songData = songData;
 
+        var count = 0;
         songData.forEach(function (c) {
-            // TODO make this more elegant
-            PreloadScreen.loadFile(c[0] + "_data", c[1] + '/' + c[2], function(_, result) {
-                SongManager.songs[c[0]] = new Song(result, c[1]);
+            console.log("Loading : " + c);
+            PreloadScreen.loadFile("song_" + (count) + "_data", c, function(_, result) {
+                var key = result.id;
+                var basePath = SongManager.basePath(c);
+                SongManager.songs[key] = new Song(result, basePath);
             });
+            count++;
         });
+    };
+
+    SongManager.basePath = function (path) {
+        var paths = path.split('/');
+        paths.pop();
+        return paths.join('/');
     };
 
     SongManager.tick = function () {
@@ -1929,7 +1973,7 @@ var PresongScreen = (function() {
         .css('font-family', 'Junge')
         .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
-    PresongScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(255, 255, 255, 0.5)');
+    PresongScreen.progressbar = new Progressbar(950, 355, 320, 5, 'rgba(255, 255, 255, 0.5)', 'black');
     PresongScreen.progressbar.bar.css('box-shadow', '0px 0px 20px 3px rgba(153, 153, 153, 0.5)');
     PresongScreen.progressbar.z(50);
 
@@ -1959,7 +2003,7 @@ var PresongScreen = (function() {
             PresongScreen.txtStatus.txt("Ready");
             PresongScreen.progressbar.progress(1);
         } else {
-            PresongScreen.progressbar.progress(song.getLoadProgress());
+            PresongScreen.progressbar.progress(song.getAudioLoadProgress());
         }
     };
 
