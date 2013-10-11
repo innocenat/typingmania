@@ -951,6 +951,11 @@ var Viewport = (function() {
             });
         }
 
+        // Note to my future self
+        // shifted variable contain whether to shift the element by the block border margin
+        // item INSIDE other div will have shifted=true
+        // as defined by LimitedControlGroup
+
         var css = {
             position: "absolute"
         };
@@ -1203,6 +1208,9 @@ var ControlBase = (function() {
 
 /**
  * Group of control that can be resized and relocated together.
+ *
+ * Why have both this and limited version, you ask? This is to allow
+ * box-shadow to be set for Progressbar, otherwise it will be hidden.
  */
 var ControlGroup = (function($super) {
     $extends(ControlGroup, $super);
@@ -1386,6 +1394,10 @@ var ControlGroup = (function($super) {
     return ControlGroup;
 })(ControlBase);
 
+/**
+ * Like ControlGroup, but all its children stay inside a DIV
+ * to hide all overflow. Make this much more complex.
+ */
 var LimitedControlGroup = (function ($super) {
     $extends(LimitedControlGroup, $super);
 
