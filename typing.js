@@ -433,6 +433,9 @@ var Song = (function() {
         if (this.isLoading)
             this.cancel();
 
+        this.currentVerse = -1;
+        this.isInVerse = false;
+        this.typing = null;
         this.isPlaying = false;
         this.isLoading = false;
     };
