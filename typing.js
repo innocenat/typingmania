@@ -17,7 +17,7 @@ var SONGLIST   = 'data/songs.json';
 var INTERVAL   = 20;
 
 // Engine Version
-var VERSION = '0.1.0';
+var VERSION = '0.2.0';
 
 // TODO Create MENU Screen
 // TODO Beautify the screen
