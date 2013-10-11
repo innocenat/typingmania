@@ -581,11 +581,6 @@ var SongManager = (function() {
     // Current song
     SongManager.song = null;
 
-    // Related to automatic background changing
-    // TODO move this to dedicated class
-    SongManager.imgTransitioning = false;
-    SongManager.currentImage = null;
-
     SongManager.initSongData = function (songData) {
         SongManager.songData = songData;
 
@@ -600,31 +595,6 @@ var SongManager = (function() {
     SongManager.tick = function () {
         if (SongManager.song != null) {
             SongManager.song.tick();
-
-            var song = SongManager.song;
-
-            if (song.image == null) {
-                song.loadImage();
-            }
-
-            if (!SongManager.imgTransitioning && song.image != null && !song.image.visible()) {
-                song.image.z(10);
-                if (SongManager.currentImage != null) {
-                    SongManager.currentImage.z(15);
-                    SongManager.currentImage.fadeOut('slow', function() {
-                        SongManager.imgTransitioning = false;
-                    });
-                    song.image.show();
-                    SongManager.currentImage = song.image;
-                } else {
-                    song.image.fadeIn('slow', function() {
-                        SongManager.imgTransitioning = false;
-                    });
-                    SongManager.currentImage = song.image;
-                }
-
-                SongManager.imgTransitioning = true;
-            }
         }
     };
 
@@ -1828,6 +1798,7 @@ var MenuScreen = (function() {
 
     MenuScreen.tick = function () {
         SongManager.tick();
+        SongDisplayManager.tick();
     };
 
     MenuScreen.handleKey = function (input) {
@@ -2003,6 +1974,7 @@ var SongScreen = (function() {
 
     SongScreen.tick = function () {
         SongManager.tick();
+        SongDisplayManager.tick();
         AutoPlay.tick();
 
         var song = SongManager.getSong();
@@ -2066,7 +2038,7 @@ var ScoreScreen = (function() {
     };
 
     ScoreScreen.tick = function () {
-
+        SongDisplayManager.tick();
     };
 
     ScoreScreen.handleKey = function (input) {
@@ -2075,6 +2047,44 @@ var ScoreScreen = (function() {
     };
 
     return ScoreScreen;
+})();
+
+var SongDisplayManager = (function () {
+    function SongDisplayManager () {}
+    SongDisplayManager.imgTransitioning = false;
+    SongDisplayManager.currentImage = null;
+
+    SongDisplayManager.tick = function () {
+        if (SongManager.song != null) {
+            // Background Image
+            var song = SongManager.song;
+
+            if (song.image == null) {
+                song.loadImage();
+            }
+
+            if (!SongDisplayManager.imgTransitioning && song.image != null && !song.image.visible()) {
+                song.image.z(10);
+                if (SongDisplayManager.currentImage != null) {
+                    SongDisplayManager.currentImage.z(15);
+                    SongDisplayManager.currentImage.fadeOut('slow', function() {
+                        SongDisplayManager.imgTransitioning = false;
+                    });
+                    song.image.show();
+                    SongDisplayManager.currentImage = song.image;
+                } else {
+                    song.image.fadeIn('slow', function() {
+                        SongDisplayManager.imgTransitioning = false;
+                    });
+                    SongDisplayManager.currentImage = song.image;
+                }
+
+                SongDisplayManager.imgTransitioning = true;
+            }
+        }
+    };
+
+    return SongDisplayManager;
 })();
 
 /// ///////////////////////
