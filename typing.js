@@ -86,7 +86,6 @@ var TypingChar = (function() {
 
         var ret = 0;
 
-        // TODO make sure this is bug-free
         if (accept && this.complete) {
             var toEnd = this.possibleInput[0].length - this.input.length + 1;
             if (toEnd >= 0)
@@ -157,11 +156,11 @@ var TypingWord = (function() {
         // TODO make backward fallback too for sequence of same character
         var accept = this.typingItem[this.currentItem].accept(c);
 
-        if (accept && this.typingItem[this.currentItem].isComplete()) {
+        if (accept >= 0 && this.typingItem[this.currentItem].isComplete()) {
             this.currentItem++;
         }
 
-        if (!accept && this.currentItem > 0) {
+        if (accept == -1 && this.currentItem > 0) {
             accept = this.typingItem[this.currentItem-1].accept(c);
         }
 
@@ -205,7 +204,7 @@ var Typing = (function() {
 
         // TODO make the input across word boundary like in TypingWord
         var accept = this.typingWords[this.currentWord].accept(c);
-        if (accept && this.typingWords[this.currentWord].isComplete()) {
+        if (accept >= 0 && this.typingWords[this.currentWord].isComplete()) {
             this.currentWord++;
         }
 
