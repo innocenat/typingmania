@@ -2170,7 +2170,7 @@ var PresongScreen = (function() {
         .z(60)
         .css('font-family', 'Junge')
         .css('letter-spacing', '0.1em')
-        .css('text-shadow', '0px 0px 8px #666');
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
 
     PresongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     PresongScreen.control
@@ -2325,6 +2325,14 @@ var SongScreen = (function() {
         .css('letter-spacing', '0.1em')
         .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
 
+    SongScreen.lblHelp= new Text("Esc: Abandon Game and View Result", 16.5, 920, 15, 'white');
+    SongScreen.lblHelp.z(1000);
+    SongScreen.lblHelp
+        .z(1000)
+        .css('font-family', 'Junge')
+        .css('letter-spacing', '0.1em')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+
     SongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     SongScreen.control
         .add(SongScreen.typingText)
@@ -2336,6 +2344,7 @@ var SongScreen = (function() {
         .add(SongScreen.prgInterval)
         .add(SongScreen.lblInterval)
         .add(SongScreen.lblTotalTime)
+        .add(SongScreen.lblHelp)
         .z(1000);
 
     SongScreen.shouldUpdate = false;
