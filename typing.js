@@ -2130,6 +2130,7 @@ var PresongScreen = (function() {
                 Graphics.complete.play();
 
                 PresongScreen.txtStatus.txt("Ready");
+                PresongScreen.txtStatus.css('text-shadow', '0px 0px 20px #090, 0px 0px 20px #cfc');
                 PresongScreen.progressbar.progress(1);
                 PresongScreen.progressbar2.progress(1);
                 PresongScreen.txtAudioLoad.txt('Complete!');
@@ -2138,6 +2139,7 @@ var PresongScreen = (function() {
         } else if (song.isLyricsError || song.isAudioError) {
             if (!PresongScreen.error) {
                 PresongScreen.txtStatus.txt("Error");
+                PresongScreen.txtStatus.css('text-shadow', '0px 0px 20px #900, 0px 0px 20px #fcc');
 
                 if (song.isLyricsError) {
                     PresongScreen.txtLyricsLoad.txt('Error!');
