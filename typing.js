@@ -17,7 +17,7 @@ var SETTINGS   = 'data/settings.json';
 var INTERVAL   = 20;
 
 // Engine Version
-var VERSION = '0.3.0-dev+00002';
+var VERSION = '0.3.0';
 
 // TODO Beautify the screen
 // TODO Add scoring system (with local storage)
