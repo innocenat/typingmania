@@ -1745,7 +1745,11 @@ var Graphics = (function() {
             fontactive: function () {
                 Viewport.resizeAll();
                 PreloadScreen.completedItem++;
-            }
+            },
+            fontinactive: function (e) {
+                PreloadScreen.completedItem++;
+            },
+            timeout: 10000
         });
         PreloadScreen.numberOfItem += NUMBER_OF_FONT;
 
@@ -1755,7 +1759,7 @@ var Graphics = (function() {
         superOverlay.show();
 
         // Stylesheet
-        Graphics.initStyle();
+//        Graphics.initStyle();
     };
 
     Graphics.initStyle = function () {
