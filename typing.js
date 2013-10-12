@@ -1735,8 +1735,9 @@ var Graphics = (function() {
         var NUMBER_OF_FONT = 6;
         //noinspection JSUnusedGlobalSymbols
         WebFont.load({
-            google: {
-                families: ['Droid Sans', 'Droid Serif', 'Junge', 'Open Sans:400,600,700']
+            custom: {
+                families: ['Droid Sans', 'Droid Serif', 'Junge', 'Open Sans:400,600,700'],
+                urls: ['data/fonts/fonts.css']
             },
             active: function () {
                 Graphics.fontLoaded = true;
