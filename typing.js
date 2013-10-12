@@ -17,7 +17,7 @@ var SETTINGS   = 'data/settings.json';
 var INTERVAL   = 20;
 
 // Engine Version
-var VERSION = '0.3.0-dev+00001';
+var VERSION = '0.3.0-dev+00002';
 
 // TODO Beautify the screen
 // TODO Add scoring system (with local storage)
@@ -2273,14 +2273,14 @@ var SongScreen = (function() {
     SongScreen.lblTotalTime
         .css('font-family', 'Junge')
         .css('letter-spacing', '0.1em')
-        .css('text-shadow', '0px 0px 8px #ccc');
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
 
     SongScreen.lblInterval = new Text("Interval", 15, 260, 492.5, 'white', 'bx,cy');
     SongScreen.lblInterval.z(1000);
     SongScreen.lblInterval
         .css('font-family', 'Junge')
         .css('letter-spacing', '0.1em')
-        .css('text-shadow', '0px 0px 8px #ccc');
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
 
     SongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     SongScreen.control
@@ -2410,7 +2410,6 @@ var SongScreen = (function() {
                     text += i.character;
                 });
                 cc.text(text);
-                console.log("Complete: " + text);
             }
             elem.append(cc);
         });
