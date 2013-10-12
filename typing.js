@@ -724,7 +724,6 @@ var AssetManager = (function() {
     AssetManager.status = {};
     this.complete = true;
 
-    // TODO add error callback
     AssetManager.load = function (id, src, callback, start, progressCallback, errorCallback) {
         if (start == undefined)
             start = true;
@@ -1848,8 +1847,6 @@ var PreloadScreen = (function() {
             .add(PreloadScreen.creditText)
             .add(PreloadScreen.creditText2)
             .add(PreloadScreen.creditText3);
-
-        // TODO add more information to loading screen
 
         PreloadScreen.control.attach();
         PreloadScreen.control.show();
