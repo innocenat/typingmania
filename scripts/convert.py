@@ -61,7 +61,9 @@ def convert(fi, fo, fo2, key):
     lyrics = []
     typing = []
 
-    # TODO calculate level
+    maxCPM = 0;
+    avgCPMn = 0;
+    avgCPMd = 0;
 
     for line in fi:
         match = regexp.match(line)
@@ -114,10 +116,33 @@ def convert(fi, fo, fo2, key):
 
         if ctyping != False:
             data["typing"] = parse_typing(ctyping["typing"])
-        event.append(data)
 
         lasttime = lyric["end"]
 
+        # level calculation
+        text = data["lyric"]
+        if ctyping != False:
+            text = ', '.join(str(x) for x in data["typing"])
+
+        l = len(text)
+        import re
+
+        for c in text:
+            if re.match(r'[A-Za-z0-9\.\'\? ]', c) == None:
+                l += 1
+
+        cpm = (l)/((lyric["end"]-lyric["start"])/(60*1000))
+        #data["cpm"] = round(cpm)
+
+        maxCPM = max(cpm, maxCPM)
+        avgCPMn += cpm*l
+        avgCPMd += l
+
+        # append data
+        event.append(data)
+
+    output["max_cpm"] = round(maxCPM)
+    output["avg_cpm"] = round(avgCPMn/avgCPMd)
 
     fo.write(json.dumps(output, sort_keys=True, ensure_ascii=True, indent=4, separators=(',', ': ')))
     fo.write("\n")
