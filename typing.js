@@ -2478,6 +2478,24 @@ var DynamicBackground = (function () {
             event.preventDefault();
     });
 
+    // Page Visibility API
+    // Note: only browser that support this natively is Firefox I think. Sucks.
+    var visibilityChangeFunc = function () {
+        if (SongManager.getSong() != null && SongManager.getSong().isPlaying) {
+            if (document.hidden || document.msHidden || document.webkitHidden || document.mozHidden) {
+                SongManager.getSong().audio.pause();
+                console.log("Song paused.");
+            } else {
+                SongManager.getSong().audio.resume();
+                console.log("Song resumed.");
+            }
+        }
+    };
+    $(document).on("visibilityChange", visibilityChangeFunc);
+    $(document).on("msvisibilitychange", visibilityChangeFunc);
+    $(document).on("webkitvisibilitychange", visibilityChangeFunc);
+    $(document).on("mozvisibilitychange", visibilityChangeFunc);
+
     // Main game loop
     setInterval(function() {
         switch (State.current) {
