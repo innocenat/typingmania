@@ -1958,11 +1958,17 @@ var MenuScreen = (function() {
 
     MenuScreen.handleKey = function (input) {
         if (input == 'Up') {
-            MenuScreen.currentSong = Math.max(0, MenuScreen.currentSong-1);
+            MenuScreen.currentSong = MenuScreen.currentSong-1;
+            if (MenuScreen.currentSong < 0)
+                MenuScreen.currentSong = MenuScreen.songDisplay.length-1;
+
             Graphics.select.play();
             this.repositionSong();
         } else if (input == 'Down') {
-            MenuScreen.currentSong = Math.min(MenuScreen.songDisplay.length-1, MenuScreen.currentSong+1);
+            MenuScreen.currentSong = MenuScreen.currentSong+1;
+            if (MenuScreen.currentSong >= MenuScreen.songDisplay.length)
+                MenuScreen.currentSong = 0;
+
             Graphics.select.play();
             this.repositionSong();
         } else if (input == 'Esc') {
