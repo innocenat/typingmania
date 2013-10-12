@@ -1722,15 +1722,11 @@ var Graphics = (function() {
     Graphics.fontLoaded = false;
     Graphics.language   = 'en';
 
-    Graphics.bgm = null;
     Graphics.select = null;
     Graphics.decide = null;
     Graphics.complete = null;
 
     Graphics.song_overlay = null;
-
-    Graphics.bgm_interval = null;
-    Graphics.bgm_playing = false;
 
     Graphics.init = function () {
         // Global setting
@@ -1773,38 +1769,6 @@ var Graphics = (function() {
 
         // Ruleset
         sheet.insertRule(".word {padding-right:0.4em}", 0);
-    };
-
-    Graphics.startBGM = function () {
-        if (Graphics.bgm_playing)
-            return;
-
-        clearInterval(Graphics.bgm_interval);
-        Graphics.bgm_playing = true;
-
-        Graphics.bgm.resume();
-        Graphics.bgm_interval = setInterval(function () {
-            Graphics.bgm.volume = Graphics.bgm.volume + 0.01;
-            if(Graphics.bgm.volume >= 0.2) {
-                clearInterval(Graphics.bgm_interval);
-            }
-        }, 100);
-    };
-
-    Graphics.stopBGM = function () {
-        if (!Graphics.bgm_playing)
-            return;
-
-        clearInterval(Graphics.bgm_interval);
-        Graphics.bgm_playing = false;
-
-        Graphics.bgm_interval = setInterval(function () {
-            Graphics.bgm.volume = Graphics.bgm.volume - 0.05;
-            if(Graphics.bgm.volume <= 0.0000000001) {
-                clearInterval(Graphics.bgm_interval);
-                Graphics.bgm.pause();
-            }
-        }, 100);
     };
 
     return Graphics;
@@ -1915,16 +1879,6 @@ var PreloadScreen = (function() {
                 Graphics.complete = createjs.Sound.createInstance(id);
                 Graphics.complete.volume = 0.2;
             });
-            PreloadScreen.loadFile('__bgm', result.sound_bgm, function(id) {
-                Graphics.bgm = new createjs.Sound.createInstance(id);
-                Graphics.bgm.volume = 0.2;
-                Graphics.bgm_playing = true;
-                Graphics.bgm.play();
-                // Looping
-                Graphics.bgm.addEventListener("complete", function () {
-                    Graphics.bgm.play();
-                });
-            });
 
             // Background overlay
             PreloadScreen.loadFile('__overlay_song', result.overlay_song, function(id) {
@@ -2009,7 +1963,6 @@ var MenuScreen = (function() {
     MenuScreen.songDisplay = [];
 
     MenuScreen.onIn = function () {
-        Graphics.startBGM();
         if (this.songDisplay.length == 0)
             MenuScreen.makeSongDisplay();
 
@@ -2052,7 +2005,6 @@ var MenuScreen = (function() {
     };
 
     MenuScreen.onOut = function (callback) {
-        Graphics.stopBGM();
         MenuScreen.control.hide();
         callback();
     };
@@ -2187,7 +2139,6 @@ var PresongScreen = (function() {
 
     PresongScreen.completed = false;
     PresongScreen.error = false;
-    PresongScreen.okay = false;
 
     PresongScreen.onIn = function () {
         PresongScreen.txtStatus
@@ -2199,7 +2150,6 @@ var PresongScreen = (function() {
 
         PresongScreen.completed = false;
         PresongScreen.error = false;
-        PresongScreen.okay = false;
 
         setTimeout(function () {
             PresongScreen.okay = true;
@@ -2215,7 +2165,7 @@ var PresongScreen = (function() {
     PresongScreen.tick = function () {
         SongManager.tick();
         var song = SongManager.getSong();
-        if (song.isReady() && PresongScreen.okay) {
+        if (song.isReady()) {
             if (!PresongScreen.completed) {
                 PresongScreen.completed = true;
                 Graphics.complete.play();
@@ -2256,7 +2206,7 @@ var PresongScreen = (function() {
     };
 
     PresongScreen.handleKey = function (input) {
-        if (SongManager.getSong().isReady() && (input == ' ' || input == 'Enter') && PresongScreen.okay) {
+        if (SongManager.getSong().isReady() && (input == ' ' || input == 'Enter')) {
             State.to(State.SONG);
         }
 
@@ -2269,7 +2219,6 @@ var PresongScreen = (function() {
     };
 
     PresongScreen.onOut = function (callback) {
-        Graphics.bgm.pause();
         Graphics.complete.stop();
         PresongScreen.control.hide();
         callback();
