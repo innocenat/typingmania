@@ -10,14 +10,14 @@
 var BACKGROUND = 'data/background.jpg';
 
 // Song list and main configuration file.
-var SONGLIST   = 'data/songs.json';
+var SETTINGS   = 'data/settings.json';
 
 // Interval to draw game. In millisecond.
 // Default to 20ms, which translated to 50fps
 var INTERVAL   = 20;
 
 // Engine Version
-var VERSION = '0.2.0';
+var VERSION = '0.3.0-dev+00000';
 
 // TODO Create MENU Screen
 // TODO Beautify the screen
@@ -1837,7 +1837,7 @@ var PreloadScreen = (function() {
             Graphics.backgroundImage.fadeIn('slow');
         }, false);
 
-        PreloadScreen.loadFile('__songlist', SONGLIST, function(_, result) {
+        PreloadScreen.loadFile('__SETTINGS', SETTINGS, function(_, result) {
             // Because the number of item in this stage is dynamic,
             // donnable variable are introduced to prevent the load to be done
             // before new set of data are added.
@@ -2050,17 +2050,53 @@ var PresongScreen = (function() {
         .css('font-family', 'Junge')
         .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
-    PresongScreen.progressbar = new Progressbar(950, 355, 320, 5, 'rgba(255, 255, 255, 0.5)', 'black');
+    PresongScreen.progressbar = new Progressbar(950, 40, 320, 5, 'rgba(255, 255, 255, 1.0)', 'rgba(0, 0, 0, 0.3)');
     PresongScreen.progressbar.bar.css('box-shadow', '0px 0px 20px 3px rgba(153, 153, 153, 0.5)');
     PresongScreen.progressbar.z(50);
+
+    PresongScreen.progressbar2 = new Progressbar(950, 10, 320, 5, 'rgba(255, 255, 255, 1.0)', 'rgba(0, 0, 0, 0.3)');
+    PresongScreen.progressbar2.bar.css('box-shadow', '0px 0px 20px 3px rgba(153, 153, 153, 0.5)');
+    PresongScreen.progressbar2.z(50);
+
+    PresongScreen.lblAudioLoad = new Text("Loading Audio", 18, 950, 15, 'white');
+    PresongScreen.lblAudioLoad
+        .z(60)
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 8px #999, 0px 0px 8px #fff');
+
+    PresongScreen.lblLyricsLoad = new Text("Loading Lyrics", 18, 950, 45, 'white');
+    PresongScreen.lblLyricsLoad
+        .z(60)
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 8px #999, 0px 0px 8px #fff');
+
+    PresongScreen.txtAudioLoad = new Text("0%", 18, 1270, 15, 'white', 'bx');
+    PresongScreen.txtAudioLoad
+        .z(60)
+        .css('font-weight', 'bold')
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 8px #999, 0px 0px 8px #fff');
+
+    PresongScreen.txtLyricsLoad = new Text("0%", 18, 1270, 45, 'white', 'bx');
+    PresongScreen.txtLyricsLoad
+        .z(60)
+        .css('font-weight', 'bold')
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 8px #999, 0px 0px 8px #fff');
 
     PresongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     PresongScreen.control
         .add(PresongScreen.txtStatus)
         .add(PresongScreen.progressbar)
+        .add(PresongScreen.progressbar2)
+        .add(PresongScreen.lblAudioLoad)
+        .add(PresongScreen.lblLyricsLoad)
+        .add(PresongScreen.txtAudioLoad)
+        .add(PresongScreen.txtLyricsLoad)
         .z(50);
 
-    PresongScreen.readSoundPlayed = false;
+    PresongScreen.completed = false;
+    PresongScreen.error = false;
 
     PresongScreen.onIn = function () {
         PresongScreen.txtStatus.txt("Standby");
@@ -2068,7 +2104,8 @@ var PresongScreen = (function() {
 
         PresongScreen.control.show();
 
-        PresongScreen.readSoundPlayed = false;
+        PresongScreen.completed = false;
+        PresongScreen.error = false;
 
         // Stop Autoplay if active
         // so konami code can be (re-)entered in presong stage
@@ -2081,17 +2118,40 @@ var PresongScreen = (function() {
         SongManager.tick();
         var song = SongManager.getSong();
         if (song.isReady()) {
-            PresongScreen.txtStatus.txt("Ready");
-            PresongScreen.progressbar.progress(1);
-            if (!PresongScreen.readSoundPlayed) {
-                PresongScreen.readSoundPlayed = true;
+            if (!PresongScreen.completed) {
+                PresongScreen.completed = true;
                 Graphics.complete.play();
+
+                PresongScreen.txtStatus.txt("Ready");
+                PresongScreen.progressbar.progress(1);
+                PresongScreen.progressbar2.progress(1);
+                PresongScreen.txtAudioLoad.txt('Complete!');
+                PresongScreen.txtLyricsLoad.txt('Complete!');
             }
         } else if (song.isLyricsError || song.isAudioError) {
-            PresongScreen.txtStatus.txt("Error");
-            // TODO make flag for this instead of set text every time
+            if (!PresongScreen.error) {
+                PresongScreen.txtStatus.txt("Error");
+
+                if (song.isLyricsError) {
+                    PresongScreen.txtLyricsLoad.txt('Error!');
+                }
+
+                if (song.isAudioError) {
+                    PresongScreen.txtAudioLoad.txt('Error!');
+                }
+            }
         } else {
-            PresongScreen.progressbar.progress(song.getAudioLoadProgress());
+            PresongScreen.progressbar2.progress(song.getAudioLoadProgress());
+            PresongScreen.progressbar.progress(song.getLyricsLoadProgress());
+
+            if (song.getLyricsLoadProgress() < 1)
+                PresongScreen.txtLyricsLoad.txt("" + Math.round(song.getLyricsLoadProgress()*100) + "%");
+            else
+                PresongScreen.txtLyricsLoad.txt("Complete!");
+            if (song.getAudioLoadProgress() < 1)
+                PresongScreen.txtAudioLoad.txt("" + Math.round(song.getAudioLoadProgress()*100) + "%");
+            else
+                PresongScreen.txtAudioLoad.txt("Complete!");
         }
     };
 
