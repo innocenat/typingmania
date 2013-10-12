@@ -2527,6 +2527,16 @@ var DynamicBackground = (function () {
                 ScoreScreen.tick();
                 break;
         }
+
+        // Set title bar
+        if (SongManager.getSong() != null) {
+            var title = '';
+            title += SongManager.getSong().getData('title');
+            title += ' - TypingMania'; // TODO make this show what's show in config file
+        } else {
+            title = 'TypingMania';
+        }
+        document.title = title;
     }, INTERVAL);
 
     // Start game
