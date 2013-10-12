@@ -17,7 +17,7 @@ var SETTINGS   = 'data/settings.json';
 var INTERVAL   = 20;
 
 // Engine Version
-var VERSION = '0.3.0-dev+00000';
+var VERSION = '0.3.0-dev+00001';
 
 // TODO Create MENU Screen
 // TODO Beautify the screen
@@ -2084,6 +2084,12 @@ var PresongScreen = (function() {
         .css('font-family', 'Junge')
         .css('text-shadow', '0px 0px 8px #999, 0px 0px 8px #fff');
 
+    PresongScreen.lblHelp = new Text("Esc: Return to Menu / Enter or Space: Start", 16.5, 930, 690, 'white');
+    PresongScreen.lblHelp
+        .z(60)
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 8px #666');
+
     PresongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     PresongScreen.control
         .add(PresongScreen.txtStatus)
@@ -2093,6 +2099,7 @@ var PresongScreen = (function() {
         .add(PresongScreen.lblLyricsLoad)
         .add(PresongScreen.txtAudioLoad)
         .add(PresongScreen.txtLyricsLoad)
+        .add(PresongScreen.lblHelp)
         .z(50);
 
     PresongScreen.completed = false;
@@ -2156,7 +2163,7 @@ var PresongScreen = (function() {
     };
 
     PresongScreen.handleKey = function (input) {
-        if (SongManager.getSong().isReady() && input == ' ') {
+        if (SongManager.getSong().isReady() && (input == ' ' || input == 'Enter')) {
             State.to(State.SONG);
         }
 
