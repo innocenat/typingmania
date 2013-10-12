@@ -1799,7 +1799,7 @@ var Graphics = (function() {
         Graphics.bgm_playing = false;
 
         Graphics.bgm_interval = setInterval(function () {
-            Graphics.bgm.volume = Graphics.bgm.volume - 0.01;
+            Graphics.bgm.volume = Graphics.bgm.volume - 0.05;
             if(Graphics.bgm.volume <= 0.0000000001) {
                 clearInterval(Graphics.bgm_interval);
                 Graphics.bgm.pause();
@@ -1917,9 +1917,9 @@ var PreloadScreen = (function() {
             });
             PreloadScreen.loadFile('__bgm', result.sound_bgm, function(id) {
                 Graphics.bgm = new createjs.Sound.createInstance(id);
-                Graphics.bgm.volume = 0;
+                Graphics.bgm.volume = 0.2;
+                Graphics.bgm_playing = true;
                 Graphics.bgm.play();
-                Graphics.bgm.pause();
                 // Looping
                 Graphics.bgm.addEventListener("complete", function () {
                     Graphics.bgm.play();
@@ -2052,6 +2052,7 @@ var MenuScreen = (function() {
     };
 
     MenuScreen.onOut = function (callback) {
+        Graphics.stopBGM();
         MenuScreen.control.hide();
         callback();
     };
@@ -2186,6 +2187,7 @@ var PresongScreen = (function() {
 
     PresongScreen.completed = false;
     PresongScreen.error = false;
+    PresongScreen.okay = false;
 
     PresongScreen.onIn = function () {
         PresongScreen.txtStatus
@@ -2197,6 +2199,11 @@ var PresongScreen = (function() {
 
         PresongScreen.completed = false;
         PresongScreen.error = false;
+        PresongScreen.okay = false;
+
+        setTimeout(function () {
+            PresongScreen.okay = true;
+        }, 1000);
 
         // Stop Autoplay if active
         // so konami code can be (re-)entered in presong stage
@@ -2208,7 +2215,7 @@ var PresongScreen = (function() {
     PresongScreen.tick = function () {
         SongManager.tick();
         var song = SongManager.getSong();
-        if (song.isReady()) {
+        if (song.isReady() && PresongScreen.okay) {
             if (!PresongScreen.completed) {
                 PresongScreen.completed = true;
                 Graphics.complete.play();
@@ -2249,7 +2256,7 @@ var PresongScreen = (function() {
     };
 
     PresongScreen.handleKey = function (input) {
-        if (SongManager.getSong().isReady() && (input == ' ' || input == 'Enter')) {
+        if (SongManager.getSong().isReady() && (input == ' ' || input == 'Enter') && PresongScreen.okay) {
             State.to(State.SONG);
         }
 
@@ -2262,7 +2269,7 @@ var PresongScreen = (function() {
     };
 
     PresongScreen.onOut = function (callback) {
-        Graphics.stopBGM();
+        Graphics.bgm.pause();
         Graphics.complete.stop();
         PresongScreen.control.hide();
         callback();
