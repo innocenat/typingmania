@@ -27,7 +27,8 @@ Installation
 You need following software:
 
  - Web server (any of them; it just has to serve static content)
- - Browser (only Firefox and Chrome tested and supported)
+ - Browser — only Firefox and Chrome tested and supported, though it should also work on IE10
+   or any recent standard-compliant browser. Mobile browser not supported obviously.
  - Python 3.x (for song generation script)
 
 To install, just drop the whole download (perhaps without scripts directory) into

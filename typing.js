@@ -2236,7 +2236,7 @@ var SongScreen = (function() {
         .css('font-family', 'Droid Sans')
         .css('text-shadow', '0px 0px 20px #fff, 0px 0px 20px #999');
 
-    SongScreen.typingChar = new Text("", 90, 115, 675, "white", 'by,bx');
+    SongScreen.typingChar = new Text("", 90, 120, 675, "white", 'by,bx');
     SongScreen.typingChar.z(1000);
     SongScreen.typingChar
         .css('font-family', 'Droid Sans')
@@ -2267,14 +2267,14 @@ var SongScreen = (function() {
     SongScreen.prgInterval = new Progressbar(280, 490, 960, 5, 'white', 'gray');
     SongScreen.prgInterval.z(1000);
 
-    SongScreen.lblTotalTime = new Text("Total Time", 15, 260, 472.5, 'white', 'bx,cy');
+    SongScreen.lblTotalTime = new Text("Total Time", 15, 270, 470, 'white', 'bx,cy');
     SongScreen.lblTotalTime.z(1000);
     SongScreen.lblTotalTime
         .css('font-family', 'Junge')
         .css('letter-spacing', '0.1em')
         .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
 
-    SongScreen.lblInterval = new Text("Interval", 15, 260, 492.5, 'white', 'bx,cy');
+    SongScreen.lblInterval = new Text("Interval", 15, 270, 490, 'white', 'bx,cy');
     SongScreen.lblInterval.z(1000);
     SongScreen.lblInterval
         .css('font-family', 'Junge')
