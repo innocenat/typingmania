@@ -492,7 +492,6 @@ var Song = (function() {
                 _this.lyricsLoadingProgress = 1;
                 _this.event = result;
                 console.log("Lyrics " + _this.id + " loaded.");
-                console.log(result);
 
                 if (_this.isLyricsLoaded && _this.isAudioLoaded) {
                     _this.isLoaded = true;
@@ -1719,6 +1718,11 @@ var Graphics = (function() {
     Graphics.fontLoaded = false;
     Graphics.language   = 'en';
 
+    Graphics.bgm = null;
+    Graphics.select = null;
+    Graphics.decide = null;
+    Graphics.complete = null;
+
     Graphics.init = function () {
         // Global setting
         $('body').css('background-color', 'black');
@@ -1838,6 +1842,26 @@ var PreloadScreen = (function() {
             // donnable variable are introduced to prevent the load to be done
             // before new set of data are added.
             SongManager.initSongData(result.songs);
+
+            // Load other song asset
+            PreloadScreen.loadFile('__select', result.sound_select, function(id) {
+                Graphics.select = createjs.Sound.createInstance(id);
+                Graphics.select.setVolume(0.2);
+            });
+            PreloadScreen.loadFile('__decide', result.sound_decide, function(id) {
+                Graphics.decide = createjs.Sound.createInstance(id);
+                Graphics.decide .setVolume(0.2);
+            });
+            PreloadScreen.loadFile('__complete', result.sound_complete, function(id) {
+                Graphics.complete = createjs.Sound.createInstance(id);
+                Graphics.complete .setVolume(0.2);
+            });
+            PreloadScreen.loadFile('__bgm', result.sound_bgm, function(id) {
+                Graphics.bgm = new createjs.Sound.createInstance(id);
+                Graphics.bgm.setVolume(0.2);
+            });
+
+
             PreloadScreen.donnable = true;
         }, false);
 
@@ -1931,13 +1955,16 @@ var MenuScreen = (function() {
     MenuScreen.handleKey = function (input) {
         if (input == 'Up') {
             MenuScreen.currentSong = Math.max(0, MenuScreen.currentSong-1);
+            Graphics.select.play();
             this.repositionSong();
         } else if (input == 'Down') {
             MenuScreen.currentSong = Math.min(MenuScreen.songDisplay.length-1, MenuScreen.currentSong+1);
+            Graphics.select.play();
             this.repositionSong();
         } else if (input == 'Esc') {
 
         } else if (input == 'Enter' || input == ' ') {
+            Graphics.decide.play();
             State.to(State.PRESONG);
         } else if (input == 'Backspace') {
             // TODO search system
@@ -2033,11 +2060,15 @@ var PresongScreen = (function() {
         .add(PresongScreen.progressbar)
         .z(50);
 
+    PresongScreen.readSoundPlayed = false;
+
     PresongScreen.onIn = function () {
         PresongScreen.txtStatus.txt("Standby");
         PresongScreen.progressbar.progress(0);
 
         PresongScreen.control.show();
+
+        PresongScreen.readSoundPlayed = false;
 
         // Stop Autoplay if active
         // so konami code can be (re-)entered in presong stage
@@ -2052,6 +2083,10 @@ var PresongScreen = (function() {
         if (song.isReady()) {
             PresongScreen.txtStatus.txt("Ready");
             PresongScreen.progressbar.progress(1);
+            if (!PresongScreen.readSoundPlayed) {
+                PresongScreen.readSoundPlayed = true;
+                Graphics.complete.play();
+            }
         } else if (song.isLyricsError || song.isAudioError) {
             PresongScreen.txtStatus.txt("Error");
             // TODO make flag for this instead of set text every time
@@ -2074,6 +2109,7 @@ var PresongScreen = (function() {
     };
 
     PresongScreen.onOut = function (callback) {
+        Graphics.complete.stop();
         PresongScreen.control.hide();
         callback();
     };
