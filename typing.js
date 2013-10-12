@@ -1726,6 +1726,8 @@ var Graphics = (function() {
     Graphics.decide = null;
     Graphics.complete = null;
 
+    Graphics.song_overlay = null;
+
     Graphics.init = function () {
         // Global setting
         $('body').css('background-color', 'black');
@@ -1862,6 +1864,12 @@ var PreloadScreen = (function() {
             PreloadScreen.loadFile('__bgm', result.sound_bgm, function(id) {
                 Graphics.bgm = new createjs.Sound.createInstance(id);
                 Graphics.bgm.setVolume(0.2);
+            });
+
+            // Background overlay
+            PreloadScreen.loadFile('__overlay_song', result.overlay_song, function(id) {
+                Graphics.overlay_song = new Image(id, 0, 0, 1280, 720);
+                Graphics.overlay_song.z(999);
             });
 
 
@@ -2234,6 +2242,7 @@ var SongScreen = (function() {
 
     SongScreen.onIn = function () {
         SongScreen.control.show();
+        Graphics.overlay_song.show();
         SongManager.getSong().play();
     };
 
@@ -2284,6 +2293,7 @@ var SongScreen = (function() {
 
     SongScreen.onOut = function (callback) {
         SongScreen.control.hide();
+        Graphics.overlay_song.hide();
         callback();
     };
 
