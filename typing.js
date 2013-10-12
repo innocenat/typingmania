@@ -1794,6 +1794,7 @@ var PreloadScreen = (function() {
         PreloadScreen.loadingText.z(5);
         PreloadScreen.loadingText
             .css('font-family', 'Junge')
+            .css('letter-spacing', '0.1em')
             .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
         PreloadScreen.progressbar = new Progressbar(0, 355, 1280, 5, 'rgba(100, 255, 100, 0.5)');
@@ -1804,6 +1805,7 @@ var PreloadScreen = (function() {
         PreloadScreen.detailText.z(5);
         PreloadScreen.detailText
             .css('font-family', 'Junge')
+            .css('letter-spacing', '0.1em')
             .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
         PreloadScreen.creditText = new Text(
@@ -2065,6 +2067,7 @@ var PresongScreen = (function() {
     PresongScreen.txtStatus.z(51);
     PresongScreen.txtStatus
         .css('font-family', 'Junge')
+        .css('letter-spacing', '0.1em')
         .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
     PresongScreen.progressbar = new Progressbar(950, 40, 320, 5, 'rgba(255, 255, 255, 1.0)', 'rgba(0, 0, 0, 0.3)');
@@ -2079,12 +2082,14 @@ var PresongScreen = (function() {
     PresongScreen.lblAudioLoad
         .z(60)
         .css('font-family', 'Junge')
+        .css('letter-spacing', '0.1em')
         .css('text-shadow', '0px 0px 8px #999, 0px 0px 8px #fff');
 
     PresongScreen.lblLyricsLoad = new Text("Loading Lyrics", 18, 950, 45, 'white');
     PresongScreen.lblLyricsLoad
         .z(60)
         .css('font-family', 'Junge')
+        .css('letter-spacing', '0.1em')
         .css('text-shadow', '0px 0px 8px #999, 0px 0px 8px #fff');
 
     PresongScreen.txtAudioLoad = new Text("0%", 18, 1270, 15, 'white', 'bx');
@@ -2101,10 +2106,11 @@ var PresongScreen = (function() {
         .css('font-family', 'Junge')
         .css('text-shadow', '0px 0px 8px #999, 0px 0px 8px #fff');
 
-    PresongScreen.lblHelp = new Text("Esc: Return to Menu / Enter or Space: Start", 16.5, 930, 690, 'white');
+    PresongScreen.lblHelp = new Text("Esc: Return to Menu / Enter or Space: Start", 16.5, 860, 690, 'white');
     PresongScreen.lblHelp
         .z(60)
         .css('font-family', 'Junge')
+        .css('letter-spacing', '0.1em')
         .css('text-shadow', '0px 0px 8px #666');
 
     PresongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
@@ -2212,23 +2218,43 @@ var SongScreen = (function() {
         .css('font-family', 'Droid Sans')
         .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
 
-    SongScreen.txtTimecode = new Text("0:00 / 0:00", 28, 1200, 600, "white", 'bx');
+    SongScreen.txtTimecode = new Text("0:00 / 0:00", 28, 1240, 430, "white", 'bx');
     SongScreen.txtTimecode.z(1000);
     SongScreen.txtTimecode
         .css('font-family', 'Open Sans')
         .css('font-weight', '600');
 
-    SongScreen.txtLineTyping = new Text("", 20, 100, 480, "white");
+    SongScreen.txtLineTyping = new Text("", 22, 185, 540, "#ddd");
     SongScreen.txtLineTyping.z(1000);
+    SongScreen.txtLineTyping
+        .css('font-family', 'Open Sans')
+        .css('text-shadow', '0px 0px 4px #666');
 
-    SongScreen.txtLineLyrics = new Text("", 24, 100, 500, "white");
+    SongScreen.txtLineLyrics = new Text("", 33, 185, 608, "#ddd", 'by');
     SongScreen.txtLineLyrics.z(1000);
+    SongScreen.txtLineLyrics
+        .css('font-family', 'Open Sans')
+        .css('text-shadow', '0px 0px 7px #666');
 
-    SongScreen.prgOverall = new Progressbar(300, 400, 850, 5, 'blue', 'gray');
+    SongScreen.prgOverall = new Progressbar(280, 470, 960, 5, 'white', 'gray');
     SongScreen.prgOverall.z(1000);
 
-    SongScreen.prgInterval = new Progressbar(300, 420, 850, 5, 'blue', 'gray');
+    SongScreen.prgInterval = new Progressbar(280, 490, 960, 5, 'white', 'gray');
     SongScreen.prgInterval.z(1000);
+
+    SongScreen.lblTotalTime = new Text("Total Time", 15, 260, 472.5, 'white', 'bx,cy');
+    SongScreen.lblTotalTime.z(1000);
+    SongScreen.lblTotalTime
+        .css('font-family', 'Junge')
+        .css('letter-spacing', '0.1em')
+        .css('text-shadow', '0px 0px 8px #ccc');
+
+    SongScreen.lblInterval = new Text("Interval", 15, 260, 492.5, 'white', 'bx,cy');
+    SongScreen.lblInterval.z(1000);
+    SongScreen.lblInterval
+        .css('font-family', 'Junge')
+        .css('letter-spacing', '0.1em')
+        .css('text-shadow', '0px 0px 8px #ccc');
 
     SongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     SongScreen.control
@@ -2238,6 +2264,8 @@ var SongScreen = (function() {
         .add(SongScreen.txtLineLyrics)
         .add(SongScreen.prgOverall)
         .add(SongScreen.prgInterval)
+        .add(SongScreen.lblInterval)
+        .add(SongScreen.lblTotalTime)
         .z(1000);
 
     SongScreen.onIn = function () {
@@ -2274,8 +2302,6 @@ var SongScreen = (function() {
 
         SongScreen.txtLineTyping.html(SongManager.combineTyping(line.typing));
         SongScreen.txtLineLyrics.html(line.lyrics);
-        SongScreen.txtLineTyping.css('font-family', 'Open Sans');
-        SongScreen.txtLineLyrics.css('font-family', 'Open Sans');
     };
 
     SongScreen.handleKey = function (input) {
