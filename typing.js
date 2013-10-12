@@ -1852,12 +1852,6 @@ var PreloadScreen = (function() {
         PreloadScreen.control.attach();
         PreloadScreen.control.show();
 
-        PreloadScreen.loadFile('__background', BACKGROUND, function(id) {
-            Graphics.backgroundImage = new Image(id, 0, 0, 1280, 720);
-            Graphics.backgroundImage.z(-1000);
-            Graphics.backgroundImage.fadeIn('slow');
-        }, false);
-
         PreloadScreen.loadFile('__SETTINGS', SETTINGS, function(_, result) {
             // Because the number of item in this stage is dynamic,
             // donnable variable are introduced to prevent the load to be done
@@ -1886,6 +1880,12 @@ var PreloadScreen = (function() {
 
 
             PreloadScreen.donnable = true;
+        }, false);
+
+        PreloadScreen.loadFile('__background', BACKGROUND, function(id) {
+            Graphics.backgroundImage = new Image(id, 0, 0, 1280, 720);
+            Graphics.backgroundImage.z(-1000);
+            Graphics.backgroundImage.fadeIn('slow');
         }, false);
 
         AssetManager.queue.load();
