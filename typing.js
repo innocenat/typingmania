@@ -1753,6 +1753,18 @@ var Graphics = (function() {
         var superOverlay = new Block(0, 0, 1280, 720);
         //superOverlay.z(10000);
         superOverlay.show();
+
+        // Stylesheet
+        Graphics.initStyle();
+    };
+
+    Graphics.initStyle = function () {
+        var style = $('<style></style>');
+        style.appendTo('body');
+        var sheet = style[0].sheet;
+
+        // Ruleset
+        sheet.insertRule(".word {padding-right:0.4em}", 0);
     };
 
     return Graphics;
