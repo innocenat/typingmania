@@ -62,6 +62,7 @@ var $extends = function (d, b) {
 var TypingChar = (function() {
     function TypingChar(character) {
         this.input = "";
+        this.character = character;
         this.possibleInput = Kana.getPossibleRomaji(character.toLowerCase());
 
         // Sanitation
@@ -224,12 +225,11 @@ var Typing = (function() {
         return this.currentWord >= this.typingWords.length;
     };
 
-    Typing.prototype.getDisplay = function () {
-        var ret = "";
+    Typing.prototype.getTypingList = function () {
+        var ret = [];
         this.typingWords.forEach(function (i) {
             if (!i.isComplete())
-                // TODO make it more pretty and maybe dom-based only
-                ret += '<span class="word">' + i.getRemainingText().replace(/ /g, "_").toUpperCase() + '</span>';
+                ret.push(i.getRemainingText().replace(/ /g, "_").toUpperCase());
         });
         return ret;
     };
@@ -293,10 +293,10 @@ var Song = (function() {
         return false;
     };
 
-    Song.prototype.getDisplay = function () {
+    Song.prototype.getTypingList = function () {
         if (this.typing != null)
-            return this.typing.getDisplay();
-        return "";
+            return this.typing.getTypingList();
+        return [];
     };
 
     Song.prototype.tick = function () {
@@ -776,6 +776,7 @@ var AssetManager = (function() {
         var id = event.item.id;
         if (AssetManager.status[id].error != undefined)
             AssetManager.status[id].error(id, event.item.src);
+        console.log(event);
     };
 
     AssetManager.onComplete = function () {
@@ -1759,7 +1760,7 @@ var Graphics = (function() {
         superOverlay.show();
 
         // Stylesheet
-//        Graphics.initStyle();
+        Graphics.initStyle();
     };
 
     Graphics.initStyle = function () {
@@ -2145,7 +2146,9 @@ var PresongScreen = (function() {
     PresongScreen.error = false;
 
     PresongScreen.onIn = function () {
-        PresongScreen.txtStatus.txt("Standby");
+        PresongScreen.txtStatus
+            .txt("Standby")
+            .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
         PresongScreen.progressbar.progress(0);
 
         PresongScreen.control.show();
@@ -2228,11 +2231,18 @@ var PresongScreen = (function() {
 var SongScreen = (function() {
     function SongScreen() {}
 
-    SongScreen.typingText = new Text("", 40, 50, 650, "white", 'cy');
+    SongScreen.typingText = new Text("", 32, 130, 665, "white", 'by');
     SongScreen.typingText.z(1000);
     SongScreen.typingText
         .css('font-family', 'Droid Sans')
-        .css('text-shadow', '0px 0px 20px #6f6, 0px 0px 20px #9f9');
+        .css('text-shadow', '0px 0px 20px #fff, 0px 0px 20px #999');
+
+    SongScreen.typingChar = new Text("", 90, 115, 675, "white", 'by,bx');
+    SongScreen.typingChar.z(1000);
+    SongScreen.typingChar
+        .css('font-family', 'Droid Sans')
+        .css('font-weight', 300)
+        .css('text-shadow', '0px 0px 20px #fff, 0px 0px 20px #999');
 
     SongScreen.txtTimecode = new Text("0:00 / 0:00", 28, 1240, 430, "white", 'bx');
     SongScreen.txtTimecode.z(1000);
@@ -2275,6 +2285,7 @@ var SongScreen = (function() {
     SongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     SongScreen.control
         .add(SongScreen.typingText)
+        .add(SongScreen.typingChar)
         .add(SongScreen.txtTimecode)
         .add(SongScreen.txtLineTyping)
         .add(SongScreen.txtLineLyrics)
@@ -2284,7 +2295,12 @@ var SongScreen = (function() {
         .add(SongScreen.lblTotalTime)
         .z(1000);
 
+    SongScreen.shouldUpdate = false;
+    SongScreen.lastVerse = -1;
+
     SongScreen.onIn = function () {
+        SongScreen.shouldUpdate = true;
+        SongScreen.lastVerse = -1;
         SongScreen.control.show();
         Graphics.overlay_song.show();
         SongManager.getSong().play();
@@ -2299,25 +2315,105 @@ var SongScreen = (function() {
         if (song == null)
             return;
 
-        SongScreen.typingText.html(song.getDisplay());
+        // Process typing display & auxiliary line
+        if (SongScreen.shouldUpdate || SongScreen.lastVerse != song.currentVerse) {
+            SongScreen.lastVerse = song.currentVerse;
+            SongScreen.shouldUpdate = false;
+
+            SongScreen.typingText.$.empty();
+            var tl = song.getTypingList();
+            var tchar = "";
+            tl.forEach(function (c) {
+                var cc = $('<span></span>');
+                cc.css('padding-right', '0.4em');
+                if (tchar.length == 0) {
+                    tchar = c.substring(0, 1);
+                    if (c.length > 1)
+                        cc.text(c.substring(1));
+                } else {
+                    cc.text(c);
+                }
+                SongScreen.typingText.$.append(cc);
+            });
+            SongScreen.typingText.shouldResize();
+            SongScreen.typingChar.txt(tchar);
+
+            var line;
+            if ((song.typing != null && song.typing.isComplete()) || song.isBlank(song.currentVerse)) {
+                line = song.getNextVerse();
+                SongScreen.combinedTypingSimple(line.typing, SongScreen.txtLineTyping.$)
+            } else {
+                line = song.getCurrentVerse();
+                SongScreen.combinedTypingCurrent(song.typing, SongScreen.txtLineTyping.$)
+            }
+
+            SongScreen.txtLineLyrics.html(line.lyrics);
+            SongScreen.txtLineTyping.shouldResize();
+            SongScreen.currentShowingLine = line;
+        }
+
+        // Other stats
         SongScreen.txtTimecode.txt(SongManager.formatTime(song.getTime()) + " / " + SongManager.formatTime(song.getDuration()));
         SongScreen.prgOverall.progress(song.getProgress());
 
+        // Interval progressbar
         var tun = song.getTimeUntilNextLine();
         var tcl = song.getCurrentSectionTime();
         SongScreen.prgInterval.progress((tcl-tun)/tcl);
-
-        var line = song.getCurrentVerse();
-        if ((song.typing != null && song.typing.isComplete()) || song.isBlank(song.currentVerse)) {
-            line = song.getNextVerse();
-        }
-
         if (song.isComplete()) {
             State.to(State.SCORE);
         }
 
-        SongScreen.txtLineTyping.html(SongManager.combineTyping(line.typing));
-        SongScreen.txtLineLyrics.html(line.lyrics);
+    };
+
+    SongScreen.combinedTypingSimple = function (t, elem) {
+        elem.empty();
+        t.forEach(function (c) {
+            var cc = $('<span></span>');
+            cc.css('padding-right', '0.35em');
+            cc.text(c);
+            elem.append(cc);
+        });
+    };
+
+    /* This is complicated because it allow highligh
+       as we typing in auxiliary line
+     */
+    SongScreen.combinedTypingCurrent = function (t, elem) {
+        elem.empty();
+        var completed = false;
+        t.typingWords.forEach(function (c) {
+            var cc = $('<span></span>');
+            cc.css('padding-right', '0.35em');
+            if (c.isComplete()) {
+                cc.css('color', '#00fefe');
+                var text = "";
+                c.typingItem.forEach(function (i) {
+                    text += i.character;
+                });
+                cc.text(text);
+            } else if (!completed) {
+                c.typingItem.forEach(function (i) {
+                    var ci = $('<span></span>');
+                    ci.text(i.character);
+                    if (i.isComplete()) {
+                        ci.css('color', '#00fefe');
+                        completed = true;
+                    } else if (i.input.length > 0) {
+                        ci.css('color', '#fefe00');
+                    }
+                    cc.append(ci);
+                });
+            } else {
+                var text = "";
+                c.typingItem.forEach(function (i) {
+                    text += i.character;
+                });
+                cc.text(text);
+                console.log("Complete: " + text);
+            }
+            elem.append(cc);
+        });
     };
 
     SongScreen.handleKey = function (input) {
@@ -2330,6 +2426,7 @@ var SongScreen = (function() {
             return;
         }
 
+        SongScreen.shouldUpdate = true;
         SongManager.getSong().handleKey(input);
     };
 
@@ -2347,7 +2444,8 @@ var ScoreScreen = (function() {
 
     ScoreScreen.txtTemp = new Text("Press any key to return to menu.", 60, 640, 355, "white", 'cx,cy');
     ScoreScreen.txtTemp.z(75);
-    ScoreScreen.txtTemp.css('font-family', 'Junge')
+    ScoreScreen.txtTemp
+        .css('font-family', 'Junge')
         .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
     ScoreScreen.onIn = function () {
