@@ -1729,6 +1729,9 @@ var Graphics = (function() {
 
     Graphics.song_overlay = null;
 
+    Graphics.bgm_interval = null;
+    Graphics.bgm_playing = false;
+
     Graphics.init = function () {
         // Global setting
         $('body').css('background-color', 'black');
@@ -1770,6 +1773,38 @@ var Graphics = (function() {
 
         // Ruleset
         sheet.insertRule(".word {padding-right:0.4em}", 0);
+    };
+
+    Graphics.startBGM = function () {
+        if (Graphics.bgm_playing)
+            return;
+
+        clearInterval(Graphics.bgm_interval);
+        Graphics.bgm_playing = true;
+
+        Graphics.bgm.resume();
+        Graphics.bgm_interval = setInterval(function () {
+            Graphics.bgm.volume = Graphics.bgm.volume + 0.01;
+            if(Graphics.bgm.volume >= 0.2) {
+                clearInterval(Graphics.bgm_interval);
+            }
+        }, 100);
+    };
+
+    Graphics.stopBGM = function () {
+        if (!Graphics.bgm_playing)
+            return;
+
+        clearInterval(Graphics.bgm_interval);
+        Graphics.bgm_playing = false;
+
+        Graphics.bgm_interval = setInterval(function () {
+            Graphics.bgm.volume = Graphics.bgm.volume - 0.01;
+            if(Graphics.bgm.volume <= 0.0000000001) {
+                clearInterval(Graphics.bgm_interval);
+                Graphics.bgm.pause();
+            }
+        }, 100);
     };
 
     return Graphics;
@@ -1870,19 +1905,25 @@ var PreloadScreen = (function() {
             // Load other song asset
             PreloadScreen.loadFile('__select', result.sound_select, function(id) {
                 Graphics.select = createjs.Sound.createInstance(id);
-                Graphics.select.setVolume(0.2);
+                Graphics.select.volume = 0.2;
             });
             PreloadScreen.loadFile('__decide', result.sound_decide, function(id) {
                 Graphics.decide = createjs.Sound.createInstance(id);
-                Graphics.decide .setVolume(0.2);
+                Graphics.decide.volume = 0.2;
             });
             PreloadScreen.loadFile('__complete', result.sound_complete, function(id) {
                 Graphics.complete = createjs.Sound.createInstance(id);
-                Graphics.complete .setVolume(0.2);
+                Graphics.complete.volume = 0.2;
             });
             PreloadScreen.loadFile('__bgm', result.sound_bgm, function(id) {
                 Graphics.bgm = new createjs.Sound.createInstance(id);
-                Graphics.bgm.setVolume(0.2);
+                Graphics.bgm.volume = 0;
+                Graphics.bgm.play();
+                Graphics.bgm.pause();
+                // Looping
+                Graphics.bgm.addEventListener("complete", function () {
+                    Graphics.bgm.play();
+                });
             });
 
             // Background overlay
@@ -1968,6 +2009,7 @@ var MenuScreen = (function() {
     MenuScreen.songDisplay = [];
 
     MenuScreen.onIn = function () {
+        Graphics.startBGM();
         if (this.songDisplay.length == 0)
             MenuScreen.makeSongDisplay();
 
@@ -2220,6 +2262,7 @@ var PresongScreen = (function() {
     };
 
     PresongScreen.onOut = function (callback) {
+        Graphics.stopBGM();
         Graphics.complete.stop();
         PresongScreen.control.hide();
         callback();
@@ -2594,14 +2637,20 @@ var DynamicBackground = (function () {
     // Page Visibility API
     // Note: only browser that support this natively is Firefox I think. Sucks.
     var visibilityChangeFunc = function () {
-        if (SongManager.getSong() != null && SongManager.getSong().isPlaying) {
-            if (document.hidden || document.msHidden || document.webkitHidden || document.mozHidden) {
+        if (document.hidden || document.msHidden || document.webkitHidden || document.mozHidden) {
+            if (SongManager.getSong() != null && SongManager.getSong().isPlaying) {
                 SongManager.getSong().audio.pause();
                 console.log("Song paused.");
-            } else {
+            }
+            if (Graphics.bgm_playing)
+                Graphics.bgm.pause();
+        } else {
+            if (SongManager.getSong() != null && SongManager.getSong().isPlaying) {
                 SongManager.getSong().audio.resume();
                 console.log("Song resumed.");
             }
+            if (Graphics.bgm_playing)
+                Graphics.bgm.resume();
         }
     };
     $(document).on("visibilityChange", visibilityChangeFunc);
