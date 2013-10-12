@@ -311,6 +311,8 @@ var Song = (function() {
             this.currentVerse++;
             if (!this.isBlank(this.currentVerse))
                 this.typing = new Typing(this.getCurrentVerse()['typing']);
+            else
+                this.typing = null;
             ret = true;
         }
 
@@ -375,7 +377,9 @@ var Song = (function() {
     };
 
     Song.prototype.isBlank = function (line) {
-        return line <= this.getLineCount() && "blank" in this.event[line] && this.event[line]['blank'];
+        if (!this.isInSong(line))
+            return true;
+        return "blank" in this.event[line] && this.event[line]['blank'];
     };
 
     Song.prototype.isInSong = function (line) {
@@ -2246,7 +2250,7 @@ var SongScreen = (function() {
         SongScreen.prgInterval.progress((tcl-tun)/tcl);
 
         var line = song.getCurrentVerse();
-        if ((song.typing != null && song.typing.isComplete()) || song.currentVerse == -1) {
+        if ((song.typing != null && song.typing.isComplete()) || song.isBlank(song.currentVerse)) {
             line = song.getNextVerse();
         }
 
