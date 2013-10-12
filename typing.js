@@ -17,7 +17,7 @@ var SETTINGS   = 'data/settings.json';
 var INTERVAL   = 20;
 
 // Engine Version
-var VERSION = '0.4.0-dev+00000';
+var VERSION = '0.3.1';
 
 // TODO Beautify the screen
 // TODO Add scoring system (with local storage)
@@ -723,6 +723,8 @@ var AssetManager = (function() {
     AssetManager.queue.installPlugin(createjs.Sound);
     AssetManager.status = {};
     this.complete = true;
+
+    createjs.Sound.registerPlugins([/*createjs.WebAudioPlugin, */createjs.HTMLAudioPlugin]);
 
     AssetManager.load = function (id, src, callback, start, progressCallback, errorCallback) {
         if (start == undefined)
