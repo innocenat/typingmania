@@ -9,14 +9,10 @@ is pain to config.
 
 Feature
 -------
- - Multiple input of each kana available.
+ - Multiple input of each Hiragana available (use Katakana to force reading to be specific)
  - Easy to setup
  - HTML5
  - Basically, most thing SS Studio version offers.
-
-Known Issues
-------------
- - Katakana might not get converted correctly. (too lazy to fix)
 
 Roadmap
 -------
