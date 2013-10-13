@@ -2846,12 +2846,6 @@ var SongScreen = (function() {
 var ScoreScreen = (function() {
     function ScoreScreen() {}
 
-    ScoreScreen.txtTemp = new Text("Press any key to return to menu.", 60, 640, 355, "white", 'cx,cy');
-    ScoreScreen.txtTemp.z(75);
-    ScoreScreen.txtTemp
-        .css('font-family', 'Junge')
-        .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
-
     ScoreScreen.lblHelp = new Text("Enter or Space: Return to Menu", 16.5, 950, 15, 'white');
     ScoreScreen.lblHelp.z(1000);
     ScoreScreen.lblHelp
