@@ -2733,7 +2733,7 @@ var SongScreen = (function() {
         while (ret.length < l)
             ret = "0" + ret;
         return ret;
-    }
+    };
 
     return SongScreen;
 })();
