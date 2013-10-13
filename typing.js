@@ -1747,6 +1747,7 @@ var LimitedControlGroup = (function ($super) {
 
     LimitedControlGroup.prototype.recalculate = function () {
         $super.prototype.recalculate.call(this);
+        this.block.recalculate();
     };
 
     LimitedControlGroup.prototype.setAlign = function (align) {
