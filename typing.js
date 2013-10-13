@@ -2454,6 +2454,12 @@ var SongScreen = (function() {
         .css('letter-spacing', '0.1em')
         .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
 
+    SongScreen.lblAutoplay = new Text("Autoplay", 36, 12, 450, "white");
+    SongScreen.lblAutoplay
+        .z(1000)
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 15px #9f9, 0px 0px 15px #cfc');
+
     // Scoring control
     SongScreen.lblCombo = new Text("Combo", 20, 110, 545, "white", "by");
     SongScreen.lblCombo
@@ -2585,7 +2591,7 @@ var SongScreen = (function() {
         SongScreen.txtPercent.txt("");
         SongScreen.txtClass.txt("");
 
-            Graphics.overlay_song.show();
+        Graphics.overlay_song.show();
         SongManager.getSong().play();
     };
 
@@ -2597,6 +2603,10 @@ var SongScreen = (function() {
 
         if (song == null)
             return;
+
+        // Show Autoplay Label if activated
+        if (AutoPlay.active && !SongScreen.lblAutoplay.visible())
+            SongScreen.lblAutoplay.show();
 
         // Process typing display & auxiliary line
         if (SongScreen.shouldUpdate || SongScreen.lastVerse != song.currentVerse) {
@@ -2759,6 +2769,7 @@ var SongScreen = (function() {
         // These items are not in main controlgroup
         SongScreen.txtCombo.hide();
         SongScreen.lblCombo.hide();
+        SongScreen.lblAutoplay.hide();
 
         ScoreEngine.songEnd();
         SongScreen.control.hide();
