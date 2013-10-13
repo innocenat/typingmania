@@ -1057,7 +1057,8 @@ var ScoreEngine = (function() {
             'update': 0
         });
 
-        $.jStorage.set(key, ScoreEngine.forStorage(oldData));
+        if (!AutoPlay.active)
+            $.jStorage.set(key, ScoreEngine.forStorage(oldData));
     };
 
     ScoreEngine.getPercent = function () {
