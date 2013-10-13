@@ -2902,15 +2902,11 @@ var DynamicBackground = (function () {
                 SongManager.getSong().audio.pause();
                 console.log("Song paused.");
             }
-            if (Graphics.bgm_playing)
-                Graphics.bgm.pause();
         } else {
             if (SongManager.getSong() != null && SongManager.getSong().isPlaying) {
                 SongManager.getSong().audio.resume();
                 console.log("Song resumed.");
             }
-            if (Graphics.bgm_playing)
-                Graphics.bgm.resume();
         }
     };
     $(document).on("visibilityChange", visibilityChangeFunc);
