@@ -1980,7 +1980,7 @@ var Graphics = (function() {
 
         // Create overlay to prevent accidental text selection
         var superOverlay = new Block(0, 0, 1280, 720);
-        //superOverlay.z(10000);
+        //superOverlay.z(10000); // FIXME actually enable this in real release
         superOverlay.show();
     };
 
