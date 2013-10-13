@@ -17,7 +17,7 @@ var SETTINGS   = 'data/settings.json';
 var INTERVAL   = 20;
 
 // Engine Version
-var VERSION = '0.3.1-dev+00000';
+var VERSION = '0.3.1-dev+00001';
 
 /// ///////////////////////
 ///  Basic prerequisite checking
@@ -998,19 +998,30 @@ var ScoreEngine = (function() {
         if (result == -1) {
             ScoreEngine.currentCombo = 0;
             ScoreEngine.missed++;
+
+            // Score deduction
+            var dcpm = 60*1000/Math.max(currentTime - ScoreEngine.lastTime, 1);
+            ScoreEngine.score -= dcpm * ScoreEngine.getPercent();
+            ScoreEngine.score = Math.max(ScoreEngine.score, 0);
         } else {
             // Update CPM
+            var dt = currentTime - ScoreEngine.lastTime;
+            var dcpm = 60*1000/Math.max(dt, 1);
             ScoreEngine.realType++;
-            ScoreEngine.overallTime += currentTime - ScoreEngine.lastTime;
+            ScoreEngine.overallTime += dt;
             ScoreEngine.lastTime = currentTime;
+
+            // Score calculation
+            // Base score is cpm of current typing character
+            // Score for current = base + base * (combo*percent) / 16
+            // then multiply by result factor (the number of character recognised by typing system for this keydown)
+            ScoreEngine.score += result * (dcpm + dcpm*ScoreEngine.currentCombo*ScoreEngine.getPercent()/16);
 
             // Update stats
             ScoreEngine.currentCombo += result;
             ScoreEngine.typed += result;
             if (ScoreEngine.currentCombo > ScoreEngine.maxCombo)
                 ScoreEngine.maxCombo = ScoreEngine.currentCombo;
-
-            ScoreEngine.score += ScoreEngine.currentCombo;
         }
     };
 
@@ -1066,7 +1077,7 @@ var ScoreEngine = (function() {
         if (ScoreEngine.inline && realtime) {
             time += SongManager.getSong().getTime() - ScoreEngine.lastTime
         }
-        return this.realType / (time/(60*1000));
+        return this.realType * 60 * 1000 / (time);
     };
 
     ScoreEngine.forStorage = function (oldData) {
@@ -2644,7 +2655,7 @@ var SongScreen = (function() {
                 SongScreen.txtCombo.hide();
                 SongScreen.lblCombo.hide();
             }
-            SongScreen.txtScore.txt($comma(ScoreEngine.score));
+            SongScreen.txtScore.txt($comma(Math.round(ScoreEngine.score)));
             SongScreen.txtMaxCombo.txt($comma(SongScreen.formatNumber(ScoreEngine.maxCombo, 3)));
             SongScreen.txtCompleted.txt($comma(SongScreen.formatNumber(ScoreEngine.completed, 3)));
             SongScreen.txtSolve.txt($comma(SongScreen.formatNumber(ScoreEngine.solve, 3)));
