@@ -964,8 +964,10 @@ var AutoPlay = (function() {
 
         if (song.getTime()-AutoPlay.lastType >= AutoPlay.interval && !song.typing.isComplete()) {
             AutoPlay.lastType += AutoPlay.interval;
-            var event = $.Event('keydown', { which: KeyCode.toKeyCode(song.typing.getNextChar()), shiftKey: KeyCode.toKeyShift(song.typing.getNextChar()) } );
-            $(window).trigger(event);
+            setTimeout(function() {
+                var event = $.Event('keydown', { which: KeyCode.toKeyCode(song.typing.getNextChar()), shiftKey: KeyCode.toKeyShift(song.typing.getNextChar()) } );
+                $(window).trigger(event);
+            }, 5);
         }
     };
 
