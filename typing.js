@@ -1105,6 +1105,12 @@ var ScoreEngine = (function() {
         return this.typed / (this.missed+this.solve+this.typed);
     };
 
+    ScoreEngine.getPercent2 = function () {
+        if (this.missed+this.typed == 0)
+            return 0;
+        return this.typed / (this.missed+this.typed);
+    };
+
     ScoreEngine.getCPM = function (realtime) {
         if (ScoreEngine.overallTime == 0)
             return 0;
@@ -2845,23 +2851,119 @@ var ScoreScreen = (function() {
         .css('font-family', 'Junge')
         .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
 
+    ScoreScreen.lblHelp = new Text("Enter or Space: Return to Menu", 16.5, 950, 15, 'white');
+    ScoreScreen.lblHelp.z(1000);
+    ScoreScreen.lblHelp
+        .z(75)
+        .css('font-family', 'Junge')
+        .css('letter-spacing', '0.1em')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+
+    ScoreScreen.lblCombo    = new Text("Combo"                       , 18, 100, 480, 'white', 'by');
+    ScoreScreen.lblCorrect  = new Text("Correct"                     , 18, 100, 530, 'white', 'by');
+    ScoreScreen.lblMissed   = new Text("Missed"                      , 18, 100, 560, 'white', 'by');
+    ScoreScreen.lblComplete = new Text("Completed"                   , 18, 100, 610, 'white', 'by');
+    ScoreScreen.lblSolve    = new Text("Solve"                       , 18, 100, 640, 'white', 'by');
+    ScoreScreen.lblSpeed    = new Text("Type speed / min"            , 18, 355, 480, 'white', 'by');
+    ScoreScreen.lblPercent1 = new Text("Correct percent"             , 18, 355, 530, 'white', 'by');
+    ScoreScreen.lblPercene2 = new Text("Correct percent (solve cut)" , 18, 355, 560, 'white', 'by');
+
+    ScoreScreen.lblLeftGroup = new ControlGroup(0, 0, 1280, 720);
+    ScoreScreen.lblLeftGroup
+        .add(ScoreScreen.lblCombo   )
+        .add(ScoreScreen.lblCorrect )
+        .add(ScoreScreen.lblMissed  )
+        .add(ScoreScreen.lblComplete)
+        .add(ScoreScreen.lblSolve   )
+        .add(ScoreScreen.lblSpeed   )
+        .add(ScoreScreen.lblPercent1)
+        .add(ScoreScreen.lblPercene2)
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+
+    ScoreScreen.txtCombo    = new Text("", 28, 310, 487, 'white', 'by,bx');
+    ScoreScreen.txtCorrect  = new Text("", 28, 310, 537, 'white', 'by,bx');
+    ScoreScreen.txtMissed   = new Text("", 28, 310, 567, 'white', 'by,bx');
+    ScoreScreen.txtComplete = new Text("", 28, 310, 617, 'white', 'by,bx');
+    ScoreScreen.txtSolve    = new Text("", 28, 310, 647, 'white', 'by,bx');
+    ScoreScreen.txtSpeed    = new Text("", 28, 590, 487, 'white', 'by,bx');
+    ScoreScreen.txtPercent1 = new Text("", 28, 680, 537, 'white', 'by,bx');
+    ScoreScreen.txtPercent2 = new Text("", 28, 680, 567, 'white', 'by,bx');
+
+    ScoreScreen.txtScore = new Text(""     , 48, 210, 370, 'white');
+    ScoreScreen.lblScore = new Text("Score", 40, 185, 375, 'white', 'bx');
+    ScoreScreen.txtClass = new Text(""     , 72, 210, 290, 'white');
+    ScoreScreen.lblClass = new Text("Class", 60, 185, 300, 'white', 'bx');
+
+    ScoreScreen.txtLeftGroup = new ControlGroup(0, 0, 1280, 720);
+    ScoreScreen.txtLeftGroup
+        .add(ScoreScreen.txtCombo   )
+        .add(ScoreScreen.txtCorrect )
+        .add(ScoreScreen.txtMissed  )
+        .add(ScoreScreen.txtComplete)
+        .add(ScoreScreen.txtSolve   )
+        .add(ScoreScreen.txtSpeed   )
+        .add(ScoreScreen.txtPercent1)
+        .add(ScoreScreen.txtPercent2)
+        .css('font-family', 'Open Sans')
+        .css('font-weight', '600')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+
+    ScoreScreen.classGroup = new ControlGroup(0, 0, 1280, 720);
+    ScoreScreen.classGroup
+        .add(ScoreScreen.lblClass)
+        .add(ScoreScreen.txtClass)
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 20px #00fefe, 0px 0px 20px #00fefe');
+
+    ScoreScreen.scoreGroup = new ControlGroup(0, 0, 1280, 720);
+    ScoreScreen.scoreGroup
+        .add(ScoreScreen.lblScore)
+        .add(ScoreScreen.txtScore)
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 20px #fefe00, 0px 0px 20px #fefe00')
+
+    ScoreScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
+    ScoreScreen.control
+        .add(ScoreScreen.lblHelp)
+        .add(ScoreScreen.lblLeftGroup)
+        .add(ScoreScreen.txtLeftGroup)
+        .add(ScoreScreen.classGroup)
+        .add(ScoreScreen.scoreGroup)
+        .z(75);
+
     ScoreScreen.onIn = function () {
-        ScoreScreen.txtTemp.show();
-        DynamicBackground.hide();
+        var $format = function (s) {
+            return $comma(s);
+        };
+
+        // Set score text
+        ScoreScreen.txtCombo.txt($format(ScoreEngine.maxCombo));
+        ScoreScreen.txtCorrect.txt($format(ScoreEngine.typed));
+        ScoreScreen.txtMissed.txt($format(ScoreEngine.missed));
+        ScoreScreen.txtComplete.txt($format(ScoreEngine.completed));
+        ScoreScreen.txtSolve.txt($format(ScoreEngine.solve));
+        ScoreScreen.txtSpeed.txt(Math.round(ScoreEngine.getCPM()));
+        ScoreScreen.txtPercent1.txt("" + Math.round(ScoreEngine.getPercent()*100) + "%");
+        ScoreScreen.txtPercent2.txt("" + Math.round(ScoreEngine.getPercent2()*100) + "%");
+
+        ScoreScreen.txtScore.txt($format(Math.round(ScoreEngine.score)));
+        ScoreScreen.txtClass.txt(ScoreEngine.getClass());
+
+        // Show Control
+        ScoreScreen.control.show();
     };
 
-    ScoreScreen.tick = function () {
-    };
+    ScoreScreen.tick = function () {};
 
     ScoreScreen.handleKey = function (input) {
-        if (input == ' ' || input == 'Esc')
         if (input == ' ' || input == 'Esc' || input == 'Enter')
             State.to(State.MENU);
     };
 
     ScoreScreen.onOut = function (callback) {
         SongManager.getSong().stop();
-        ScoreScreen.txtTemp.hide();
+        ScoreScreen.control.hide();
         callback();
     };
 
