@@ -17,7 +17,7 @@ var SETTINGS   = 'data/settings.json';
 var INTERVAL   = 20;
 
 // Engine Version
-var VERSION = '0.3.1-dev+00002';
+var VERSION = '0.3.1-dev+00003';
 var SAVE_VERSION = 'sv00002';
 
 /// ///////////////////////
@@ -1113,7 +1113,7 @@ var ScoreEngine = (function() {
         var ret = $.extend({}, oldData);
         if (ScoreEngine.score > oldData.score) {
             ret.score = ScoreEngine.score;
-            ret.class = ScoreEngine.class;
+            ret.class = ScoreEngine.getClass();
         }
         ret.update = new Date().getTime();
         return ret;
@@ -1122,6 +1122,34 @@ var ScoreEngine = (function() {
     ScoreEngine.getHighScore = function (song) {
         song = song || SongManager.getSong();
         return $.jStorage.get('typingmania_' + SAVE_VERSION + '_' + song.id, null);
+    };
+
+    ScoreEngine.getClass = function () {
+        var percent = this.getPercent();
+        var linePercent = ScoreEngine.typed / SongManager.getSong().charCount;
+        if (percent == 1 && linePercent > 0.99) {
+            return 'SS';
+        } else if ((linePercent > 0.95) && (this.solve == 0 && percent > 0.95)) {
+            return 'S';
+        } else if ((linePercent > 0.9) && ((this.solve == 0 && percent > 0.90) || percent > 0.95)) {
+            return 'A';
+        } else if ((linePercent > 0.85) && ((this.solve == 0 && percent > 0.80) || percent > 0.85)) {
+            return 'B+';
+        } else if ((linePercent > 0.8) && ((this.solve == 0 && percent > 0.70) || percent > 0.8)) {
+            return 'B';
+        } else if ((linePercent > 0.75) && ((this.solve == 0 && percent > 0.5) || percent > 0.7)) {
+            return 'C+';
+        } else if ((linePercent > 0.7) && (this.solve == 0 || percent > 0.55)) {
+            return 'C';
+        } else if ((linePercent > 0.6) && (percent > 0.45)) {
+            return 'D+';
+        } else if ((linePercent > 0.5) && (percent > 0.35)) {
+            return 'D';
+        } else if ((linePercent > 0.35) && (percent > 0.2)) {
+            return 'E';
+        } else {
+            return 'F';
+        }
     };
 
     return ScoreEngine;
@@ -2702,7 +2730,7 @@ var SongScreen = (function() {
             SongScreen.txtCorrect.txt($comma(SongScreen.formatNumber(ScoreEngine.typed, 3)));
             SongScreen.txtMissed.txt($comma(SongScreen.formatNumber(ScoreEngine.missed, 3)));
             SongScreen.txtPercent.txt("" + Math.round(ScoreEngine.getPercent()*100) + "%");
-            SongScreen.txtClass.txt("F");
+            SongScreen.txtClass.txt(ScoreEngine.getClass());
 
             // Update
             SongScreen.lastVerse = song.currentVerse;
