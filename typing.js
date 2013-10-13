@@ -18,7 +18,7 @@ var INTERVAL   = 20;
 
 // Engine Version
 var VERSION = '0.3.1-dev+00002';
-var SAVE_VERSION = 'sv00001';
+var SAVE_VERSION = 'sv00002';
 
 /// ///////////////////////
 ///  Basic prerequisite checking
@@ -1005,7 +1005,7 @@ var ScoreEngine = (function() {
 
             // Score deduction
             var dcpm = 60*1000/Math.max(currentTime - ScoreEngine.lastTime, 1);
-            ScoreEngine.score -= Math.sqrt(dcpm) * 5 * ScoreEngine.getPercent();
+            ScoreEngine.score -= Math.sqrt(dcpm) * 17.32 * ScoreEngine.getPercent();
             ScoreEngine.score = Math.max(ScoreEngine.score, 0);
         } else {
             // Update CPM
@@ -1019,7 +1019,7 @@ var ScoreEngine = (function() {
             // Base score is square root cpm of current typing character
             // Score for current = base + base * (combo*percent) / 16
             // then multiply by result factor (the number of character recognised by typing system for this keydown)
-            var base = Math.sqrt(dcpm)*10;
+            var base = Math.sqrt(dcpm) * 17.32; // 17.32 is approx sqrt(300)
             var score = result * (base + base*ScoreEngine.currentCombo*ScoreEngine.getPercent()/16);
             ScoreEngine.score += score;
             ScoreEngine.currentLineScore += score;
