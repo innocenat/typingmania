@@ -1141,6 +1141,9 @@ var ScoreEngine = (function() {
     };
 
     ScoreEngine.getClass = function () {
+        if (AutoPlay.active)
+            return 'AUTO';
+
         var percent = this.getPercent();
         var linePercent = ScoreEngine.typed / SongManager.getSong().charCount;
         if (percent == 1 && linePercent > 0.99) {
