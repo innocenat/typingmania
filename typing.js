@@ -972,6 +972,9 @@ var AutoPlay = (function() {
     return AutoPlay;
 })();
 
+/**
+ * Score engine for calculating and storing of score
+ */
 var ScoreEngine = (function() {
     function ScoreEngine() {}
 
