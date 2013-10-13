@@ -2855,6 +2855,7 @@ var ScoreScreen = (function() {
 
     ScoreScreen.handleKey = function (input) {
         if (input == ' ' || input == 'Esc')
+        if (input == ' ' || input == 'Esc' || input == 'Enter')
             State.to(State.MENU);
     };
 
