@@ -17,7 +17,8 @@ var SETTINGS   = 'data/settings.json';
 var INTERVAL   = 20;
 
 // Engine Version
-var VERSION = '0.3.1-dev+00001';
+var VERSION = '0.3.1-dev+00002';
+var SAVE_VERSION = 'sv00001';
 
 /// ///////////////////////
 ///  Basic prerequisite checking
@@ -1049,7 +1050,7 @@ var ScoreEngine = (function() {
 
     ScoreEngine.songEnd = function () {
         // Save score
-        var key = 'typingmania_' + VERSION + '_' + SongManager.getSong().id;
+        var key = 'typingmania_' + SAVE_VERSION + '_' + SongManager.getSong().id;
 
         var oldData = $.jStorage.get(key, {
             score: 0,
@@ -1093,7 +1094,7 @@ var ScoreEngine = (function() {
 
     ScoreEngine.getHighScore = function (song) {
         song = song || SongManager.getSong();
-        return $.jStorage.get('typingmania_' + VERSION + '_' + song.id, null);
+        return $.jStorage.get('typingmania_' + SAVE_VERSION + '_' + song.id, null);
     };
 
     return ScoreEngine;
