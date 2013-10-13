@@ -1040,7 +1040,16 @@ var ScoreEngine = (function() {
     };
 
     ScoreEngine.songEnd = function () {
+        // Save score
+        var key = 'typingmania_' + VERSION + '_' + SongManager.getSong().id;
 
+        var oldData = $.jStorage.get(key, {
+            score: 0,
+            'class': 'F',
+            'update': 0
+        });
+
+        $.jStorage.set(key, ScoreEngine.forStorage(oldData));
     };
 
     ScoreEngine.getPercent = function () {
@@ -1061,6 +1070,21 @@ var ScoreEngine = (function() {
             time += SongManager.getSong().getTime() - ScoreEngine.lastTime
         }
         return this.realType / (time/(60*1000));
+    };
+
+    ScoreEngine.forStorage = function (oldData) {
+        var ret = $.extend({}, oldData);
+        if (ScoreEngine.score > oldData.score) {
+            ret.score = ScoreEngine.score;
+            ret.class = ScoreEngine.class;
+        }
+        ret.update = new Date().getTime();
+        return ret;
+    };
+
+    ScoreEngine.getHighScore = function (song) {
+        song = song || SongManager.getSong();
+        return $.jStorage.get('typingmania_' + VERSION + '_' + song.id, null);
     };
 
     return ScoreEngine;
