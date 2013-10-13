@@ -2916,7 +2916,34 @@ var ScoreScreen = (function() {
         .add(ScoreScreen.lblScore)
         .add(ScoreScreen.txtScore)
         .css('font-family', 'Junge')
-        .css('text-shadow', '0px 0px 20px #fefe00, 0px 0px 20px #fefe00')
+        .css('text-shadow', '0px 0px 20px #fefe00, 0px 0px 20px #fefe00');
+
+    // Summary box
+    ScoreScreen.scoreCard = new LimitedControlGroup(820, 250, 400, 420);
+    ScoreScreen.scoreCard.block.position.fs = 20; // a little bit of css hack to make -em works
+    ScoreScreen.scoreCard.block
+        .css('background-color', 'rgba(255, 255, 255, 0.7)')
+        .css('border-radius', '1em');
+
+    ScoreScreen.cardTitle = new Text("Score card", 30, 200, 10, "black", "cx");
+    ScoreScreen.cardTitle
+        .css('font-family', 'Droid Serif')
+        .css('font-weight', '700')
+        .css('text-shadow', '0px 0px 12px #fff, 0px 0px 12px #fff');
+
+    ScoreScreen.cardLabel = new Text("", 16, 150, 50, "#555", 'bx');
+    ScoreScreen.cardLabel
+        .css('text-align', 'right')
+        .css('font-family', 'Droid Sans');
+
+    ScoreScreen.cardText = new Text("", 16, 160, 50, "black");
+    ScoreScreen.cardText
+        .css('font-family', 'Droid Sans');
+
+    ScoreScreen.scoreCard
+        .add(ScoreScreen.cardTitle)
+        .add(ScoreScreen.cardLabel)
+        .add(ScoreScreen.cardText);
 
     ScoreScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     ScoreScreen.control
@@ -2925,6 +2952,7 @@ var ScoreScreen = (function() {
         .add(ScoreScreen.txtLeftGroup)
         .add(ScoreScreen.classGroup)
         .add(ScoreScreen.scoreGroup)
+        .add(ScoreScreen.scoreCard)
         .z(75);
 
     ScoreScreen.onIn = function () {
@@ -2944,6 +2972,34 @@ var ScoreScreen = (function() {
 
         ScoreScreen.txtScore.txt($format(Math.round(ScoreEngine.score)));
         ScoreScreen.txtClass.txt(ScoreEngine.getClass());
+
+        // Score card
+        ScoreScreen.cardLabel.html('' +
+            '<p style="margin:0;margin-bottom:0.6em">Song name (JP)                </p>' +
+            '<p style="margin:0;margin-bottom:0.6em">Song name (EN)                </p>' +
+            '<p style="margin:0;margin-bottom:0.6em">Class                         </p>' +
+            '<p style="margin:0;margin-bottom:0.6em">Score                         </p>' +
+            '<p style="margin:0;margin-bottom:0.6em">Max Combo                     </p>' +
+            '<p style="margin:0;margin-bottom:0.6em">Correct                       </p>' +
+            '<p style="margin:0;margin-bottom:0.6em">Missed                        </p>' +
+            '<p style="margin:0;margin-bottom:0.6em">Completed                     </p>' +
+            '<p style="margin:0;margin-bottom:0.6em">Solve                         </p>' +
+            '<p style="margin:0;margin-bottom:0.6em">Speed                         </p>' +
+            '<p style="margin:0;margin-bottom:0.6em">Correct Percent               </p>' +
+            '<p style="margin:0;margin-bottom:0.6em">Correct Percent<br>(solve cut)</p>');
+        ScoreScreen.cardText.html('' +
+            '<p style="margin:0;margin-bottom:0.6em">' + SongManager.getSong().getData('title-jp') + '</p>' +
+            '<p style="margin:0;margin-bottom:0.6em">' + SongManager.getSong().getData('title-en') + '</p>' +
+            '<p style="margin:0;margin-bottom:0.6em">' + ScoreEngine.getClass() + '</p>' +
+            '<p style="margin:0;margin-bottom:0.6em">' + $format(Math.round(ScoreEngine.score)) + '</p>' +
+            '<p style="margin:0;margin-bottom:0.6em">' + $format(ScoreEngine.maxCombo) + '</p>' +
+            '<p style="margin:0;margin-bottom:0.6em">' + $format(ScoreEngine.typed) + '</p>' +
+            '<p style="margin:0;margin-bottom:0.6em">' + $format(ScoreEngine.missed) + '</p>' +
+            '<p style="margin:0;margin-bottom:0.6em">' + $format(ScoreEngine.completed) + '</p>' +
+            '<p style="margin:0;margin-bottom:0.6em">' + $format(ScoreEngine.solve) + '</p>' +
+            '<p style="margin:0;margin-bottom:0.6em">' + $format(Math.round(ScoreEngine.getCPM())) + ' cpm</p>' +
+            '<p style="margin:0;margin-bottom:0.6em">' + Math.round(ScoreEngine.getPercent()*100) + '%</p>' +
+            '<p style="margin:0;margin-bottom:0.6em">' + Math.round(ScoreEngine.getPercent2()*100) + '%</p>');
 
         // Show Control
         ScoreScreen.control.show();
