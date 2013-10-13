@@ -2860,6 +2860,9 @@ var DynamicBackground = (function () {
         var code = event.which;
         var input = KeyCode.fromKeyCode(code, event.shiftKey);
 
+        if (input == '')
+            return;
+
         if (input == 'Tab') {
             // Change language
             if (Graphics.language == 'en')
