@@ -991,6 +991,9 @@ var ScoreEngine = (function() {
         ScoreEngine.realType = 0;
         ScoreEngine.lastTime = 0;
         ScoreEngine.overallTime = 0;
+
+        ScoreEngine.currentLineScore = 0;
+        ScoreEngine.lineChain = 0;
     };
 
     ScoreEngine.onType = function (result) {
@@ -1002,7 +1005,7 @@ var ScoreEngine = (function() {
 
             // Score deduction
             var dcpm = 60*1000/Math.max(currentTime - ScoreEngine.lastTime, 1);
-            ScoreEngine.score -= dcpm * ScoreEngine.getPercent();
+            ScoreEngine.score -= Math.sqrt(dcpm) * 5 * ScoreEngine.getPercent();
             ScoreEngine.score = Math.max(ScoreEngine.score, 0);
         } else {
             // Update CPM
@@ -1013,10 +1016,13 @@ var ScoreEngine = (function() {
             ScoreEngine.lastTime = currentTime;
 
             // Score calculation
-            // Base score is cpm of current typing character
+            // Base score is square root cpm of current typing character
             // Score for current = base + base * (combo*percent) / 16
             // then multiply by result factor (the number of character recognised by typing system for this keydown)
-            ScoreEngine.score += result * (dcpm + dcpm*ScoreEngine.currentCombo*ScoreEngine.getPercent()/16);
+            var base = Math.sqrt(dcpm)*10;
+            var score = result * (base + base*ScoreEngine.currentCombo*ScoreEngine.getPercent()/16);
+            ScoreEngine.score += score;
+            ScoreEngine.currentLineScore += score;
 
             // Update stats
             ScoreEngine.currentCombo += result;
@@ -1029,6 +1035,7 @@ var ScoreEngine = (function() {
     ScoreEngine.onLineStart = function () {
         ScoreEngine.inline = true;
         ScoreEngine.lastTime = SongManager.getSong().getTime();
+        ScoreEngine.currentLineScore = 0;
     };
 
     ScoreEngine.onLineEnd = function (left) {
@@ -1036,15 +1043,20 @@ var ScoreEngine = (function() {
             return;
 
         ScoreEngine.inline = false;
-        this.solve += left;
-        if (left == 0)
-            this.completed++;
-        else {
+        ScoreEngine.solve += left;
+        if (left == 0) {
+            ScoreEngine.completed++;
+            ScoreEngine.lineChain++;
+
+            // Bonus score
+            ScoreEngine.score += ScoreEngine.currentLineScore * Math.sqrt(ScoreEngine.lineChain)/2;
+        } else {
             // Add left time to typing time
             ScoreEngine.overallTime += SongManager.getSong().getTime() - ScoreEngine.lastTime;
 
             // Reset Combo
-            this.currentCombo = 0;
+            ScoreEngine.currentCombo = 0;
+            ScoreEngine.lineChain = 0;
         }
     };
 
