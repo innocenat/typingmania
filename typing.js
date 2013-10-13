@@ -2541,7 +2541,7 @@ var SongScreen = (function() {
     SongScreen.txtCorrect = new Text("", 28, 602.5, 715, "white",  "by,bx");
     SongScreen.txtMissed  = new Text("", 28, 800, 715, "white",  "by,bx");
     SongScreen.txtPercent = new Text("", 28, 1060, 715, "white",  "by,bx");
-    SongScreen.txtClass   = new Text("", 28, 1220, 715, "white", "by,bx");
+    SongScreen.txtClass   = new Text("", 28, 1200, 715, "white", "by");
 
     SongScreen.scoreText2 = new ControlGroup(0, 0, 1280, 720);
     SongScreen.scoreText2
