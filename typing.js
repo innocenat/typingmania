@@ -296,6 +296,9 @@ var Song = (function() {
         this.audioLoadingProgress = 0;
         this.lyricsLoadingProgress = 0;
         this.imageLoading = false;
+
+        this.time = 0;
+        this.duration = -1;
     }
 
     Song.prototype.handleKey = function (input) {
@@ -316,7 +319,8 @@ var Song = (function() {
             return false;
 
         var ret = false;
-        var time = this.getTime();
+        var time = this.audio.getPosition();
+        this.time = time;
 
         if (this.currentVerse == -1 || (this.currentVerse < this.getLineCount() && time >= this.event[this.currentVerse]["end"])) {
             this.currentVerse++;
@@ -377,11 +381,13 @@ var Song = (function() {
     };
 
     Song.prototype.getTime = function () {
-        return this.audio.getPosition();
+        return this.time;
     };
 
     Song.prototype.getDuration = function() {
-        return this.audio.getDuration();
+        if (this.duration == -1)
+            this.duration = this.audio.getDuration();
+        return this.duration;
     };
 
     Song.prototype.getProgress = function () {
@@ -486,6 +492,7 @@ var Song = (function() {
         this.isPlaying = false;
         this.isLoading = false;
         this.typingLeftChar = 0;
+        this.time = 0;
     };
 
     Song.prototype.load = function () {
