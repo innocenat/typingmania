@@ -63,6 +63,13 @@ var $comma = function (nStr) {
     return x1 + x2;
 };
 
+var $formatNumber = function (num, l) {
+    var ret = "" + num;
+    while (ret.length < l)
+        ret = "0" + ret;
+    return ret;
+};
+
 /// ///////////////////////
 /// Song Engine
 /**
@@ -2715,12 +2722,12 @@ var SongScreen = (function() {
                 SongScreen.lblCombo.hide();
             }
             SongScreen.txtScore.txt($comma(Math.round(ScoreEngine.score)));
-            SongScreen.txtMaxCombo.txt($comma(SongScreen.formatNumber(ScoreEngine.maxCombo, 3)));
-            SongScreen.txtCompleted.txt($comma(SongScreen.formatNumber(ScoreEngine.completed, 3)));
-            SongScreen.txtSolve.txt($comma(SongScreen.formatNumber(ScoreEngine.solve, 3)));
+            SongScreen.txtMaxCombo.txt($comma($formatNumber(ScoreEngine.maxCombo, 3)));
+            SongScreen.txtCompleted.txt($comma($formatNumber(ScoreEngine.completed, 3)));
+            SongScreen.txtSolve.txt($comma($formatNumber(ScoreEngine.solve, 3)));
 
-            SongScreen.txtCorrect.txt($comma(SongScreen.formatNumber(ScoreEngine.typed, 3)));
-            SongScreen.txtMissed.txt($comma(SongScreen.formatNumber(ScoreEngine.missed, 3)));
+            SongScreen.txtCorrect.txt($comma($formatNumber(ScoreEngine.typed, 3)));
+            SongScreen.txtMissed.txt($comma($formatNumber(ScoreEngine.missed, 3)));
             SongScreen.txtPercent.txt("" + Math.round(ScoreEngine.getPercent()*100) + "%");
             SongScreen.txtClass.txt(ScoreEngine.getClass());
 
@@ -2731,7 +2738,7 @@ var SongScreen = (function() {
         }
 
         // Update CPM
-        SongScreen.txtSpeed.txt($comma(SongScreen.formatNumber(Math.round(ScoreEngine.getCPM()), 3)));
+        SongScreen.txtSpeed.txt($comma($formatNumber(Math.round(ScoreEngine.getCPM()), 3)));
 
         // Other stats
         SongScreen.txtTimecode.txt(SongManager.formatTime(song.getTime()) + " / " + SongManager.formatTime(song.getDuration()));
@@ -2824,13 +2831,6 @@ var SongScreen = (function() {
         Graphics.overlay_song.hide();
         DynamicBackground.update();
         callback();
-    };
-
-    SongScreen.formatNumber = function (num, l) {
-        var ret = "" + num;
-        while (ret.length < l)
-            ret = "0" + ret;
-        return ret;
     };
 
     return SongScreen;
