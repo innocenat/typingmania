@@ -1971,7 +1971,7 @@ var Graphics = (function() {
                 Viewport.resizeAll();
                 PreloadScreen.completedItem++;
             },
-            fontinactive: function (e) {
+            fontinactive: function () {
                 PreloadScreen.completedItem++;
             },
             timeout: 10000
