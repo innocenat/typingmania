@@ -2751,6 +2751,7 @@ var SongScreen = (function() {
         ScoreEngine.songEnd();
         SongScreen.control.hide();
         Graphics.overlay_song.hide();
+        DynamicBackground.update();
         callback();
     };
 
