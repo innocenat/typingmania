@@ -1491,6 +1491,18 @@ var ControlGroup = (function($super) {
         return this;
     };
 
+    ControlGroup.prototype.stopResizing = function () {
+        this.children.forEach(function (c) {
+            c.stopResizing();
+        });
+    };
+
+    ControlGroup.prototype.startResizing = function () {
+        this.children.forEach(function (c) {
+            c.startResizing();
+        });
+    };
+
     return ControlGroup;
 })(ControlBase);
 
