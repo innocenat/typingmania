@@ -19,9 +19,6 @@ var INTERVAL   = 20;
 // Engine Version
 var VERSION = '0.3.1-dev+00000';
 
-// TODO Beautify the screen
-// TODO Add scoring system (with local storage)
-
 /// ///////////////////////
 ///  Basic prerequisite checking
 if ($ == undefined || WebFont == undefined || $.jStorage == undefined ||
