@@ -2322,6 +2322,16 @@ var SongScreen = (function() {
         SongScreen.shouldUpdate = true;
         SongScreen.lastVerse = -1;
         SongScreen.control.show();
+
+        // Reset elements
+        SongScreen.typingText.$.empty();
+        SongScreen.typingChar.txt("");
+        SongScreen.txtTimecode.txt("0:00 / 0:00");
+        SongScreen.txtLineTyping.$.empty();
+        SongScreen.txtLineLyrics.txt("");
+        SongScreen.prgOverall.progress(0);
+        SongScreen.prgInterval.progress(0);
+
         Graphics.overlay_song.show();
         SongManager.getSong().play();
     };
