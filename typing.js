@@ -2808,14 +2808,40 @@ var DynamicBackground = (function () {
     DynamicBackground.txtComposer = new Text("", 21, 25, 110, "white");
     DynamicBackground.txtTitle = new Text("", 40, 25, 140, "white");
 
-    DynamicBackground.control
+    DynamicBackground.titleGroup = new ControlGroup(0, 0, 1280, 720);
+    DynamicBackground.titleGroup
         .add(DynamicBackground.txtTitle)
         .add(DynamicBackground.txtSubitle)
         .add(DynamicBackground.txtComposer)
         .z(15)
-        .css('font-family', 'Open Sans, serif')
+        .css('font-family', '"Open Sans", sans-serif')
         .css('font-weight', '600')
         .css('text-shadow', '0px 0px 20px #999, 0px 0px 20px #fff');
+
+    DynamicBackground.lblLastUpdate = new Text("Last updated: ", 20, 180, 220, "white", "bx");
+    DynamicBackground.lblHighscore  = new Text("High score: ", 20, 180, 250, "white", "bx");
+    DynamicBackground.lblClass      = new Text("Class: ", 20, 350, 250, "white");
+
+    DynamicBackground.txtLastUpdate = new Text("-", 20, 200, 220, "white");
+    DynamicBackground.txtHighscore  = new Text("-", 20, 200, 250, "white");
+    DynamicBackground.txtClass      = new Text("-", 20, 450, 250, "white", "bx");
+
+    DynamicBackground.highscoreGroup = new ControlGroup(0, 0, 1280, 720);
+    DynamicBackground.highscoreGroup
+        .add(DynamicBackground.lblLastUpdate)
+        .add(DynamicBackground.lblHighscore )
+        .add(DynamicBackground.lblClass     )
+        .add(DynamicBackground.txtLastUpdate)
+        .add(DynamicBackground.txtHighscore )
+        .add(DynamicBackground.txtClass     )
+        .z(15)
+        .css('font-family', 'Junge')
+        .css('letter-spacing', '0.1em')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+
+    DynamicBackground.control
+        .add(DynamicBackground.titleGroup)
+        .add(DynamicBackground.highscoreGroup);
 
     DynamicBackground.show = function () {
         DynamicBackground.control.show();
@@ -2866,6 +2892,16 @@ var DynamicBackground = (function () {
         DynamicBackground.txtTitle.txt(song.getData('title'));
         DynamicBackground.txtSubitle.txt(song.getData('subtitle'));
         DynamicBackground.txtComposer.txt(song.getData('composer'));
+        var data = ScoreEngine.getHighScore();
+        if (data == null) {
+            DynamicBackground.txtLastUpdate.txt('-');
+            DynamicBackground.txtHighscore.txt('-');
+            DynamicBackground.txtClass.txt('-');
+        } else {
+            DynamicBackground.txtLastUpdate.txt(new Date(data.update).toLocaleString());
+            DynamicBackground.txtHighscore.txt($comma(Math.round(data.score)));
+            DynamicBackground.txtClass.txt(data.class);
+        }
     };
 
     return DynamicBackground;
