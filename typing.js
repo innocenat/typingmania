@@ -2002,7 +2002,8 @@ var Graphics = (function() {
  * Presong Screen             50       74
  * Score Screen               75       99
  * Song Screen               100     1000
- * Final Overlay           10000
+ * Final Overlay            9999
+ * Mouse-sensitive content 10000
  */
 
 var PreloadScreen = (function() {
