@@ -280,7 +280,10 @@ var Song = (function() {
 
         this.currentVerse = -1;
         this.typing = null;
+        this.typings = [];
         this.typingLeftChar = 0;
+
+        this.charCount = 0;
 
         this.isPlaying = false;
         this.isLoaded = false;
@@ -327,14 +330,22 @@ var Song = (function() {
                 this.typingLeftChar = this.typing.getCharLeft();
             }
 
-            if (!this.isBlank(this.currentVerse))
-                this.typing = new Typing(this.getCurrentVerse()['typing']);
-            else
-                this.typing = null;
+            this.typing = this.typings[this.currentVerse];
             ret = true;
         }
 
         return ret;
+    };
+
+    Song.prototype.processTyping = function () {
+        for (var i = 0; i < this.event.length; i++) {
+            if (!this.isBlank(i)) {
+                this.typings[i] = new Typing(this.getTyping(i));
+                this.charCount += this.typings[i].getCharLeft();
+            } else {
+                this.typings[i] = null;
+            }
+        }
     };
 
     Song.prototype.getCurrentVerse = function () {
@@ -491,6 +502,8 @@ var Song = (function() {
         this.isLoading = false;
         this.typingLeftChar = 0;
         this.time = 0;
+
+        this.processTyping();
     };
 
     Song.prototype.load = function () {
@@ -522,6 +535,8 @@ var Song = (function() {
                 if (_this.isLyricsLoaded && _this.isAudioLoaded) {
                     _this.isLoaded = true;
                 }
+
+                _this.processTyping();
             }, true, function (_, progress) {
                 _this.lyricsLoadingProgress = progress;
             }, function () {
