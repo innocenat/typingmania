@@ -339,6 +339,8 @@ var Song = (function() {
 
     Song.prototype.processTyping = function () {
         this.charCount = 0;
+        if (this.event == null)
+            return;
         for (var i = 0; i < this.event.length; i++) {
             if (!this.isBlank(i)) {
                 this.typings[i] = new Typing(this.getTyping(i));
