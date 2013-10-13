@@ -16,10 +16,9 @@ Feature
 
 Roadmap
 -------
- - Scoring system
- - Score storage
  - Song search
- - Much prettier display
+ - Much prettier menu
+ - Cache setting/song lyrics in local storage
 
 Installation
 ------------
