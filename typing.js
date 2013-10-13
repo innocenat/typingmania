@@ -17,7 +17,7 @@ var SETTINGS   = 'data/settings.json';
 var INTERVAL   = 20;
 
 // Engine Version
-var VERSION = '0.3.1';
+var VERSION = '0.3.1-dev+00000';
 
 // TODO Beautify the screen
 // TODO Add scoring system (with local storage)
@@ -52,6 +52,18 @@ var $extends = function (d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 };
+
+var $comma = function (nStr) {
+    nStr += '';
+    var x = nStr.split('.');
+    var x1 = x[0];
+    var x2 = x.length > 1 ? '.' + x[1] : '';
+    var rgx = /(\d+)(\d{3})/;
+    while (rgx.test(x1)) {
+        x1 = x1.replace(rgx, '$1' + ',' + '$2');
+    }
+    return x1 + x2;
+}
 
 /// ///////////////////////
 /// Song Engine
@@ -269,6 +281,8 @@ var Song = (function() {
         this.id = json.id;
 
         this.currentVerse = -1;
+        this.typing = null;
+        this.typingLeftChar = 0;
 
         this.isPlaying = false;
         this.isLoaded = false;
@@ -282,8 +296,6 @@ var Song = (function() {
         this.audioLoadingProgress = 0;
         this.lyricsLoadingProgress = 0;
         this.imageLoading = false;
-
-        this.typing = null;
     }
 
     Song.prototype.handleKey = function (input) {
@@ -308,6 +320,11 @@ var Song = (function() {
 
         if (this.currentVerse == -1 || (this.currentVerse < this.getLineCount() && time >= this.event[this.currentVerse]["end"])) {
             this.currentVerse++;
+
+            if (this.typing != null) {
+                this.typingLeftChar = this.typing.getCharLeft();
+            }
+
             if (!this.isBlank(this.currentVerse))
                 this.typing = new Typing(this.getCurrentVerse()['typing']);
             else
@@ -468,6 +485,7 @@ var Song = (function() {
         this.typing = null;
         this.isPlaying = false;
         this.isLoading = false;
+        this.typingLeftChar = 0;
     };
 
     Song.prototype.load = function () {
@@ -945,6 +963,95 @@ var AutoPlay = (function() {
     };
 
     return AutoPlay;
+})();
+
+var ScoreEngine = (function() {
+    function ScoreEngine() {}
+
+    ScoreEngine.songStart = function () {
+        ScoreEngine.typed = 0;
+        ScoreEngine.missed = 0;
+        ScoreEngine.completed = 0;
+        ScoreEngine.solve = 0;
+        ScoreEngine.currentCombo = 0;
+        ScoreEngine.maxCombo = 0;
+        ScoreEngine.score = 0;
+        ScoreEngine.inline = false;
+
+        ScoreEngine.realType = 0;
+        ScoreEngine.lastTime = 0;
+        ScoreEngine.overallTime = 0;
+    };
+
+    ScoreEngine.onType = function (result) {
+        var currentTime = SongManager.getSong().getTime();
+
+        if (result == -1) {
+            ScoreEngine.currentCombo = 0;
+            ScoreEngine.missed++;
+        } else {
+            // Update CPM
+            ScoreEngine.realType++;
+            ScoreEngine.overallTime += currentTime - ScoreEngine.lastTime;
+            ScoreEngine.lastTime = currentTime;
+
+            // Update stats
+            ScoreEngine.currentCombo += result;
+            ScoreEngine.typed += result;
+            if (ScoreEngine.currentCombo > ScoreEngine.maxCombo)
+                ScoreEngine.maxCombo = ScoreEngine.currentCombo;
+
+            ScoreEngine.score += ScoreEngine.currentCombo;
+        }
+    };
+
+    ScoreEngine.onLineStart = function () {
+        ScoreEngine.inline = true;
+        ScoreEngine.lastTime = SongManager.getSong().getTime();
+    };
+
+    ScoreEngine.onLineEnd = function (left) {
+        if (!ScoreEngine.inline)
+            return;
+
+        ScoreEngine.inline = false;
+        this.solve += left;
+        if (left == 0)
+            this.completed++;
+        else {
+            // Add left time to typing time
+            ScoreEngine.overallTime += SongManager.getSong().getTime() - ScoreEngine.lastTime;
+
+            // Reset Combo
+            this.currentCombo = 0;
+        }
+    };
+
+    ScoreEngine.songEnd = function () {
+
+    };
+
+    ScoreEngine.getPercent = function () {
+        if (this.missed+this.solve+this.typed == 0)
+            return 0;
+        return this.typed / (this.missed+this.solve+this.typed);
+    };
+
+    ScoreEngine.getCPM = function (realtime) {
+        if (ScoreEngine.overallTime == 0)
+            return 0;
+
+        if (realtime == undefined)
+            realtime = true;
+
+        var time = ScoreEngine.overallTime;
+        if (ScoreEngine.inline && realtime) {
+            time += SongManager.getSong().getTime() - ScoreEngine.lastTime
+        }
+        return this.realType / (time/(60*1000));
+    };
+
+    return ScoreEngine;
 })();
 
 /// ///////////////////////
@@ -2255,11 +2362,12 @@ var SongScreen = (function() {
         .css('font-weight', 300)
         .css('text-shadow', '0px 0px 20px #fff, 0px 0px 20px #999');
 
-    SongScreen.txtTimecode = new Text("0:00 / 0:00", 28, 1240, 430, "white", 'bx');
+    SongScreen.txtTimecode = new Text("0:00 / 0:00", 28, 1240, 425, "white", 'bx');
     SongScreen.txtTimecode.z(1000);
     SongScreen.txtTimecode
         .css('font-family', 'Open Sans')
-        .css('font-weight', '600');
+        .css('font-weight', '600')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
 
     SongScreen.txtLineTyping = new Text("", 22, 185, 540, "#ddd");
     SongScreen.txtLineTyping.z(1000);
@@ -2301,6 +2409,88 @@ var SongScreen = (function() {
         .css('letter-spacing', '0.1em')
         .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
 
+    // Scoring control
+    SongScreen.lblCombo = new Text("Combo", 20, 110, 545, "white", "by");
+    SongScreen.lblCombo
+        .z(1000)
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+    SongScreen.txtCombo = new Text("", 30, 100, 545, "white", "bx,by");
+    SongScreen.txtCombo
+        .z(1000)
+        .css('font-family', 'Junge')
+        .css('letter-spacing', '0.1em')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+
+    SongScreen.lblScore = new Text("Score", 26, 300, 540, "white", "by");
+    SongScreen.lblMaxCombo = new Text("Max Combo", 26, 580, 540, "white", "by");
+    SongScreen.lblCompleted = new Text("Completed", 26, 840, 540, "white", "by");
+    SongScreen.lblSolve = new Text("Solve", 26, 1080, 540, "white", "by");
+
+    SongScreen.scoreLabel = new ControlGroup(0, 0, 1280, 720);
+    SongScreen.scoreLabel
+        .add(SongScreen.lblScore)
+        .add(SongScreen.lblMaxCombo)
+        .add(SongScreen.lblCompleted)
+        .add(SongScreen.lblSolve)
+        .z(1000)
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+
+
+    SongScreen.txtScore = new Text("", 26, 550, 541, "white", "bx,by");
+    SongScreen.txtMaxCombo = new Text("", 26, 815, 541, "white", "bx,by");
+    SongScreen.txtCompleted = new Text("", 26, 1060, 541, "white", "bx,by");
+    SongScreen.txtSolve = new Text("", 26, 1225, 541, "white", "bx,by");
+
+    SongScreen.scoreText = new ControlGroup(0, 0, 1280, 720);
+    SongScreen.scoreText
+        .add(SongScreen.txtScore)
+        .add(SongScreen.txtMaxCombo)
+        .add(SongScreen.txtCompleted)
+        .add(SongScreen.txtSolve)
+        .z(1000)
+        .css('font-family', 'Open Sans')
+        .css('font-weight', '600')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+
+    SongScreen.lblSpeed   = new Text("Type Speed", 15, 195, 710, "white", "by");
+    SongScreen.lblSpeed2  = new Text("/ min", 15, 375, 710, "white", "by");
+    SongScreen.lblCorrect = new Text("Correct", 15, 450, 710, "white", "by");
+    SongScreen.lblMissed  = new Text("Missed", 15, 655, 710, "white", "by");
+    SongScreen.lblPercent = new Text("Correct Percent", 15, 860, 710, "white", "by");
+    SongScreen.lblClass   = new Text("Class", 15, 1140, 710, "white", "by");
+
+    SongScreen.scoreLabel2 = new ControlGroup(0, 0, 1280, 720);
+    SongScreen.scoreLabel2
+        .add(SongScreen.lblSpeed)
+        .add(SongScreen.lblSpeed2)
+        .add(SongScreen.lblCorrect)
+        .add(SongScreen.lblMissed)
+        .add(SongScreen.lblPercent)
+        .add(SongScreen.lblClass)
+        .z(1000)
+        .css('font-family', 'Junge')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+
+    SongScreen.txtSpeed   = new Text("", 28, 360, 715, "white",  "by,bx");
+    SongScreen.txtCorrect = new Text("", 28, 602.5, 715, "white",  "by,bx");
+    SongScreen.txtMissed  = new Text("", 28, 800, 715, "white",  "by,bx");
+    SongScreen.txtPercent = new Text("", 28, 1060, 715, "white",  "by,bx");
+    SongScreen.txtClass   = new Text("", 28, 1220, 715, "white", "by,bx");
+
+    SongScreen.scoreText2 = new ControlGroup(0, 0, 1280, 720);
+    SongScreen.scoreText2
+        .add(SongScreen.txtSpeed  )
+        .add(SongScreen.txtCorrect)
+        .add(SongScreen.txtMissed )
+        .add(SongScreen.txtPercent)
+        .add(SongScreen.txtClass  )
+        .z(1000)
+        .css('font-family', 'Open Sans')
+        .css('font-weight', '600')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+
     SongScreen.control = new LimitedControlGroup(0, 0, 1280, 720);
     SongScreen.control
         .add(SongScreen.typingText)
@@ -2313,6 +2503,10 @@ var SongScreen = (function() {
         .add(SongScreen.lblInterval)
         .add(SongScreen.lblTotalTime)
         .add(SongScreen.lblHelp)
+        .add(SongScreen.scoreLabel)
+        .add(SongScreen.scoreText)
+        .add(SongScreen.scoreLabel2)
+        .add(SongScreen.scoreText2)
         .z(1000);
 
     SongScreen.shouldUpdate = false;
@@ -2321,6 +2515,9 @@ var SongScreen = (function() {
     SongScreen.onIn = function () {
         SongScreen.shouldUpdate = true;
         SongScreen.lastVerse = -1;
+        SongScreen.scoringLine = false;
+
+        ScoreEngine.songStart();
         SongScreen.control.show();
 
         // Reset elements
@@ -2332,7 +2529,18 @@ var SongScreen = (function() {
         SongScreen.prgOverall.progress(0);
         SongScreen.prgInterval.progress(0);
 
-        Graphics.overlay_song.show();
+        SongScreen.txtScore.txt("");
+        SongScreen.txtMaxCombo.txt("");
+        SongScreen.txtCompleted.txt("");
+        SongScreen.txtSolve.txt("");
+
+        SongScreen.txtSpeed.txt("");
+        SongScreen.txtCorrect.txt("");
+        SongScreen.txtMissed.txt("");
+        SongScreen.txtPercent.txt("");
+        SongScreen.txtClass.txt("");
+
+            Graphics.overlay_song.show();
         SongManager.getSong().play();
     };
 
@@ -2347,9 +2555,6 @@ var SongScreen = (function() {
 
         // Process typing display & auxiliary line
         if (SongScreen.shouldUpdate || SongScreen.lastVerse != song.currentVerse) {
-            SongScreen.lastVerse = song.currentVerse;
-            SongScreen.shouldUpdate = false;
-
             SongScreen.typingText.$.empty();
             var tl = song.getTypingList();
             var tchar = "";
@@ -2368,6 +2573,11 @@ var SongScreen = (function() {
             SongScreen.typingText.shouldResize();
             SongScreen.typingChar.txt(tchar);
 
+            // Scoring extract
+            if (tchar.length == 0) {
+                ScoreEngine.onLineEnd(0);
+            }
+
             var line;
             if ((song.typing != null && song.typing.isComplete()) || song.isBlank(song.currentVerse)) {
                 line = song.getNextVerse();
@@ -2380,7 +2590,45 @@ var SongScreen = (function() {
             SongScreen.txtLineLyrics.html(line.lyrics);
             SongScreen.txtLineTyping.shouldResize();
             SongScreen.currentShowingLine = line;
+
+            // Scoring
+            if (SongScreen.lastVerse != song.currentVerse) {
+                if (SongScreen.scoringLine)
+                    ScoreEngine.onLineEnd(song.typingLeftChar);
+
+                SongScreen.scoringLine = !song.isBlank(song.currentVerse);
+
+                if (SongScreen.scoringLine)
+                    ScoreEngine.onLineStart();
+            }
+
+            // Update scoring
+            if (ScoreEngine.currentCombo != 0) {
+                SongScreen.txtCombo.show();
+                SongScreen.lblCombo.show();
+                SongScreen.txtCombo.txt($comma(ScoreEngine.currentCombo));
+            } else {
+                SongScreen.txtCombo.hide();
+                SongScreen.lblCombo.hide();
+            }
+            SongScreen.txtScore.txt($comma(ScoreEngine.score));
+            SongScreen.txtMaxCombo.txt($comma(SongScreen.formatNumber(ScoreEngine.maxCombo, 3)));
+            SongScreen.txtCompleted.txt($comma(SongScreen.formatNumber(ScoreEngine.completed, 3)));
+            SongScreen.txtSolve.txt($comma(SongScreen.formatNumber(ScoreEngine.solve, 3)));
+
+            SongScreen.txtCorrect.txt($comma(SongScreen.formatNumber(ScoreEngine.typed, 3)));
+            SongScreen.txtMissed.txt($comma(SongScreen.formatNumber(ScoreEngine.missed, 3)));
+            SongScreen.txtPercent.txt("" + Math.round(ScoreEngine.getPercent()*100) + "%");
+            SongScreen.txtClass.txt("F");
+
+            // Update
+            SongScreen.lastVerse = song.currentVerse;
+            SongScreen.shouldUpdate = false;
+
         }
+
+        // Update CPM
+        SongScreen.txtSpeed.txt($comma(SongScreen.formatNumber(Math.round(ScoreEngine.getCPM()), 3)));
 
         // Other stats
         SongScreen.txtTimecode.txt(SongManager.formatTime(song.getTime()) + " / " + SongManager.formatTime(song.getDuration()));
@@ -2456,14 +2704,29 @@ var SongScreen = (function() {
         }
 
         SongScreen.shouldUpdate = true;
-        SongManager.getSong().handleKey(input);
+        var result = SongManager.getSong().handleKey(input);
+        if (result !== false) {
+            ScoreEngine.onType(result);
+        }
     };
 
     SongScreen.onOut = function (callback) {
+        // These items are not in main controlgroup
+        SongScreen.txtCombo.hide();
+        SongScreen.lblCombo.hide();
+
+        ScoreEngine.songEnd();
         SongScreen.control.hide();
         Graphics.overlay_song.hide();
         callback();
     };
+
+    SongScreen.formatNumber = function (num, l) {
+        var ret = "" + num;
+        while (ret.length < l)
+            ret = "0" + ret;
+        return ret;
+    }
 
     return SongScreen;
 })();
