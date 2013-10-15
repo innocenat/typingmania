@@ -74,14 +74,14 @@ def convert(fi, fo, fo2, key):
             data  = match.group("data")
             if dtype == "lyrics":
                 lyrics.append({
-                    "start":  toMillisec(start),
-                    "end":    toMillisec(end),
+                    "start":  toMillisec(start)-100,
+                    "end":    toMillisec(end)-100,
                     "lyric":  data
                 })
             elif dtype == "typing":
                 typing.append({
-                    "start":  toMillisec(start),
-                    "end":    toMillisec(end),
+                    "start":  toMillisec(start)-100,
+                    "end":    toMillisec(end)-100,
                     "typing":  data
                 })
             else:
