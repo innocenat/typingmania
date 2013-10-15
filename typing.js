@@ -867,7 +867,9 @@ var KeyCode = (function() {
         [ 39, 'Right'],
         [ 13, 'Enter'],
         [  8, 'Backspace'],
-        [  9, 'Tab'  ]
+        [  9, 'Tab'  ],
+        [ 33, 'PgUp' ],
+        [ 34, 'PgDown']
     ];
 
     KeyCode.fromKeyCode = function (code, shift) {
