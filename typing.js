@@ -3071,11 +3071,26 @@ var DynamicBackground = (function () {
         .css('letter-spacing', '0.1em')
         .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
 
+    DynamicBackground.lblVolume = new Text("Master Volume", 15, 10, 7, "white");
+    DynamicBackground.lblVolume
+        .z(15)
+        .css('font-family', 'Junge')
+        .css('letter-spacing', '0.1em')
+        .css('text-shadow', '0px 0px 8px #ccc, 2px 2px 4px #333');
+
+    DynamicBackground.prgVolume = new Progressbar(150, 15, 250, 5, "white", "gray");
+    DynamicBackground.prgVolume.z(1000);
+
+    DynamicBackground.currentVolume = $.jStorage.get('__typingmania_volume', 1.0);
+
     DynamicBackground.control
         .add(DynamicBackground.titleGroup)
-        .add(DynamicBackground.highscoreGroup);
+        .add(DynamicBackground.highscoreGroup)
+        .add(DynamicBackground.lblVolume)
+        .add(DynamicBackground.prgVolume);
 
     DynamicBackground.show = function () {
+        DynamicBackground.updateVolumeControl();
         DynamicBackground.control.show();
     };
 
@@ -3136,6 +3151,28 @@ var DynamicBackground = (function () {
         }
     };
 
+    // for master volume
+    DynamicBackground.handleKey = function (input) {
+        if (input == 'PgUp') {
+            DynamicBackground.currentVolume = Math.min(DynamicBackground.currentVolume + 0.025, 2.0);
+            DynamicBackground.updateVolumeControl();
+            return true;
+        } else if (input == 'PgDown') {
+            DynamicBackground.currentVolume = Math.max(DynamicBackground.currentVolume - 0.025, 0.0);
+            DynamicBackground.updateVolumeControl();
+            return true;
+        } else
+            return false;
+    };
+
+    DynamicBackground.updateVolumeControl = function () {
+        createjs.Sound.setVolume(DynamicBackground.currentVolume);
+        DynamicBackground.prgVolume.progress(DynamicBackground.currentVolume / 2);
+        $.jStorage.set('__typingmania_volume', DynamicBackground.currentVolume);
+    };
+
+    // TODO mouse for volume changing
+
     return DynamicBackground;
 })();
 
@@ -3166,6 +3203,7 @@ var DynamicBackground = (function () {
 
             DynamicBackground.update();
             MenuScreen.update();
+        } else if (DynamicBackground.handleKey(input)) {
         } else switch (State.current) {
             case State.PRELOAD:
                 PreloadScreen.handleKey(input);
