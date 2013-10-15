@@ -3002,7 +3002,8 @@ var ScoreScreen = (function() {
             '<p style="margin:0;margin-bottom:0.6em">' + $format(ScoreEngine.solve) + '</p>' +
             '<p style="margin:0;margin-bottom:0.6em">' + $format(Math.round(ScoreEngine.getCPM())) + ' cpm</p>' +
             '<p style="margin:0;margin-bottom:0.6em">' + Math.round(ScoreEngine.getPercent()*100) + '%</p>' +
-            '<p style="margin:0;margin-bottom:0.6em">' + Math.round(ScoreEngine.getPercent2()*100) + '%</p>');
+            '<p style="margin:0;margin-bottom:0.6em">' + Math.round(ScoreEngine.getPercent2()*100) + '%</p>')
+            .css('width', '3000px');
 
         // Show Control
         ScoreScreen.control.show();
