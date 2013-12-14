@@ -689,9 +689,6 @@ var State = (function() {
 var SongManager = (function() {
     function SongManager() {}
 
-    // Main game data
-    SongManager.songData = null;
-
     // List of available song
     SongManager.songs = {};
 
@@ -699,16 +696,22 @@ var SongManager = (function() {
     SongManager.song = null;
 
     SongManager.initSongData = function (songData) {
-        SongManager.songData = songData;
+        PreloadScreen.loadFile("song_" + songData + "_data", songData + "/_index.json", function (_, result) {
+            if (result['folder']) {
+                result['folder'].forEach(function (c) {
+                    SongManager.initSongData(songData + "/" + c);
+                });
+            }
 
-        var count = 0;
-        songData.forEach(function (c) {
-            PreloadScreen.loadFile("song_" + (count) + "_data", c, function(_, result) {
-                var key = result.id;
-                var basePath = SongManager.basePath(c);
-                SongManager.songs[key] = new Song(result, basePath);
-            });
-            count++;
+            if (result['file']) {
+                result['file'].forEach(function (c) {
+                    PreloadScreen.loadFile("song_" + c + "_data", c, function(_, result) {
+                        var key = result.id;
+                        var basePath = SongManager.basePath(c);
+                        SongManager.songs[key] = new Song(result, basePath);
+                    });
+                });
+            }
         });
     };
 
@@ -2086,9 +2089,6 @@ var PreloadScreen = (function() {
         PreloadScreen.control.show();
 
         PreloadScreen.loadFile('__SETTINGS', SETTINGS, function(_, result) {
-            // Because the number of item in this stage is dynamic,
-            // donnable variable are introduced to prevent the load to be done
-            // before new set of data are added.
             SongManager.initSongData(result.songs);
 
             // Load other song asset
@@ -2111,7 +2111,9 @@ var PreloadScreen = (function() {
                 Graphics.overlay_song.z(999);
             });
 
-
+            // Because the number of item in this stage is dynamic,
+            // donnable variable is introduced to prevent the load to be done
+            // before new set of data are added.
             PreloadScreen.donnable = true;
         }, false);
 
