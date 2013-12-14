@@ -101,6 +101,29 @@ ready to go. Don't forget to add path to your newly generated JSON file to your
 Troubleshoot
 ------------
 
+#### `Fatal error: Please contact webmaster or try again.`
+
+Check to make sure all your path are correct. This include `data/settings.json` and
+`data/background.jpg`, `_index.json` in your `songs` directory, and all file refered
+in your `_index.json` are available.
+
+#### Song does not start, it just freezes at 0:00
+
+Go back to menu and try again. This is limitation of browser audio support and precise timing.
+
+#### Audio in menu sound does not play properly
+
+Again, this is limitation of browser audio support. This cannot be helped.
+
+#### Song loading progressbar is broken
+
+Until browser start reporting progress for audio load, it cannot be helped.
+
+#### Controls on-screen are misplaced.
+
+A very unfortunate timing. Try resizing the window again. This is due to
+design that try to minimize costly DOM access.
+
 License
 -------
 
