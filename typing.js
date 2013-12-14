@@ -462,6 +462,10 @@ var Song = (function() {
         if (key in this.data)
             return this.data[key];
 
+        key = info.substring(0, info.length-3);
+        if (key in this.data)
+            return this.data[key];
+
         return "";
     };
 
