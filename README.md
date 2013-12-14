@@ -20,6 +20,27 @@ Roadmap
  - Much prettier menu
  - Cache setting/song lyrics in local storage
 
+TypingMania Odyssey Compatibility
+---------------------------------
+
+ With import script (documentation pending), most TypingMania installation can be converted to be used with
+ this engine at ease. There are some limitation though:
+
+  - TypingMania Odyssey allow malformed XML as its data file. The conversion script can take care
+    of simple errors, but sometime XML parse error might occur during conversion.
+  - Video-based song is not supported, nor will be supported in this engine in foreseeable future.
+  - .flv as background isn't support, nor will be supported.
+  - Apart from that, import and conversion should be perfect.
+
+Engine compatibility:
+  - TypingMania Odyssey seems to accept keytype a little bit early than real timestamp. This engine
+   	does not allow such thing. The `.ass` => `.json` conversion script automatically take care
+   	of this by padding every timestamp by 100ms. The Odyssey import script does this too, but some
+   	song might still not work as expected.
+  - Rank AA became S; AAA became SS.
+  - Scoring is much harsher in this engine. Rank SS can only be obtained by 100% game.
+  - The UI is almost the same; however, the tune bar are not possible in Javascript and does not present.
+
 Installation
 ------------
 
@@ -76,6 +97,9 @@ Name the <code>.ass</code> (data & lyrics), <code>.mp3</code> (songs), <code>.jp
 (background image) the same, then runs  <code>convert.py file.ass</code>. Then you are
 ready to go. Don't forget to add path to your newly generated JSON file to your
 <code>songs.json</code>.
+
+Troubleshoot
+------------
 
 License
 -------
