@@ -12,13 +12,9 @@ var BACKGROUND = 'data/background.jpg';
 // Song list and main configuration file.
 var SETTINGS   = 'data/settings.json';
 
-// Interval to draw game. In millisecond.
-// Default to 20ms, which translated to 50fps
-var INTERVAL   = 20;
-
 // Engine Version
-var VERSION = '0.3.1-dev+00003';
-var SAVE_VERSION = 'sv00003';
+var VERSION = '0.4.0-beta2';
+var SAVE_VERSION = 'sv00004';
 
 /// ///////////////////////
 ///  Basic prerequisite checking
