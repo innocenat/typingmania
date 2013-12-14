@@ -2299,7 +2299,8 @@ var MenuScreen = (function() {
     };
 
     MenuScreen.songSorter = function (a, b) {
-        return a.song.getData('title-en').localeCompare(b.song.getData('title-en'));
+        //return a.song.getData('title-en').localeCompare(b.song.getData('title-en'));
+        return a.song.getData('avg_cpm') - b.song.getData('avg_cpm');
     };
 
     return MenuScreen;
