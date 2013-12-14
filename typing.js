@@ -2273,7 +2273,7 @@ var MenuScreen = (function() {
     MenuScreen.repositionSong = function () {
         for (var i = 0; i < MenuScreen.songDisplay.length; i++) {
             var diff = i - MenuScreen.currentSong;
-            if (Math.abs(diff) >= 5) {
+            if (Math.abs(diff) > 5) {
                 MenuScreen.songDisplay[i].hide();
                 continue;
             }
