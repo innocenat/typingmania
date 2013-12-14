@@ -3247,7 +3247,18 @@ var DynamicBackground = (function () {
     $(document).on("mozvisibilitychange", visibilityChangeFunc);
 
     // Main game loop
-    setInterval(function() {
+    var requestAnimFrame = (function(){
+        return  window.requestAnimationFrame       ||
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame    ||
+                function(callback){
+                    window.setTimeout(callback, 1000 / 60);
+                };
+    })();
+
+    var renderLoop = function() {
+        requestAnimFrame(renderLoop);
+
         switch (State.current) {
             case State.PRELOAD:
                 PreloadScreen.tick();
@@ -3275,7 +3286,9 @@ var DynamicBackground = (function () {
             title = 'TypingMania';
         }
         document.title = title;
-    }, INTERVAL);
+    };
+
+    renderLoop();
 
     // Start game
     PreloadScreen.onIn();
