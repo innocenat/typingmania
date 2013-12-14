@@ -706,9 +706,13 @@ var SongManager = (function() {
             if (result['file']) {
                 result['file'].forEach(function (c) {
                     PreloadScreen.loadFile("song_" + c + "_data", c, function(_, result) {
-                        var key = result.id;
-                        var basePath = SongManager.basePath(c);
-                        SongManager.songs[key] = new Song(result, basePath);
+                        if (result != null) {
+                            var key = result.id;
+                            var basePath = SongManager.basePath(c);
+                            SongManager.songs[key] = new Song(result, basePath);
+                        } else {
+                            console.log("wrf: " + _);
+                        }
                     });
                 });
             }

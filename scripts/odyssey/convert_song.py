@@ -205,7 +205,6 @@ def convert_odyssey_folder(url, target):
             song.write(target + "/" + song_id)
         except:
             print("Error: cannot parse " + item.get('xmlpath'))
-            raise
 
     with open(target + "/" + "_index.json", "w") as fo:
         fo.write(json.dumps({ "file": song_list }, sort_keys=False, ensure_ascii=True, indent=4, separators=(',', ': ')))
