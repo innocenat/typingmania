@@ -600,8 +600,14 @@ var Song = (function() {
         this.imageLoading = true;
         var _this = this;
         AssetManager.load(this.id + "_image", this.basePath + '/' + this.data['image'], function (id) {
-            _this.image = new Image(id, 0, 0, 1280, 720);
-            _this.image.z(10);
+            try {
+                _this.image = new Image(id, 0, 0, 1280, 720);
+                _this.image.z(10);
+            } catch (_) {
+                _this.image = new Image(BACKGROUND, 0, 0, 1280, 720);
+            }
+        }, true, undefined, function (_) {
+            _this.image = new Image(BACKGROUND, 0, 0, 1280, 720);
         });
     };
 
