@@ -13,7 +13,7 @@ var BACKGROUND = 'data/background.jpg';
 var SETTINGS   = 'data/settings.json';
 
 // Engine Version
-var VERSION = '0.4.0-beta2';
+var VERSION = '0.4.0';
 var SAVE_VERSION = 'sv00004';
 
 /// ///////////////////////
@@ -2006,7 +2006,7 @@ var Graphics = (function() {
 
         // Create overlay to prevent accidental text selection
         var superOverlay = new Block(0, 0, 1280, 720);
-        //superOverlay.z(9999); // FIXME actually enable this in real release
+        superOverlay.z(9999);
         superOverlay.show();
     };
 
