@@ -2418,6 +2418,7 @@ var PresongScreen = (function() {
 
     PresongScreen.tick = function () {
         SongManager.tick();
+        DynamicBackground.tick();
         var song = SongManager.getSong();
         if (song.isReady()) {
             if (!PresongScreen.completed) {
@@ -2688,6 +2689,7 @@ var SongScreen = (function() {
     SongScreen.tick = function () {
         SongManager.tick();
         AutoPlay.tick();
+        DynamicBackground.tick();
 
         var song = SongManager.getSong();
 
