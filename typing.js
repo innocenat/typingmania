@@ -2199,6 +2199,8 @@ var MenuScreen = (function() {
     MenuScreen.currentSong = 0;
     MenuScreen.songDisplay = [];
 
+    MenuScreen.movedInThisTick = false;
+
     MenuScreen.onIn = function () {
         if (this.songDisplay.length == 0)
             MenuScreen.makeSongDisplay();
@@ -2212,23 +2214,37 @@ var MenuScreen = (function() {
     MenuScreen.tick = function () {
         SongManager.tick();
         DynamicBackground.tick();
+
+        MenuScreen.movedInThisTick = false;
     };
 
     MenuScreen.handleKey = function (input) {
         if (input == 'Up') {
+            // Prevent lag when move too fast
+            if (MenuScreen.movedInThisTick) {
+                return;
+            }
+
             MenuScreen.currentSong = MenuScreen.currentSong-1;
             if (MenuScreen.currentSong < 0)
                 MenuScreen.currentSong = MenuScreen.songDisplay.length-1;
 
             Graphics.select.play();
             this.repositionSong();
+            MenuScreen.movedInThisTick = true;
         } else if (input == 'Down') {
+            // Prevent lag when move too fast
+            if (MenuScreen.movedInThisTick) {
+                return;
+            }
+
             MenuScreen.currentSong = MenuScreen.currentSong+1;
             if (MenuScreen.currentSong >= MenuScreen.songDisplay.length)
                 MenuScreen.currentSong = 0;
 
             Graphics.select.play();
             this.repositionSong();
+            MenuScreen.movedInThisTick = true;
         } else if (input == 'Esc') {
 
         } else if (input == 'Enter' || input == ' ') {
