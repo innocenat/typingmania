@@ -785,7 +785,7 @@ var AssetManager = (function() {
     AssetManager.status = {};
     this.complete = true;
 
-    createjs.Sound.registerPlugins([/*createjs.WebAudioPlugin, */createjs.HTMLAudioPlugin]);
+    createjs.Sound.registerPlugins([createjs.WebAudioPlugin, createjs.HTMLAudioPlugin]);
 
     AssetManager.load = function (id, src, callback, start, progressCallback, errorCallback) {
         if (start == undefined)
