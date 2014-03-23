@@ -1,6 +1,5 @@
 .idea/*
-cache/*
 *.db
-songs/*
-data/*
+src/songs/*
+src/data/*
 *.iml
