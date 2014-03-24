@@ -1,6 +1,28 @@
 TypingMania Typing Game
 =======================
 
+I am currently refactoring to get rid of most of its dependencies (e.g. createjs)
+to a simple library I wrote (It's unlikely that this game can be run efficiently on
+old browser anyway so no need to polyfill/shim) and also to refactor into multiple
+source file for easier development.
+
+To get stable version, please download old version from `Release` tab or from
+`master` branch.
+
+Roadmap (in no particular order)
+----------------------------------
+
+* Get rid of CreateJS and other libraries
+* Replace the HTML/DOM viewport management with Canvas2D for better performance
+* Support dynamic background and video background
+* Offline playing
+* Use Web Audio API to display frequency overlay like original version
+* Better menu system and mouse support
+
+**INFORMATION BELOW THIS LINE IS OLD AND NOT UPDATED**
+
+----
+
 TypingMania is a song type-a-long game, aiming to be a clone of TypingMania Odyssey
 by [SightSeeker Studio](http://www.sightseekerstudio.com/typingmania/). The main reason
 being that SS Studio version is very hard to install and set up properly. (I admit, I
