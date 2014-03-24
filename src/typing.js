@@ -6,6 +6,8 @@
  * See LICENSE file for more detail
  */
 
+(function($) {
+
 // Default background image used during game preloading.
 var BACKGROUND = 'data/background.jpg';
 
@@ -18,8 +20,7 @@ var SAVE_VERSION = 'sv00004';
 
 /// ///////////////////////
 ///  Basic prerequisite checking
-if ($ == undefined || WebFont == undefined || $.jStorage == undefined ||
-    createjs == undefined || createjs.LoadQueue == undefined || createjs.Sound == undefined) {
+if ($ == undefined || WebFont == undefined || $.jStorage == undefined) {
     document.write("<p style=\"font-size:300%;color:#c00;text-align:center\">Error: Prerequisite not satisfied. Please check.</p>");
     throw 'Prerequisite not satisfied.';
 }
@@ -447,6 +448,7 @@ var Song = (function() {
 
     Song.prototype.getData = function (info) {
         var key = info + "-" + Graphics.language;
+
         if (key in this.data)
             return this.data[key];
 
@@ -535,7 +537,7 @@ var Song = (function() {
         if (!this.isLyricsLoaded && !this.isLyricsLoading && !this.isLyricsError) {
             console.log("Begin loading lyrics...");
 
-            AssetManager.load(this.id + "_lyrics", this.getLyricsURL(), function (_, result) {
+            AssetManager.load(Loader.json, this.id + "_lyrics", this.getLyricsURL(), function (result) {
                 _this.isLyricsLoaded = true;
                 _this.isLyricsLoading = false;
                 _this.lyricsLoadingProgress = 1;
@@ -547,7 +549,7 @@ var Song = (function() {
                 }
 
                 _this.processTyping();
-            }, true, function (_, progress) {
+            }, true, function (progress) {
                 _this.lyricsLoadingProgress = progress;
             }, function () {
                 _this.isLyricsError = true; // error
@@ -561,20 +563,22 @@ var Song = (function() {
 
         // Load Audio if not loaded
         if (!this.isAudioLoaded && !this.isAudioLoading && !this.isAudioError) {
-            console.log("Begin loading song...");
+            console.log("Begin loading song...", this.getAudioURL());
 
-            AssetManager.load(this.id + "_audio", this.getAudioURL(), function (id) {
+            AssetManager.load(Loader.music, this.id + "_audio", this.getAudioURL(), function (response) {
+                console.log("Here2");
                 _this.isAudioLoaded = true;
                 _this.isAudioLoading = false;
                 _this.audioLoadingProgress = 1;
-                _this.audio = createjs.Sound.createInstance(id);
+                _this.audio = new BasicSound(response);
                 console.log("Song " + _this.id + " loaded.");
 
                 if (_this.isLyricsLoaded && _this.isAudioLoaded) {
                     _this.isLoaded = true;
                 }
-            }, true, function (_, progress) {
+            }, true, function (progress) {
                 _this.audioLoadingProgress = progress;
+                console.log(progress);
             }, function () {
                 _this.isAudioError = true; // error
                 _this.isAudioLoaded = false;
@@ -599,9 +603,9 @@ var Song = (function() {
 
         this.imageLoading = true;
         var _this = this;
-        AssetManager.load(this.id + "_image", this.basePath + '/' + this.data['image'], function (id) {
+        AssetManager.load(Loader.image, this.id + "_image", this.basePath + '/' + this.data['image'], function (response) { // TODO add load type
             try {
-                _this.image = new Image(id, 0, 0, 1280, 720);
+                _this.image = new Image(response, 0, 0, 1280, 720);
                 _this.image.z(10);
             } catch (_) {
                 _this.image = new Image(BACKGROUND, 0, 0, 1280, 720);
@@ -702,7 +706,7 @@ var SongManager = (function() {
     SongManager.song = null;
 
     SongManager.initSongData = function (songData) {
-        PreloadScreen.loadFile("song_" + songData + "_data", songData + "/_index.json", function (_, result) {
+        PreloadScreen.loadFile(Loader.json, "song_" + songData + "_data", songData + "/_index.json", function (result) {
             if (result['folder']) {
                 result['folder'].forEach(function (c) {
                     SongManager.initSongData(songData + "/" + c);
@@ -711,13 +715,14 @@ var SongManager = (function() {
 
             if (result['file']) {
                 result['file'].forEach(function (c) {
-                    PreloadScreen.loadFile("song_" + c + "_data", c, function(_, result) {
+                    var id = "song_" + c + "_data";
+                    PreloadScreen.loadFile(Loader.json, id, c, function(result) {
                         if (result != null) {
                             var key = result.id;
                             var basePath = SongManager.basePath(c);
                             SongManager.songs[key] = new Song(result, basePath);
                         } else {
-                            console.log("wrf: " + _);
+                            console.log("wrf: ");
                         }
                     });
                 });
@@ -780,69 +785,73 @@ var SongManager = (function() {
 var AssetManager = (function() {
     function AssetManager() {}
 
-    AssetManager.queue = new createjs.LoadQueue();
-    AssetManager.queue.installPlugin(createjs.Sound);
+    //AssetManager.queue = new createjs.LoadQueue();
+    //AssetManager.queue.installPlugin(createjs.Sound);
     AssetManager.status = {};
     this.complete = true;
+    this.count = 0;
 
-    createjs.Sound.registerPlugins([createjs.WebAudioPlugin, createjs.HTMLAudioPlugin]);
-
-    AssetManager.load = function (id, src, callback, start, progressCallback, errorCallback) {
+    AssetManager.load = function (type, id, src, callback, start, progressCallback, errorCallback) {
         if (start == undefined)
             start = true;
         if (id in AssetManager.status) {
-            callback(id, AssetManager.queue.getResult(id));
+            AssetManager.status[id].loader.then(function(obj) {
+                AssetManager.count--;
+                if (AssetManager.count == 0)
+                    AssetManager.complete = true;
+                AssetManager.status[id].status = 1;
+                if (callback)
+                    callback(obj);
+            }, errorCallback, function(evt) {
+                if (evt.lengthComputable && progressCallback) {
+                    progressCallback(evt.loaded/evt.total); // TODO check correctness
+                }
+            }).then(null, function (e) { console.error(e); });
             return;
         }
-        AssetManager.queue.loadFile({
-            id: id,
-            src: src + "?version=" + encodeURIComponent(VERSION)
-        }, start);
+
+        var loader = type("get", src + "?version=" + encodeURIComponent(VERSION));
+
+        loader.then(function(obj) {
+            AssetManager.count--;
+            if (AssetManager.count == 0)
+                AssetManager.complete = true;
+            AssetManager.status[id].status = 1;
+            callback(obj);
+        }, errorCallback, function(evt) {
+            if (evt.lengthComputable && progressCallback) {
+                progressCallback(evt.loaded/evt.total); // TODO check correctness
+            }
+        }).then(null, function (e) { console.error(e); });
+
         AssetManager.status[id] = {
             status: 0,
             src: src,
+            loader: loader,
             callback: callback,
             progress: progressCallback,
             error: errorCallback
         };
+
+        AssetManager.count++;
         AssetManager.complete = false;
+
+        //if (start)
+            loader.send();
     };
 
     AssetManager.remove = function (id, hard) {
         if (id in AssetManager.status && AssetManager.status[id].status != 1) {
-            AssetManager.queue.remove(id);
+            AssetManager.status[id].xhr.abort();
             delete AssetManager.status[id];
             return true;
         }
         if (hard != undefined && hard) {
-            AssetManager.queue.remove(id);
+            AssetManager.status[id].xhr.abort();
             delete AssetManager.status[id];
             return true;
         }
         return false;
-    };
-
-    AssetManager.onFileDownloaded = function (event) {
-        var id = event.item.id;
-        AssetManager.status[id].status = 1;
-        AssetManager.status[id].callback(id, event.result);
-    };
-
-    AssetManager.onFileProgressed = function (event) {
-        var id = event.item.id;
-        if (AssetManager.status[id].progress != undefined)
-            AssetManager.status[id].progress(id, event.progress);
-    };
-
-    AssetManager.onError = function (event) {
-        var id = event.item.id;
-        if (AssetManager.status[id].error != undefined)
-            AssetManager.status[id].error(id, event.item.src);
-        console.log(event);
-    };
-
-    AssetManager.onComplete = function () {
-        AssetManager.complete = true;
     };
 
     AssetManager.isComplete = function (id) {
@@ -851,11 +860,6 @@ var AssetManager = (function() {
         }
         return false;
     };
-
-    AssetManager.queue.on("fileload", AssetManager.onFileDownloaded);
-    AssetManager.queue.on("fileprogress", AssetManager.onFileProgressed);
-    AssetManager.queue.on("complete", AssetManager.onComplete);
-    AssetManager.queue.on("error", AssetManager.onError);
 
     return AssetManager;
 })();
@@ -930,7 +934,7 @@ var KeyCode = (function() {
  * Replacement in case the setup didn't include kanatable.js.
  * For example in case of English-song only setup
  */
-var Kana = Kana || (function() {
+var Kana = window.Kana || (function() {
     function KanaR() {}
 
     KanaR.splitKana = function (kana) {
@@ -1893,9 +1897,15 @@ var Image = (function($super) {
         this.src = src;
 
         // If id is provided, load from preloaded queue
-        if (src in AssetManager.status && AssetManager.status[src].status == 1) {
-            img = $(AssetManager.queue.getResult(src));
-        } else {
+        //if (src in AssetManager.status && AssetManager.status[src].status == 1) {
+        //    img = $(AssetManager.queue.getResult(src)); // TODO fix this
+        //} else {
+        //    img = $('<img />');
+        //    img.attr('src', src);
+        //}
+        if (src instanceof HTMLImageElement)
+            img = $(src);
+        else {
             img = $('<img />');
             img.attr('src', src);
         }
@@ -2098,25 +2108,25 @@ var PreloadScreen = (function() {
         PreloadScreen.control.attach();
         PreloadScreen.control.show();
 
-        PreloadScreen.loadFile('__SETTINGS', SETTINGS, function(_, result) {
+        PreloadScreen.loadFile(Loader.json, '__SETTINGS', SETTINGS, function(result) {
             SongManager.initSongData(result.songs);
 
             // Load other song asset
-            PreloadScreen.loadFile('__select', result.sound_select, function(id) {
-                Graphics.select = createjs.Sound.createInstance(id);
+            PreloadScreen.loadFile(Loader.music, '__select', result.sound_select, function(id) {
+                Graphics.select = new BasicSound(id);
                 Graphics.select.volume = 0.2;
             });
-            PreloadScreen.loadFile('__decide', result.sound_decide, function(id) {
-                Graphics.decide = createjs.Sound.createInstance(id);
+            PreloadScreen.loadFile(Loader.music, '__decide', result.sound_decide, function(id) {
+                Graphics.decide = new BasicSound(id);
                 Graphics.decide.volume = 0.2;
             });
-            PreloadScreen.loadFile('__complete', result.sound_complete, function(id) {
-                Graphics.complete = createjs.Sound.createInstance(id);
+            PreloadScreen.loadFile(Loader.music, '__complete', result.sound_complete, function(id) {
+                Graphics.complete = new BasicSound(id);
                 Graphics.complete.volume = 0.2;
             });
 
             // Background overlay
-            PreloadScreen.loadFile('__overlay_song', result.overlay_song, function(id) {
+            PreloadScreen.loadFile(Loader.image, '__overlay_song', result.overlay_song, function(id) {
                 Graphics.overlay_song = new Image(id, 0, 0, 1280, 720);
                 Graphics.overlay_song.z(999);
             });
@@ -2127,13 +2137,13 @@ var PreloadScreen = (function() {
             PreloadScreen.donnable = true;
         }, false);
 
-        PreloadScreen.loadFile('__background', BACKGROUND, function(id) {
+        PreloadScreen.loadFile(Loader.image, '__background', BACKGROUND, function(id) {
             Graphics.backgroundImage = new Image(id, 0, 0, 1280, 720);
             Graphics.backgroundImage.z(-1000);
             Graphics.backgroundImage.fadeIn('slow');
         }, false);
 
-        AssetManager.queue.load();
+        //AssetManager.queue.load();
     };
 
     PreloadScreen.tick = function () {
@@ -2162,23 +2172,24 @@ var PreloadScreen = (function() {
         callback();
     };
 
-    PreloadScreen.loadFile = function (id, src, callback, start) {
+    PreloadScreen.loadFile = function (loader, id, src, callback, start) {
         PreloadScreen.numberOfItem++;
-
-        AssetManager.load(id, src, function (id, result) { // complete callback
+        console.log("Loading", src);
+        // TODO FIX THIS
+         AssetManager.load(loader, id, src, function (result) { // complete callback
             PreloadScreen.completedItem++;
             PreloadScreen.currentItem = 0;
             if (callback != undefined)
-                callback(id, result);
-        }, start, function (id, progress) { // process callback
+                callback(result);
+        }, start, function (progress) { // process callback
             PreloadScreen.currentItem = progress;
-        }, function (id, url) { // error callback
+        }, function () { // error callback
             if (id.substring(0,2) == '__') { // fatal error
                 PreloadScreen.loadingText.txt("Fatal error");
                 PreloadScreen.detailText.txt("Please contact webmaster or try again.");
                 PreloadScreen.detailText.show();
             } else {
-                console.log("File not found: " + url);
+                console.log("File not found: " + src);
                 PreloadScreen.numberOfItem--;
             }
         });
@@ -3197,7 +3208,7 @@ var DynamicBackground = (function () {
     };
 
     DynamicBackground.updateVolumeControl = function () {
-        createjs.Sound.setVolume(DynamicBackground.currentVolume);
+        //createjs.Sound.setVolume(DynamicBackground.currentVolume);
         DynamicBackground.prgVolume.progress(DynamicBackground.currentVolume / 2);
         $.jStorage.set('__typingmania_volume', DynamicBackground.currentVolume);
     };
@@ -3325,4 +3336,6 @@ var DynamicBackground = (function () {
     PreloadScreen.onIn();
 
 })();
+
+})(window.jQuery);
 
