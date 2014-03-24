@@ -6,7 +6,7 @@
  * See LICENSE file for more detail
  */
 
-(function($) {
+define(function(require) {
 
 // Default background image used during game preloading.
 var BACKGROUND = 'data/background.jpg';
@@ -17,6 +17,15 @@ var SETTINGS   = 'data/settings.json';
 // Engine Version
 var VERSION = '0.4.0';
 var SAVE_VERSION = 'sv00004';
+
+var $ = window.jQuery;
+var WebFont = window.WebFont;
+
+var BasicSound = require('lib/sound').BasicSound;
+var Loader = require('lib/loader');
+
+console.log(BasicSound);
+console.log("Hello!");
 
 /// ///////////////////////
 ///  Basic prerequisite checking
@@ -931,22 +940,9 @@ var KeyCode = (function() {
 })();
 
 /**
- * Replacement in case the setup didn't include kanatable.js.
- * For example in case of English-song only setup
+ * Use AMD loader
  */
-var Kana = window.Kana || (function() {
-    function KanaR() {}
-
-    KanaR.splitKana = function (kana) {
-        return [kana];
-    };
-
-    KanaR.getPossibleRomaji = function (kana) {
-        return [kana];
-    };
-
-    return KanaR;
-})();
+var Kana = require('kanatable');
 
 /**
  * Autoplay class --- for cheating since every game need one
@@ -3221,7 +3217,7 @@ var DynamicBackground = (function () {
 /// ///////////////////////
 /// Startup
 
-(function() {
+return function() {
 
     // Graphics Initialization
     Graphics.init();
@@ -3335,7 +3331,6 @@ var DynamicBackground = (function () {
     // Start game
     PreloadScreen.onIn();
 
-})();
-
-})(window.jQuery);
+};
+});
 

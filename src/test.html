@@ -1,9 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title></title>
+    <script src="lib/promise.js"></script>
+    <script src="lib/loader.js"></script>
 </head>
 <body>
-
+<script>
+    var img = Loader.music("get", "songs/easy/bluef.mp3");
+    img.send();
+    img.then(function() {
+        console.log("L0!");
+        img.response.play();
+    }, function() {
+        console.log("err!");
+    }, function (evt) {
+        if (evt.lengthComputable) {
+            console.log("Progress: " + evt.loaded + "/" + evt.total + " (" + (100*evt.loaded/evt.total) + "%)");
+        } else {
+            console.log("Progress: unavailable");
+        }
+    });
+</script>
 </body>
 </html>
