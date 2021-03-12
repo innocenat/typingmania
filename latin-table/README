@@ -1,0 +1,34 @@
+Latin Table
+===========
+
+TypingMania NEO only allow limited ASCII character to be typed in the game.
+However, song lyrics often include other character for styling, etc. Including
+Japanese lyrics, the Latin Table provide translation between each character
+and its appropriate latin character.
+
+While build-csv.js script was initially use for seeding the CSV table,
+the final table was enhanced by hand so do not re-run the script if you
+do not know what you are doing.
+
+Available mapping table:
+ - `japanese-kana` : Japanese Hiragana and Katakana
+    (Unicode BMP "Hiragana" and "Katakana")
+ - `japanese-katakana-half` : Half Width Katakana
+    (Second half of Unicode BMP "Halfwidth and Fullwidth Forms")
+ - `cjk-symbol` : CJK Symbol
+ - `full-width` : Full Width Latin Character/Symbol
+    (First half of Unicode BMP "Halfwidth and Fullwidth Forms")
+ - `enclosed-alnum` : Enclosed form
+   (Unicode BMP "Enclosed Alphanumerics" and partially "Enclosed CJK Letters and Months")
+ - `latin-extended` : Unicode BMP: Latin-1 Supplement, Latin Extended-A, Latin Extended-B, Latin Extended Additional
+ - `quote` : Smart Quatation Mark
+   (Unicode "Quotation Mark=Yes")
+
+The main modifications by hand are:
+
+ - Full-width space and Japanese quotation mark 「」『』 map to empty string
+   to flow better with the song lyrics. Of course, typing space
+   or [ ] is also accepted as valid.
+ - Add reading for multiple kana, and for small kana by itself.
+ - Special handling for っ ッ ゝ ゞ ヽ ヾ
+ - And a bit more I might have forgot to make a note of.

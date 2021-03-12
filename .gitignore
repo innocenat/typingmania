@@ -1,0 +1,5 @@
+node_modules/
+/game
+.DS_Store
+.idea
+/dist

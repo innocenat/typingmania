@@ -1,0 +1,19 @@
+{
+  "name": "typingmania-neo",
+  "description": "TypingMania NEO is a typing game. It is a spiritual successor to TypingMania Odyssey by SightSeeker Studio.",
+  "author": "innosu",
+  "license": "Apache 2.0",
+  "version": "0.9.0",
+  "type": "module",
+  "devDependencies": {
+    "esbuild": "^0.9.0",
+    "jest": "^26.6.3"
+  },
+  "scripts": {
+    "test": "jest",
+    "build-game": "node scripts/build-game.js",
+    "build-assets": "node scripts/build-assets.js",
+    "build-index": "node scripts/build-index.js",
+    "build-song": "node scripts/build-song.js"
+  }
+}

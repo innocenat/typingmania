@@ -1,0 +1,241 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+body {
+    overflow: hidden;
+}
+
+.app-container {
+    display: grid;
+    grid-template-columns: 480px minmax(0, auto);
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.panel-song-info {
+    overflow-y: auto;
+    background: #ddd;
+}
+
+.panel-song-lyrics {
+    overflow-y: auto;
+    flex: 0 0 auto;
+    border-left: 0.125rem solid #999;
+}
+
+.song-info-file {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.song-info-file .btn {
+    margin: 1rem;
+}
+
+.song-info-fileinfo h2 {
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+.lyrics-preview-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.lyrics-preview-table th {
+    text-align: left;
+}
+
+.lyrics-preview-table td, .lyrics-preview-table th {
+    padding: 0 0.5rem;
+    border-bottom: 0.0625px solid #ccc;
+}
+
+.lyrics-preview-table .start-time, .lyrics-preview-table .end-time {
+    width: 100px;
+    cursor: pointer;
+}
+
+.lyrics-preview-table .start-time:hover, .lyrics-preview-table .end-time:hover {
+    background: #fef3c7;
+}
+
+.lyrics-preview-table .active td {
+    background: #a7f3d0;
+}
+
+.lyrics-preview-table .active td.start-time:hover, .lyrics-preview-table .active td.end-time:hover {
+    background: #d1fae5;
+}
+
+.lyrics-preview-table .lyrics {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.lyrics-preview-table .typing {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.big-toolbar-btn {
+    display: block;
+    border: 0.125rem solid black;
+    background: #ddd;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+.big-toolbar-btn:hover {
+    background: #eee;
+}
+
+.big-toolbar-btn svg {
+    display: block;
+    width: 2rem;
+    margin: 0 auto 0.5rem;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+}
+
+.toolbar .btn-separator {
+    border-left: 0.0625rem solid #999;
+    width: 0.5rem;
+    height: 1.5rem;
+}
+
+.toolbar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0.0625rem solid #999;
+    border-right: 0;
+    background: #ddd;
+    padding: 0.25rem;
+    cursor: pointer;
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.toolbar-btn svg {
+    display: block;
+    width: 1rem;
+}
+
+.toolbar-btn:hover {
+    background: #eee;
+}
+
+.toolbar-btn:last-child {
+    border-right: 0.0625rem solid #999;
+}
+
+.info-panel {
+    border-top: 0.0625rem solid #999;
+}
+
+.info-panel h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.25rem 0.5rem;
+    background: #064e3b;
+    color: white;
+}
+
+.info-panel .info-panel-content {
+    padding: 0.5rem;
+}
+
+.info-panel .panel-empty {
+    text-transform: uppercase;
+    color: #666;
+    text-align: center;
+    padding: 2rem 0;
+    font-weight: 700;
+}
+
+.info-panel img {
+    border: 0;
+    height: auto;
+    width: 100%;
+    display: block;
+}
+
+.info-panel .info-panel-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.info-panel .info-panel-table .empty-text {
+    font-style: italic;
+    color: #999;
+}
+
+.info-panel .info-panel-table th {
+    text-align: left;
+}
+
+.info-panel .info-panel-table th, .info-panel .info-panel-table td {
+    padding: 0 0.5rem;
+    border-bottom: 0.0625rem solid #999;
+}
+
+.info-panel .info-panel-table td:first-child {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.lyrics-ruby {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: flex-start;
+}
+
+.lyrics-ruby .ruby-group {
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.lyrics-ruby .ruby-base {
+    text-align: center;
+}
+
+.lyrics-ruby .ruby-ruby {
+    text-align: center;
+    font-size: 0.75em;
+    margin-bottom: -0.75em;
+    white-space: nowrap;
+}
+
+.media-player-progress {
+    width: 100%;
+    margin: 0;
+}
+
+.media-player-control {
+    display: flex;
+    justify-content: space-between;
+}
+
+.media-player-container > * {
+    width: 100%;
+    height: auto;
+}
+
+/*# sourceMappingURL=preview.css.map */

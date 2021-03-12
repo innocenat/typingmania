@@ -1,0 +1,70 @@
+@import 'components/common'
+
+body
+  overflow: hidden
+
+.app-container
+  display: grid
+  grid-template-columns: 480px minmax(0, auto)
+  width: 100%
+  height: 100vh
+  overflow: hidden
+
+.panel-song-info
+  overflow-y: auto
+  background: #ddd
+
+.panel-song-lyrics
+  overflow-y: auto
+  flex: 0 0 auto
+  border-left: 0.125rem solid #999
+
+.song-info-file
+  display: flex
+  flex-direction: row
+  align-items: center
+
+  .btn
+    margin: 1rem
+
+.song-info-fileinfo
+  h2
+    font-size: 1rem
+    text-transform: uppercase
+
+.lyrics-preview-table
+  border-collapse: collapse
+  width: 100%
+
+  th
+    text-align: left
+
+  td, th
+    padding: 0 0.5rem
+    border-bottom: 0.0625px solid #ccc
+
+  .start-time, .end-time
+    width: 100px
+    cursor: pointer
+
+    &:hover
+      background: rgb(254, 243, 199)
+
+  .active td
+    background: rgb(167, 243, 208)
+
+    &.start-time:hover, &.end-time:hover
+      background: rgb(209, 250, 229)
+
+  .lyrics
+    font-size: 1.2rem
+    font-weight: 500
+
+  .typing
+    color: #666
+    font-size: 0.8rem
+
+@import 'components/button'
+@import 'components/panel'
+@import 'components/ruby'
+@import 'components/miniplayer'
