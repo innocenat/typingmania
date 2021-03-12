@@ -32,7 +32,7 @@ const files = walk(RAW_ASSETS)
 const packer = new PackedFile()
 
 for (const file of files) {
-  const fileName = file.replace(RAW_ASSETS, '').substring(1)
+  const fileName = file.replace(RAW_ASSETS, '').substring(1).replace('\\', '/')
   packer.addFile(fileName, fs.readFileSync(file))
   console.log(fileName)
 }
