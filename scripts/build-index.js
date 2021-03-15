@@ -45,7 +45,7 @@ function build_songs (directory) {
       const packed = new PackedFile()
       packed.unpackFromBuffer(content.buffer)
       const song = JSON.parse(packed.getAsText('song.json'))
-      song.url = 'data' + filepath.replace(BASE, '')
+      song.url = 'data' + filepath.replace(BASE, '').replace('\\', '/')
       collection.push(song)
     }
   }

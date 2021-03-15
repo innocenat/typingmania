@@ -37,8 +37,12 @@ export default class Song {
     this.loadHighScore()
   }
 
+  _getHighScoreKey() {
+    return 'typingmania:high_score:' + window.location.href + ':' + this.url
+  }
+
   loadHighScore () {
-    const key = 'typingmania:high_score:' + this.url
+    const key = this._getHighScoreKey()
     try {
       const storage = window.localStorage
       this.high_score = storage.getItem(key) || 0
@@ -54,7 +58,7 @@ export default class Song {
       this.high_score = score
       this.high_score_class = cls
 
-      const key = 'typingmania:high_score:' + this.url
+      const key = this._getHighScoreKey()
       window.localStorage.setItem(key, score)
       window.localStorage.setItem(key + ':class', cls)
     }
