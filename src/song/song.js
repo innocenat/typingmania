@@ -5,6 +5,19 @@ export default class Song {
   constructor (options, collection) {
     this.collection = collection
 
+    this._setMetaData(options)
+    this.url = options.url
+
+    // These data are from secondary loading
+    this.loaded = false
+    this.media_url = ''
+    this.lyrics_csv = ''
+    this.image_url = ''
+
+    this.loadHighScore()
+  }
+
+  _setMetaData(options) {
     this.title = options.title
     this.subtitle = options.subtitle
     this.artist = options.artist
@@ -12,8 +25,6 @@ export default class Song {
     this.latin_title = options.latin_title || ''
     this.latin_subtitle = options.latin_subtitle || ''
     this.latin_artist = options.latin_artist || ''
-
-    this.url = options.url
 
     this.language = options.language
     this.cpm = options.cpm
@@ -27,14 +38,6 @@ export default class Song {
     } else if ('audio' in options) {
       this.media_type = 'audio'
     }
-
-    // These data are from secondary loading
-    this.loaded = false
-    this.media_url = ''
-    this.lyrics_csv = ''
-    this.image_url = ''
-
-    this.loadHighScore()
   }
 
   _getHighScoreKey() {
@@ -82,6 +85,9 @@ export default class Song {
   loadFromPackedFile (packed_song) {
     const song_meta = JSON.parse(packed_song.getAsText('song.json'))
 
+    // Reset metadata
+    this._setMetaData(song_meta)
+
     this.image_url = packed_song.getFileAsURL(song_meta.image)
     this.lyrics_csv = packed_song.getAsText('lyrics.csv')
 
@@ -92,5 +98,11 @@ export default class Song {
     } else if (this.media_type === 'audio') {
       this.media_url = packed_song.getFileAsURL(song_meta.audio)
     }
+  }
+
+  static async fromURL(url, collection) {
+    const song = new Song({ url }, collection)
+    await song.load(() => {})
+    return song
   }
 }
