@@ -39,8 +39,12 @@ fs.writeFileSync(DIST_PATH + '/index.html', `
   })
 </script>
 <noscript>
-    TypingMania NEO is a song lyrics typing game. It is a spiritual successor
-    to SightSeekerStudio's TypingMania Odyssey.
+    <p>
+        TypingMania NEO is a song lyrics typing game. It is a spiritual successor to SightSeekerStudio's TypingMania Odyssey.
+    </p>
+    <p>
+        JavaScript is required to play.
+    </p>
 </noscript>
 </body>
 </html>
