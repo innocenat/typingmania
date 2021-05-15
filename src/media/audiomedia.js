@@ -35,6 +35,10 @@ export default class AudioMedia extends Media {
     return this.media_element.currentTime
   }
 
+  skipTo (time) {
+    this.media_element.currentTime = time
+  }
+
   play () {
     if (!this.ended)
       this.media_element.play()

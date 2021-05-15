@@ -60,6 +60,10 @@ export default class YouTubeMedia extends Media {
     return this.player.getCurrentTime()
   }
 
+  skipTo (time) {
+    this.player.seekTo(time)
+  }
+
   play () {
     if (!this.ended)
       this.player.playVideo()

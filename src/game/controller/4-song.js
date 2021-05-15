@@ -59,6 +59,15 @@ export default class SongController {
         break
       }
 
+      // Skip line
+      if (keyEvent.key === 'Tab') {
+        const line = this.game.typing.getCurrentLine()
+        if (line) {
+          this.game.media.skipTo(line.end_time - 0.2)
+        }
+        continue
+      }
+
       // If it is typing key
       if (keyEvent.key.length === 1 && this.current_line && !this.current_line.isCompleted()) {
         const key = keyEvent.key

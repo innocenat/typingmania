@@ -15,6 +15,9 @@ export default class Media {
   getCurrentTime () {
   }
 
+  skipTo (time) {
+  }
+
   play () {
   }
 
