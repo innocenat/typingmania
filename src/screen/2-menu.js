@@ -26,9 +26,14 @@ export default class MenuScreen extends Screen {
       Txt(1628, 18, 107, 24).layer(122).radius(5).text('Backspace').fill(Black).stroke(BtnBorder).align(CENTER).font(UIFont.size(18)).color(White),
       Txt(1746, 15, 159, 30).layer(122).color(White).text('Go To Parent').font(UIFont.size(24)),
 
+      // Empty view text
+      this.empty_text = Txt(1250, 510, 620, 60).layer(200).color(White).text('Empty').font(UIFont.size(48)),
+
       // Song List Container
       this.songs_list_container = Box(1300, 0, 620, 1080).layer(110)
     ])
+
+    this.empty = true
 
     // List move animation
     this.songs_list_container.el.style.transition = 'transform 0.2s ease'
@@ -42,6 +47,16 @@ export default class MenuScreen extends Screen {
       this.songs_list_container.el.removeChild(this.songs_list_container.el.lastChild)
     }
     this.song_list_item = []
+
+    // If the collection is empty
+    if (collection.children.length === 0) {
+      this.empty_text.show()
+      this.empty = true
+      return
+    }
+
+    this.empty_text.hide()
+    this.empty = false
 
     let position = 0
     for (const c of collection.children) {
@@ -72,6 +87,10 @@ export default class MenuScreen extends Screen {
   }
 
   setSongListPosition (position) {
+    if (this.empty) {
+      return
+    }
+
     this.songs_list_container.el.style.transform = `translate(0, ${-position * 100 + 500}px)`
 
     this.song_list_item[this.current_position].el.style.transform = ''

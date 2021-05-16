@@ -150,9 +150,12 @@ export default class MenuController {
 
               this.updateSong(true)
               this.game.sfx.play('select2')
-            } else {
-              // A song, so transition to Song screen
+            } else if (this.current_collection.children[this.current_index]) {
+              // If a song, so transition to Song screen
               is_song_chosen = true
+            } else {
+              // Empty
+              this.game.sfx.play('error')
             }
         }
       } else {

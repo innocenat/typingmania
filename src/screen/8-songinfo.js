@@ -60,7 +60,17 @@ export default class SongInfoScreen extends Screen {
   }
 
   updateSong (song) {
-    if (song instanceof SongCollection) {
+    if (!song) {
+      // Empty collection
+      this.song_artist.text('')
+      this.song_title.text('Empty')
+      this.song_subtitle.text('')
+      this.collection_description.text('')
+      this.song_language.hide()
+      this.song_sub_group.hide()
+      this.collection_sub_group.hide()
+      this.song_path.hide()
+    } else if (song instanceof SongCollection) {
       this.updateSongPath(song.parent)
       this.song_language.hide()
       this.song_artist.text('')
