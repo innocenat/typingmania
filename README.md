@@ -6,12 +6,20 @@ Karaoke, but typing version.
 
 **You can play at https://typingmania.stdlib.xyz**
 
+You can also contact me at typingmania (at) stdlib (dot) xyz.
+
 ### Highlighted features
 
 - YouTube playback ability
 - Japanese lyric lines are more natural (Kanji & Furigana)
 - Typing sound feedback
 - Can load local song files
+
+### Roadmap
+
+- Visual editor for song
+- Song collection website
+- **GitHub release along with example data**.
 
 Table of Content
 ----------------
@@ -486,7 +494,7 @@ responsibility for managing the copyright of any content used by the user.
 
 日本語
 ------
-TypingMania NEOは歌の歌詞に合わせてタイピングするタイピングソフトです。元々のTypingMania ODYSSEYはSightSeeker Studioによる開発し、残念ながら2009年 に開発中止しまいました。SightSeeker StudioのTypingManiaはAdobe Flashで開発しました。
+TypingMania NEOは歌の歌詞に合わせてタイピングするタイピングソフトです。元々のTypingMania ODYSSEYはSightSeeker Studioによる開発し、残念ながら2009年に開発中止しまいました。SightSeeker StudioのTypingManiaはAdobe Flashで開発しました。
 
 2013年に、私はHTML5によるTypingManiaのパクリのソフトを開発し、2021年にこのTypingMania NEOを完成しました。HTML5でどんなブラウザにもプレイをでき、YouTubeの音源としても利用できるようにしました。2020年をもってAdobe Flashサポート終了を伴い、TypingMania ODYSSEYはプレイできなくなり、TypingMania NEOを誕生しました。
 
