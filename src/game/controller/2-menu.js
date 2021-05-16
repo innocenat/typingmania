@@ -116,11 +116,9 @@ export default class MenuController {
 
       // Check if we process the load via URL yet
       if (!this.loaded_from_url) {
-        console.log('here')
         this.loaded_from_url = true
         const query_string = new URLSearchParams(window.location.search)
         const url = query_string.get('song')
-        console.log(url)
         if (url !== null) {
           try {
             await this.importSong(false, url)
