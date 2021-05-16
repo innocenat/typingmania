@@ -168,7 +168,7 @@ export default class MenuController {
 
         // Create local collection if not
         if (!this.local_collection) {
-          this.local_collection = new SongCollection({ name: 'Local song' , description: 'Locally-loaded song.', contents: []}, this.game.songs.root)
+          this.local_collection = new SongCollection({ name: 'Imported song' , description: 'Locally-imported song.', contents: []}, this.game.songs.root)
           this.game.songs.root.children.unshift(this.local_collection)
         }
 
