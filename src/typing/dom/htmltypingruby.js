@@ -29,7 +29,7 @@ export default class HTMLTypingRuby {
 
     this.base_el.textContent = ruby.base === '|' ? '' : ruby.base
     if (ruby.base === ' ') {
-      this.base_el.innerHTML = '&nbsp;'
+      this.base_el.innerHTML = '\u00A0\u00A0'
     }
     this.el.appendChild(this.base_el)
 

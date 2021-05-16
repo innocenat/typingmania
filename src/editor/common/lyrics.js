@@ -10,7 +10,7 @@ export default class Lyrics extends Component {
             ${this.props.line.rubies.map((ruby) => {
                 let base = ruby.base === '|' ? '' : ruby.base
                 if (base === ' ') {
-                    base = '\u00A0'
+                    base = '\u00A0\u00A0'
                 }
                 if (ruby.show_reading) {
                     return html`

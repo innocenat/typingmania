@@ -71,7 +71,7 @@ export default class TypingRuby extends Observable {
 
       // Special case for | to represent visual space
       if (this.typing_chars[i].base === '|' || this.typing_chars[i].base === '\u3000') {
-        remaining_text += ' '
+        remaining_text += '\u00A0\u00A0'
       }
     }
     return remaining_text
