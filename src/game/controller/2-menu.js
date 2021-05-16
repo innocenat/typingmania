@@ -32,7 +32,7 @@ export default class MenuController {
   processDroppedFile(e) {
     // Prevent default behavior (Prevent file from being opened)
     e.preventDefault();
-    let file = null
+    let files = []
 
     if (!this.signal_drop) {
       // Not accepting drop right now
@@ -41,34 +41,26 @@ export default class MenuController {
 
     if (e.dataTransfer.items) {
       // Use DataTransferItemList interface to access the file(s)
-      if (e.dataTransfer.items.length !== 1) {
-        alert('Can only load 1 file at a time.')
-        return
-      } else {
-        if (e.dataTransfer.items[0].kind !== 'file') {
-          alert('Invalid file.')
-          return
-        } else {
-          file = e.dataTransfer.items[0].getAsFile()
+      for (const item of e.dataTransfer.items) {
+        if (item.kind === 'file') {
+          files.push(item.getAsFile())
         }
       }
     } else {
       // Use DataTransfer interface to access the file(s)
-      if (e.dataTransfer.files.length !== 1) {
-        alert('Can only load 1 file at a time.')
-        return
+      files = e.dataTransfer.files
+    }
+
+    let results = []
+    for (const file of files) {
+      if (file.name.match(/\.typingmania$/)) {
+        results.push([file.name, URL.createObjectURL(file)])
       } else {
-        file = e.dataTransfer.files[0]
+        console.error('Cannot load', file.name, ', invalid file.')
       }
     }
 
-    if (!file.name.match(/\.typingmania$/)) {
-      alert('Please use .typingmania file.')
-      return
-    }
-
-    const url = URL.createObjectURL(file)
-    this.signal_drop(url)
+    this.signal_drop(results)
   }
 
   async run () {
@@ -172,13 +164,17 @@ export default class MenuController {
           this.game.songs.root.children.unshift(this.local_collection)
         }
 
-        // Load song
-        const song = await Song.fromURL(action, this.local_collection)
-        this.local_collection.children.push(song)
-
-        // Set menu to that song
+        // Set menu to the top of imported song
         this.current_collection = this.local_collection
-        this.current_index = this.local_collection.children.length - 1
+        this.current_index = this.local_collection.children.length
+
+        // Load songs
+        for (const file of action) {
+          const song = await Song.fromURL(file[1], this.local_collection)
+          this.local_collection.children.push(song)
+        }
+
+        // Update song screen
         this.updateSong(true)
 
         // Reset signal
