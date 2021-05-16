@@ -31,7 +31,7 @@ export default class FileLoader {
         }
 
         // Loaded, reassemble file
-        const file = new Uint8Array(length)
+        const file = new Uint8Array(received)
         let offset = 0
         for (let chunk of chunks) {
           file.set(chunk, offset)
