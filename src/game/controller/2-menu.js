@@ -63,6 +63,26 @@ export default class MenuController {
     this.signal_drop(results)
   }
 
+  async importSong (filename, url) {
+    // Create local collection if not
+    if (!this.local_collection) {
+      this.local_collection = new SongCollection({
+        name: 'Imported song',
+        description: 'Locally-imported song.',
+        contents: [],
+      }, this.game.songs.root)
+      this.game.songs.root.children.unshift(this.local_collection)
+    }
+
+    const song = await Song.fromURL(url, this.local_collection)
+
+    // Since the high score is keyed via URL, change the URL so that it keyed correctly
+    song.url = 'import://file/' + filename
+    song.loadHighScore() // reload high score
+
+    this.local_collection.children.push(song)
+  }
+
   async run () {
     // Show all scene
     this.game.menu_screen.show()
@@ -160,31 +180,13 @@ export default class MenuController {
         }
       } else {
         // Process dropped song
-
-        // Create local collection if not
-        if (!this.local_collection) {
-          this.local_collection = new SongCollection({
-            name: 'Imported song',
-            description: 'Locally-imported song.',
-            contents: [],
-          }, this.game.songs.root)
-          this.game.songs.root.children.unshift(this.local_collection)
+        for (const file of action) {
+          await this.importSong(file[0], file[1])
         }
 
         // Set menu to the top of imported song
         this.current_collection = this.local_collection
-        this.current_index = this.local_collection.children.length
-
-        // Load songs
-        for (const file of action) {
-          const song = await Song.fromURL(file[1], this.local_collection)
-
-          // Since the high score is keyed via URL, change the URL so that it keyed correctly
-          song.url = 'import://file/' + file[0]
-          song.loadHighScore() // reload high score
-
-          this.local_collection.children.push(song)
-        }
+        this.current_index = this.local_collection.children.length - action.length
 
         // Update song screen
         this.updateSong(true)
