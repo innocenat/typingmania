@@ -25,13 +25,13 @@ export default class MenuController {
     this.game.songinfo_screen.updateSong(this.current_collection.children[this.current_index])
   }
 
-  processDragOver(e) {
+  processDragOver (e) {
     e.preventDefault()
   }
 
-  processDroppedFile(e) {
+  processDroppedFile (e) {
     // Prevent default behavior (Prevent file from being opened)
-    e.preventDefault();
+    e.preventDefault()
     let files = []
 
     if (!this.signal_drop) {
@@ -91,7 +91,7 @@ export default class MenuController {
       let is_song_chosen = false
 
       // Wait for input key
-      const action =  await Promise.any([this.game.input.waitForAnyKey(), this.dropped_signal])
+      const action = await Promise.any([this.game.input.waitForAnyKey(), this.dropped_signal])
       if (action instanceof KeyboardEvent) {
         const key = action.key
         switch (key) {
@@ -163,7 +163,11 @@ export default class MenuController {
 
         // Create local collection if not
         if (!this.local_collection) {
-          this.local_collection = new SongCollection({ name: 'Imported song' , description: 'Locally-imported song.', contents: []}, this.game.songs.root)
+          this.local_collection = new SongCollection({
+            name: 'Imported song',
+            description: 'Locally-imported song.',
+            contents: [],
+          }, this.game.songs.root)
           this.game.songs.root.children.unshift(this.local_collection)
         }
 

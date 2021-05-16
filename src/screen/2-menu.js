@@ -30,7 +30,7 @@ export default class MenuScreen extends Screen {
       this.empty_text = Txt(1250, 510, 620, 60).layer(200).color(White).text('Empty').font(UIFont.size(48)),
 
       // Song List Container
-      this.songs_list_container = Box(1300, 0, 620, 1080).layer(110)
+      this.songs_list_container = Box(1300, 0, 620, 1080).layer(110),
     ])
 
     this.empty = true
@@ -65,14 +65,14 @@ export default class MenuScreen extends Screen {
         group = Group(0, position * 100, 620, 100, [
           Txt(0, 24, 720, 36).text(c.name).font(SongFont.size(36)).color(White),
           Txt(0, 0, 720, 18).text('Collection').font(SongFont.size(22)).color(White),
-          Txt(-40, 28, 30, 30).fill(Gray).radius(5)
+          Txt(-40, 28, 30, 30).fill(Gray).radius(5),
         ])
       } else {
         const color = c.media_type === 'youtube' ? BadgeYouTube : c.media_type === 'video' ? BadgeVideo : BadgeAudio
         group = Group(0, position * 100, 620, 100, [
           Txt(0, 24, 720, 36).text(c.title).font(SongFont.size(36)).color(White),
           Txt(0, 0, 720, 18).text(c.artist).font(SongFont.size(22)).color(White),
-          Txt(-40, 28, 30, 30).text(c.language.toUpperCase()).font(UIFont.size(18)).align(CENTER).color(White).fill(color).radius(5)
+          Txt(-40, 28, 30, 30).text(c.language.toUpperCase()).font(UIFont.size(18)).align(CENTER).color(White).fill(color).radius(5),
         ])
       }
 
