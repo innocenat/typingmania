@@ -94,8 +94,6 @@ export default class MenuController {
       this.signal_drop = resolve
     })
 
-    let dropped_song = undefined
-
     while (true) {
       // Flag to break the loop and transition to song-load controller
       let is_song_chosen = false
