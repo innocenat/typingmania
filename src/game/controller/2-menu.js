@@ -8,6 +8,7 @@ export default class MenuController {
     this.current_collection = null
     this.current_index = 0
     this.local_collection = null
+    this.loaded_from_url = false
 
     // Listen for drop event
     window.addEventListener('drop', this.processDroppedFile.bind(this))
@@ -77,8 +78,11 @@ export default class MenuController {
     const song = await Song.fromURL(url, this.local_collection)
 
     // Since the high score is keyed via URL, change the URL so that it keyed correctly
-    song.url = 'import://file/' + filename
-    song.loadHighScore() // reload high score
+    // if the source URL is blob url (i.e. drag-drop file)
+    if (filename) {
+      song.url = 'import://file/' + filename
+      song.loadHighScore() // reload high score
+    }
 
     this.local_collection.children.push(song)
   }
@@ -109,6 +113,27 @@ export default class MenuController {
     while (true) {
       // Flag to break the loop and transition to song-load controller
       let is_song_chosen = false
+
+      // Check if we process the load via URL yet
+      if (!this.loaded_from_url) {
+        console.log('here')
+        this.loaded_from_url = true
+        const query_string = new URLSearchParams(window.location.search)
+        const url = query_string.get('song')
+        console.log(url)
+        if (url !== null) {
+          try {
+            await this.importSong(false, url)
+            this.current_collection = this.local_collection
+            this.current_index = this.local_collection.children.length - 1
+            this.updateSong(true)
+            is_song_chosen = true
+            break
+          } catch {
+            console.error('Cannot load ', url)
+          }
+        }
+      }
 
       // Wait for input key
       const action = await Promise.any([this.game.input.waitForAnyKey(), this.dropped_signal])
