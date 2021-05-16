@@ -1,27 +1,13 @@
 TypingMania NEO
 ===============
 
-**NOTE: This README is incomplete**
-
-- [x] Game is completed
-- [x] Command line script to build song data (from .ass file)
-- [ ] ~~Script to convert from the old TypingMania format~~ **Abandoned**
-- [x] Preview for song file (See `preview.html`)
-- [ ] Dedicated HTML Song Editor
-- [x] How to play
-- [ ] How to create new song
-- [ ] This README File
-- [x] Redistributable release (See `npm run build-game`)
-- [ ] Initial free song pack
-- [x] Demo server
-- [ ] Actual GitHub release
-
-----
-
 TypingMania is a song lyric typing game. You can also think of it like
 Karaoke, but typing version.
 
+**You can play at https://typingmania.stdlib.xyz**
+
 ### Highlighted features
+
 - YouTube playback ability
 - Japanese lyric lines are more natural (Kanji & Furigana)
 - Typing sound feedback
@@ -29,48 +15,59 @@ Karaoke, but typing version.
 
 Table of Content
 ----------------
+
 - [How to Play](#how-to-play)
 - [Creating New Song](#creating-new-song)
 - [Score Calculation](#score-calculation)
 - [Supported Browser](#supported-browsers)
 - [History](#history)
 - [Project Structure](#project-structure)
+- [Installation & Building](#installation--building)
+- [File Format](#file-format)
 - [License & Copyright](#license--copyright)
 - [日本語](#日本語)
 
 How to Play
 -----------
 
-This game is controlled purely by keyboard (because it is a typing game).
-There are no mouse interaction available.
+This game is controlled purely by a keyboard (because it is a typing game).
+There is no mouse interaction available.
 
 ### Selecting song
 
 ![TypingMania NEO Menu](docs/img/game-menu.png)
 
-**Top-Left** is the master volume control. Use `PageUp` and `PageDown` key to
-change volume level. Note that for YouTube, the volume is only approximated.
+**Top-Left** is the master volume control. Use the `PageUp` and `PageDown` keys
+to change the volume level. Note that for YouTube, the volume is only 
+approximated.
 
 **Right** part of the screen is the song list. It shows the artist and song 
-title. The square shows the song language, while the color denotes the media 
+title. The square shows the song language, while the color denotes the media
 type:
 
 - **Red** (shown in the picture) means YouTube media.
 - **Green** means a video file.
-- **Blue** means audio only.
+- **Blue** means audio-only.
 
 **Left** part shows song detail. It includes artist, song title, song subtitle,
 current high score, the song length. It also shows the character-per-minute
 of the song, at 90 percentile and the maximum. This can be used to gauge
-difficulty of the song.
+the difficulty of the song.
 
-To navigate the menu, use `Up Arrow` and `Down Arrow`. To enter collection or
-select the song to play, use `Enter`. To exit collection, use `Backspace`.
+To navigate the menu, use `Up Arrow` and `Down Arrow`. To enter a collection or
+select a song to play, use `Enter`. To exit collection, use `Backspace`.
 
-### Using local file
+#### Using local file
 
-You can drag and drop valid `.typingmania` file to the game to load. In this
-case, high score is keyed by the file name.
+You can drag and drop a valid `.typingmania` file to the game to load. In this
+case, the high score is keyed by the file name.
+
+#### Automatic song selection
+
+If you want the game to load and go straight to a specific song skipping the 
+menu, please pass the query string `song={file_url}` to the game, where 
+`file_url` is the relative path to the `.typingmania` file to load. The game 
+will immediately load the song provided.
 
 ### Typing
 
@@ -79,31 +76,31 @@ case, high score is keyed by the file name.
 Basically, just type what is on the screen. You can press `Esc` at any time to
 finish the song early.
 
-You can use `Tab` button to skip any line. Note that if you skipped a lyric
-that you have not finish typing yet, it will be counted as *skipped*.
+You can use the `Tab` button to skip any line. Note that if you skipped a lyric
+that you have not finished typing yet, it will be counted as *skipped*.
 
-The **Total** progressbar show the progress within the song. The **Line**
-progressbar show the current progress with in the line.
+The **Total** progress bar shows the progress within the song. The **Line**
+progress bar shows the current progress within the line.
 
-For Japanese line, even though the shown Romaji might be different, the system
-supports almost every possible keypress sequence that will result in that Kana.
-For example, にゃ can be input as *nya*, *nixya*, and *nilya*. いっしょ can be
-input as *issho*, *ixtsusho*, *ixtushixyo*, etc.
+For the Japanese line, even though the shown Romaji might be different, the 
+system supports almost every possible keypress sequence that will result in 
+that Kana. For example, にゃ can be input as *nya*, *nixya*, and *nilya*. 
+いっしょ can be input as *issho*, *ixtsusho*, *ixtushixyo*, etc.
 
 ### Score
 
 ![TypingMania NEO Score Screen](docs/img/game-score.png)
 
 After the song ended (or `Esc` was pressed), the score summary screen will be
-shown with following number:
+shown with the following number:
 - **Score/Class**: Refer to [Score calculation](#score-calculation) section.
 - **Max Combo**: maximum number of consecutive correct keypresses.
 - **Correct**: number of correct keypresses.
 - **Missed**: number of incorrect keypresses.
 - **Completed Line**: number of lines completed.
-- **Skipped Line** number of lines that was not completed (unable to finish
+- **Skipped Line** number of lines that were not completed (unable to finish
   typing within the time)
-- **Skipped Char**: number of characters unable to finished within the time.
+- **Skipped Char**: number of characters unable to finish within the time.
 - **Accuracy**: your accuracy.
 - **Typing Accuracy**: typing accuracy if the skipped char is counted as 
   missed.
@@ -111,11 +108,108 @@ shown with following number:
 Creating New Song
 -----------------
 
-### Preparing lyrics and metadata
+### Before you begins
 
-### Timing the scripts
+Prepare the following:
 
-### Preparing media file
+- **Song media.** Can be audio, video, or YouTube video. For raw audio/video,
+  the guaranteed format is mp4 (H.264/AAC) for video, and mp4 (AAC) or mp3
+  for audio. For YouTube video, it is recommended to also download the video 
+  anyway (using a program like `youtube-dl`) to facilitate lyric timing.
+- **Song lyric.** For English, just the lyric itself is usually okay. Make sure
+  to check for any non-typeable characters and remove them beforehand. For
+  Japanese, see below.
+- **Song image.** This image is used as a preview image, and also background
+  image during loading/score screen. Can be in any major format.
+
+#### Preparation of Japanese song
+
+Japanese song lyrics required some preparation. Reading is required for
+all Kanji in the lyrics.
+
+The system will recognize hiragana/katakana characters and punctuations,
+but will require reading for Kanji.
+
+Punctuations like 「」【】 will be removed automatically from typing.
+。、… etc. will become . , ... respectively. For Kanji, use [] to specify
+the reading. For example,
+
+    強くなれる理由を知った 明日へ
+
+should become:
+
+    強[つよ]くなれる理[り]由[ゆう]を知[し]った 明日[あした]へ
+
+Half-width space will require spacebar input during typing, but full-width
+space will be skipped automatically. Moreover, putting `|` character will
+create a little spacing in the typing romaji line to ease readability.
+
+### Using the visual editor
+
+*Visual editor is currently in development*
+
+### Using command line
+
+You will need `nodejs`, *Aegisub* (or other programs that can edit .ass file),
+a text editor, and a basic understanding of the command line to create a song 
+this way. You also need `ffmpeg` somewhere in your path.
+
+The `.ass` file to be converted requires the following in **Actor** field:
+
+- `Title` Song title. `{native_script} // {latin_script}`. Note that the Latin 
+  script is currently not used. If the native script is already in Latin, 
+  omitted the `//`.
+- `Subtitle` Same format.
+- `Artist` Same format.
+- `Image` File name of song image. Must be in the same folder as the subtitle 
+  file.
+- `Audio` or `Video` or `YouTube` Audio/Video file, or YouTube Video ID.
+- `Language` Lyric language. 2-letter, e.g. EN, JP, etc.
+- `Lyrics` These are typing lines.
+
+Other than the lyrics line where the timing information is used, the other 
+lines can be at any time. For Aegisub timing guide, see
+https://unanimated.github.io/timing-basics.htm. Note that lead-in, lead-out,
+scene-bleed, etc. do not apply here.
+
+Finally, run:
+
+    node /path/to/build-all-songs.js
+
+This will convert all `.ass` files in the current working directory, as long
+as any in the sub-folder, to `.typingmania` files, ready to be played.
+
+If the program returned an error, you likely missed some Kanji
+reading in the lyrics.
+
+The example data also includes the original `.ass` file.
+
+### Building song index
+
+If you are playing by yourself, you do not need to build the index.
+Refer to [Using local file](#using-local-file) section to play your song
+locally.
+
+You can also send the resulting `.typingmania` file to other people to play
+without needing a song index too.
+
+For setting up your own TypingMania instance, you need to build a song index,
+typically `songs.json`, for the game to know what songs are available.
+
+The easiest way to do this is to create the structure inside `data/` folder
+to the structure you wanted. Then, do:
+
+    npm run build-index
+
+This will automatically create an index file `songs.json` with the same
+structure as `data/` folder.
+
+To have more control over a collection name, you can create `info.txt` inside
+the folder. The first line of the file will be used as a collection name,
+and the rest will be the collection description.
+
+Refers to [File format](#file-format) section for specific format of
+`songs.json` index file.
 
 Score Calculation
 -----------------
@@ -126,7 +220,7 @@ however, this is different. For example, ち may be typed as ti and chi,
 but the *scoring character* is always 2. It is always the number of
 the shortest possible sequence of keypresses to input that character.
 
-All keypress up to the *scoring character* are used for score
+All keypresses up to the *scoring character* are used for score
 calculation. All further keypress will also be used to calculate
 typing speed, but cannot generate any positive score.
 
@@ -151,7 +245,7 @@ is calculated by: `number_of_char × 1250`, where `number_of_char` refers to the
 complete the song.
 
 <details>
-  <summary>Score ratio for each class</summary>
+<summary>Score ratio for each class</summary>
 
 | Percent  | Class |
 | -------- | ----- |
@@ -175,15 +269,15 @@ complete the song.
 </details>
 
 <details>
-  <summary>REFERENCE: TypingMania ODYSSEY Score Calculation</summary>
+<summary>REFERENCE: TypingMania ODYSSEY Score Calculation</summary>
 
 The original SightSeeker Studio's TypingMania ODYSSEY score calculation is
 very simple. The maximum score is 200,000, and each correct keypress gain you
 `200,000 ÷ scoring character`. Each incorrect keypress loss you half of the
 gain (`-0.5 * (200,000 ÷ scoring character)`).
 
-Possibly due to a bug in character count calculation, it is possible to get more
-than 200,000 points by always typing the longest romaji of each character.
+Possibly due to a bug in character count calculation, it is possible to get 
+more than 200,000 points by always typing the longest romaji of each character.
 
 The combo does not affect the score at all.
 
@@ -191,11 +285,11 @@ The combo does not affect the score at all.
 
 Supported Browsers
 -----------------
+
 - The latest version of Google Chrome and Mozilla Firefox.
 - Untested on Microsoft Edge, but should work.
 - Safari has a delay between the actual and reported media time,
   resulting in a slight (but noticeable) delay of the lyrics line.
-
 
 History
 -------
@@ -208,12 +302,12 @@ except for the score calculation system which I did not reverse-engineer
 at that time.
 
 I have been trying to rewrite this project since 2016, but this attempt in
-2020/2021 is the first successful attempt. This comes after a lot of 
-advancement in HTML5 technologies, including: Web Audio API, HTML5 Video,
+2020/2021 is the first successful attempt. This comes after a lot of
+advancements in HTML5 technologies, including Web Audio API, HTML5 Video,
 and ES6 module.
 
 The current TypingMania NEO is a pure HTML5 and JavaScript program. No
-external libraries were used. The editor, however, use the Preact library.
+external libraries were used. The editor, however, uses the Preact library.
 
 The Japanese Kana input system is extensively tested using unit tests.
 
@@ -222,17 +316,18 @@ The Japanese Kana input system is extensively tested using unit tests.
 - It is written in HTML5 (HTML+JS), so it runs in 2021 after Adobe dropped
   Flash support in December 2020.
 - Revamp UI, including changes to correct terminology: Solve -> Skipped,
-  Corrected Percent -> Accuracy, etc. Also include split progressbar for song
+  Corrected Percent -> Accuracy, etc. Also include split progress bar for song
   total time.
 - New score calculation algorithm (see [Score calculation](#score-calculation))
-- Maybe better Japanese handling. This version accepts almost all Romaji 
+- Maybe better Japanese handling. This version accepts almost all Romaji
   sequences that result in the same sentence.
-- No longer differentiate between lyrics and typing line. *Furigana* must be 
-  added to Kanji lyrics. Most other symbols are converted automatically to typable text.
+- No longer differentiate between lyrics and typing line. *Furigana* must be
+  added to Kanji lyrics. Most other symbols are converted automatically to
+  typable text.
 - Add sound effect for typing/missed/skipped line.
 - Can skip line using `Tab` key.
-- Can load local file.
-- **Can load video directly from YouTube**
+- Can load a local file.
+- **Can load the video directly from YouTube**
 
 ### Different from original TypingMania
 
@@ -244,8 +339,9 @@ The Japanese Kana input system is extensively tested using unit tests.
 
 Project Structure
 -----------------
+
 - `assets/raw` folder contains the actual assets file used.
-- `assets/assets.dat` is packed assets file. This can be generated with
+- `assets/assets.dat` is a packed assets file. This can be generated with
   `npm run build-assets`
 - `data/songs.json` is the main song index file. I suggest putting all songs 
   file (.typingmania) under this folder, but it is not required.
@@ -255,11 +351,130 @@ Project Structure
 - `scripts` contains nodejs scripts for processing game media, etc.
 - `src` is the main source code folder.
 
+Installation & Building
+-----------------------
+
+Note that this game can runs directly from the source code folder. The
+`index.html` file in the project root is a full game by itself. However,
+it might not be suitable for production releases because it loads multiple
+javascript files.
+
+To get a production-ready file, either download from the ~~GitHub releases page~~ *not available yet*
+or build from the source code below.
+
+In the `index.html` file there are two configurable parameters: `assets_url`
+and `songs_url`. `assets_url` refers to the path to the `assets.dat` file, and 
+the `songs_url` refers to the song index file, both relative to the 
+`index.html`.
+
+The recommendation is to create a `data/` folder and put the index file
+`songs.json` along with other `.typingmania` files there, but it is not
+required, and you can put it however you want. Noted that URLs inside
+`songs.json` are also relative to `index.html`.
+
+This game can be hosted on any web server capable of serving static files.
+
+### Building from source
+
+To build the game, run:
+
+    npm run build-game
+
+This will create a `dist/` folder containing files suitable for distribution.
+
+If you make a change to the assets file, you can rebuild the `assets.dat` by:
+
+    npm run build-assets
+
+Note that the `build-game` command does not rebuild assets. Run `build-assets`
+before `build-game` to build a redistributable file with new assets.
+
+File Format
+-----------
+
+### `.typingmania` file format
+
+`.typingmania` is a binary file in a RIFF format. It is basically a very
+simple archive. It contains 2 chunks: `LIST` and `FILE`.
+
+#### `.typingmania` RIFF
+
+| Byte range | Type  | Description                   |
+|------------|-------|-------------------------------|
+| 0-3        | 4CC   | 'TPMN' file signature         |
+| 4-7        | u32le | Total file length - 8         |
+| 8-11       | 4CC   | 'LIST'                        |
+| 12-15      | u32le | Number of file in the archive |
+| 16+        |       | `<<file_entry>>`              |
+|            | 4CC   | 'FILE'                        |
+|            | bin   | File contents                 | 
+
+#### `<<file_entry>>`
+
+| Byte range  | Type  | Description           |
+|-------------|-------|-----------------------|
+| 0           | u8    | Length of file name   |
+| 1-(n+1)     | str   | File name (UTF-8)     |
+| (n+1)-(n+4) | u32le | Offset to the start of this file in the archive | 
+| (n+5)-(n+8) | u32le | File length           | 
+
+### `song.json` file format
+
+This is a standard JSON file encoded in UTF-8. It contains the following
+fields:
+
+- `title`: Title in song native language
+- `latin_title`: Title in Latin alphabet (currently not used)
+- `subtitle`: Subtitle in song native language
+- `latin_subtitle`: Subtitle in Latin alphabet (currently not used)
+- `artist`: Artist in song native language
+- `latin_artist`: Artist in Latin alphabet (currently not used)
+- `language`: Lyrics language. 2 letter format. (e.g. EN, JP, etc.)
+- `cpm`: Character per minute of the lyric line, 90 percentile
+- `max_cpm`: Character per minute of the lyric lines, maximum
+- `duration`: Song duration, in second
+- `image`: Image file name in the same `.typingmania` archive
+- Media file specification. Must have one of the below:
+  - `audio`: Audio file name in the same `.typingmania` archive
+  - `video`: Video file name in the same `.typingmania` archive
+  - `youtube`: YouTube Video ID
+
+### `lyrics.csv` file format
+
+This is a CSV file containing lyrics and timing information. The line
+format is `{start_time},{end_time},{lyric}`. The file must be encoded
+in UTF-8.
+
+- `start_time` is the line start time, in millisecond.
+- `end_time` is the line end time, in millisecond.
+- `lyric` is the lyric (typing).
+
+The line must be sorted, by `start_time` and there must not be any overlap
+between each line.
+
+### `songs.json` file format
+
+This is a standard JSON file encoded in UTF-8. It contains an array of songs
+or song collections.
+
+#### `song` object
+
+Basically the same as `song.json` format, except also has the `url` property
+to specify the URL to the `.typingmania` file (relative to `index.html`).
+
+#### `song collection` object
+
+- `type`: Must be "collection"
+- `name`: Collection name
+- `desciption`: Collection description
+- `contents`: Array of songs or song collections.
+
 License & Copyright
 --------------------
 The code and assets are copyrighted under the term of the Apache 2.0 license.
 
-This game uses [Dustyroom Casual Game Sound - One Shot SFX Pack](http://dustyroom.com/free-casual-game-sounds/).
+This game uses
+[Dustyroom Casual Game Sound - One Shot SFX Pack](http://dustyroom.com/free-casual-game-sounds/).
 
 This game also uses the Iosevka Etoile, Noto Sans CJK JP, and Open Sans fonts.
 Iosevka font family is licensed under SIL Open Font License. Noto Sans and
@@ -271,13 +486,9 @@ responsibility for managing the copyright of any content used by the user.
 
 日本語
 ------
-TypingMania NEOは歌の歌詞に合わせてタイピングするタイピングソフトです。元々のTypingMania ODYSSEYは
-SightSeeker Studioによる開発し、残念ながら2009年に開発中止しまいました。SightSeeker Studioの
-TypingManiaはAdobe Flashで開発しました。
+TypingMania NEOは歌の歌詞に合わせてタイピングするタイピングソフトです。元々のTypingMania ODYSSEYはSightSeeker Studioによる開発し、残念ながら2009年 に開発中止しまいました。SightSeeker StudioのTypingManiaはAdobe Flashで開発しました。
 
-2013年に、私はHTML5によるTypingManiaのパクリのソフトを開発し、2021年にこのTypingMania NEOを完成しました。
-HTML5でどんなブラウザにもプレイをでき、YouTubeの音源としても利用できるようにしました。2020年をもって
-Adobe Flashサポート終了を伴い、TypingMania ODYSSEYはプレイできなくなり、TypingMania NEOを誕生しました。
+2013年に、私はHTML5によるTypingManiaのパクリのソフトを開発し、2021年にこのTypingMania NEOを完成しました。HTML5でどんなブラウザにもプレイをでき、YouTubeの音源としても利用できるようにしました。2020年をもってAdobe Flashサポート終了を伴い、TypingMania ODYSSEYはプレイできなくなり、TypingMania NEOを誕生しました。
 
 ### 対応ブラウザ
 - 最新型のGoogle Chrome, Mozilla Firefox
