@@ -171,6 +171,11 @@ export default class MenuController {
         // Load songs
         for (const file of action) {
           const song = await Song.fromURL(file[1], this.local_collection)
+
+          // Since the high score is keyed via URL, change the URL so that it keyed correctly
+          song.url = 'import://file/' + file[0]
+          song.loadHighScore() // reload high score
+
           this.local_collection.children.push(song)
         }
 

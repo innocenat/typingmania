@@ -69,8 +69,8 @@ select the song to play, use `Enter`. To exit collection, use `Backspace`.
 
 ### Using local file
 
-You can drag and drop valid `.typingmania` file to the game to load. Note that
-high score is not supported for locally-load file.
+You can drag and drop valid `.typingmania` file to the game to load. In this
+case, high score is keyed by the file name.
 
 ### Typing
 
