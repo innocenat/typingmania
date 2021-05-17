@@ -15,7 +15,7 @@ export default class LoadingController {
 
     // Load assets file
     this.game.loading_screen.setMainText('Loading...')
-    this.game.loading_screen.setSubText('Download assets 0%')
+    this.game.loading_screen.setSubText('Downloading assets 0%')
 
     let assets, packed_file
     let is_error = false
@@ -25,7 +25,7 @@ export default class LoadingController {
       assets = await FileLoader.load(this.game.config.assets_url, (progress) => {
         if (!is_error) {
           const p = Math.floor(progress * 100)
-          this.game.loading_screen.setSubText(`Download assets ${p}%`)
+          this.game.loading_screen.setSubText(`Downloading assets ${p}%`)
         }
       })
     } catch (error) {
@@ -41,7 +41,7 @@ export default class LoadingController {
           return false
         case 'HTTP_ERROR':
         default:
-          this.game.loading_screen.setSubText('Error download assets file.')
+          this.game.loading_screen.setSubText('Error downloading assets file.')
           return false
       }
     }
@@ -87,7 +87,7 @@ export default class LoadingController {
       const songList = await FileLoader.load(this.game.config.songs_url, (progress) => {
         if (!is_error) {
           const p = Math.floor(progress * 100)
-          this.game.loading_screen.setSubText(`Download songs list ${p}%`)
+          this.game.loading_screen.setSubText(`Downloading songs list ${p}%`)
         }
       })
       songJson = JSON.parse(FileLoader.decode(songList))
@@ -103,7 +103,7 @@ export default class LoadingController {
           return false
         case 'HTTP_ERROR':
         default:
-          this.game.loading_screen.setSubText('Error download songs list file.')
+          this.game.loading_screen.setSubText('Error downloading songs list file.')
           return false
       }
     }
@@ -111,6 +111,42 @@ export default class LoadingController {
     // Process song list
     this.game.loading_screen.setSubText('Processing song list')
     this.game.songs.load(songJson)
+
+    // Check if we are direct-loading any song
+    const query_string = new URLSearchParams(window.location.search)
+    const song_url = query_string.get('song')
+    if (song_url !== null) {
+      this.game.loading_screen.setSubText('Downloading specified song 0%')
+      try {
+        // Load with progress report
+        const song_file = await FileLoader.load(song_url, (progress) => {
+          if (!is_error) {
+            const p = Math.floor(progress * 100)
+            this.game.loading_screen.setSubText(`Downloading specified song ${p}%`)
+          }
+        })
+        const song_blob = new Blob([song_file])
+        const song_blob_url = URL.createObjectURL(song_blob)
+
+        this.game.specified_song = song_blob_url
+        this.game.specified_song_path = song_url
+      } catch (error) {
+        is_error = true
+        this.game.loading_screen.setMainText('Error.')
+        switch (error) {
+          case 'NETWORK_ERROR':
+            this.game.loading_screen.setSubText('Unable to download specified song file.')
+            return false
+          case 'NOT_FOUND':
+            this.game.loading_screen.setSubText('Specified song file not found.')
+            return false
+          case 'HTTP_ERROR':
+          default:
+            this.game.loading_screen.setSubText('Error downloading specified song.')
+            return false
+        }
+      }
+    }
 
     // Wait for sound initialization keydown
     this.game.loading_screen.setMainText('Ready')

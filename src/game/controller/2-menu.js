@@ -117,19 +117,14 @@ export default class MenuController {
       // Check if we process the load via URL yet
       if (!this.loaded_from_url) {
         this.loaded_from_url = true
-        const query_string = new URLSearchParams(window.location.search)
-        const url = query_string.get('song')
-        if (url !== null) {
-          try {
-            await this.importSong(false, url)
-            this.current_collection = this.local_collection
-            this.current_index = this.local_collection.children.length - 1
-            this.updateSong(true)
-            is_song_chosen = true
-            break
-          } catch {
-            console.error('Cannot load ', url)
-          }
+
+        if (this.game.specified_song) {
+          await this.importSong(this.game.specified_song_path, this.game.specified_song)
+          this.current_collection = this.local_collection
+          this.current_index = this.local_collection.children.length - 1
+          this.updateSong(true)
+          is_song_chosen = true
+          break
         }
       }
 
