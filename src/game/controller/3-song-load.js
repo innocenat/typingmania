@@ -13,7 +13,7 @@ export default class SongLoadController {
 
     // Load song
     this.game.loading_screen.setMainText('Loading...')
-    this.game.loading_screen.setSubText('Download song 0%')
+    this.game.loading_screen.setSubText('Downloading song 0%')
 
     let is_error = false
     try {
@@ -22,7 +22,7 @@ export default class SongLoadController {
         await song.load((progress) => {
           if (!is_error) {
             const p = Math.floor(progress * 100)
-            this.game.loading_screen.setSubText(`Download song ${p}%`)
+            this.game.loading_screen.setSubText(`Downloading song ${p}%`)
           }
         })
       }
@@ -39,7 +39,7 @@ export default class SongLoadController {
           break
         case 'HTTP_ERROR':
         default:
-          this.game.loading_screen.setSubText('Error download song file.')
+          this.game.loading_screen.setSubText('Error downloading song file.')
       }
     }
 
@@ -74,16 +74,20 @@ export default class SongLoadController {
     await this.game.media.load(this.game.background_screen.getSongBackgroundContainer())
 
     // Ready
-    this.game.loading_screen.setMainText('Ready')
-    this.game.loading_screen.setSubText('Press any key')
+    if (!this.game.specified_song) {
+      this.game.loading_screen.setMainText('Ready')
+      this.game.loading_screen.setSubText('Press any key')
 
-    // Wait for key
-    const key = await this.game.input.waitForAnyKey()
-    if (key.key === 'Escape' || key.key === 'Backspace') {
-      // Exit to menu if Esc or Backspace is pressed
-      this.game.loading_screen.hide()
-      this.game.reset()
-      return this.game.menu_controller
+      // Wait for key
+      const key = await this.game.input.waitForAnyKey()
+      if (key.key === 'Escape' || key.key === 'Backspace') {
+        // Exit to menu if Esc or Backspace is pressed
+        this.game.loading_screen.hide()
+        this.game.reset()
+        return this.game.menu_controller
+      }
+    } else {
+      this.game.specified_song = null
     }
     this.game.loading_screen.hide()
     this.game.sfx.play('intro')
