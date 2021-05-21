@@ -112,6 +112,20 @@ shown with the following number:
 - **Accuracy**: your accuracy.
 - **Typing Accuracy**: typing accuracy if the skipped char is counted as 
   missed.
+  
+### Game modes
+
+Game mode is a hidden feature. You can cycle game mode in the menu screen using
+`F9` key. It will cycle between these modes:
+
+- **Normal** Normal game mode. Default. No indications.
+- **Easy** In easy mode, if you have not finished typing the line when the
+  time is up, the line will repeat itself until you finish typing.
+- **Auto** Automatic typing. Sit and watch. Note that this does not block the
+  input, so you can still mess up the score by also trying to type in this mode.
+
+NOTE: Playing any game mode other than **Normal** will not save the high score
+for that play.
 
 Creating New Song
 -----------------

@@ -1,10 +1,14 @@
 import { format_time } from '../../screen/0-common.js'
 import HTMLTypingLine from '../../typing/dom/htmltypingline.js'
+import AutoMode from '../automode.js'
 
 export default class SongController {
   constructor (game) {
     this.game = game
     this.in_screen = false
+
+    this.automode = null
+    this.auto_paused = false
 
     // To pause song when tab go out of focus
     // This is kinda important because the main loop use the requestAnimationFrame mechanism
@@ -46,6 +50,14 @@ export default class SongController {
       this.signal_end = resolve
     })
 
+    // Set up automode
+    if (this.game.game_mode === 'auto') {
+      const song_cpm = this.game.songs.current_song.max_cpm
+      const interval = 60 / song_cpm
+      this.automode = new AutoMode(this.game.typing, this, interval * 0.8)
+      this.automode.run()
+    }
+
     while (true) {
       const keyEvent = await Promise.any([this.game.input.waitForAnyKey(), this.ended_signal])
 
@@ -71,25 +83,7 @@ export default class SongController {
       // If it is typing key
       if (keyEvent.key.length === 1 && this.current_line && !this.current_line.isCompleted()) {
         const key = keyEvent.key
-
-        // Try to process input key
-        const accept = this.current_line.accept(key)
-
-        this.game.score.onType(this.game.media.getCurrentTime(), accept)
-        this.updateTypingLine()
-
-        // Play sfx
-        if (accept < 0) {
-          this.game.sfx.play('error')
-        } else {
-          this.game.sfx.play('key')
-        }
-
-        // If line is completed
-        if (this.current_line.isCompleted()) {
-          this.game.score.onLineEnd(0)
-          this.triggerTypingChange()
-        }
+        this.type(key)
       }
     }
 
@@ -101,7 +95,32 @@ export default class SongController {
       this.game.background_screen.showSongBackground()
     }
 
+    if (this.automode) {
+      this.automode.stop()
+    }
+
     return this.game.result_controller
+  }
+
+  type(key) {
+    // Try to process input key
+    const accept = this.current_line.accept(key)
+
+    this.game.score.onType(this.game.media.getCurrentTime(), accept)
+    this.updateTypingLine()
+
+    // Play sfx
+    if (accept < 0) {
+      this.game.sfx.play('error')
+    } else {
+      this.game.sfx.play('key')
+    }
+
+    // If line is completed
+    if (this.current_line.isCompleted()) {
+      this.game.score.onLineEnd(0)
+      this.triggerTypingChange()
+    }
   }
 
   updateTypingLine () {
@@ -168,19 +187,25 @@ export default class SongController {
       }
 
       // Update typing system
-      const [changed, leftover] = this.game.typing.update(current_time)
-      if (changed) {
-        // Typing line has changed
-        if (leftover > 0) {
-          // The line isn't completed, update the score
-          this.game.score.onLineEnd(leftover)
-          // Play skip sfx when line is skipped
-          this.game.sfx.play('skip')
-        }
+      if (this.game.game_mode === 'easy' && current_line && current_time > current_line.end_time && !current_line.isCompleted()) {
+        // In easy mode, wait for the line to complete before advancing
+        const left_percent =  (1 - (current_line.getLeftoverCharCount() / current_line.getCharacterCount()))
+        this.game.media.skipTo(current_line.start_time + left_percent * (current_line.end_time - current_line.start_time))
+      } else {
+        const [changed, leftover] = this.game.typing.update(current_time)
+        if (changed) {
+          // Typing line has changed
+          if (leftover > 0) {
+            // The line isn't completed, update the score
+            this.game.score.onLineEnd(leftover)
+            // Play skip sfx when line is skipped
+            this.game.sfx.play('skip')
+          }
 
-        // Trigger start of the new line
-        this.game.score.onLineStart(current_time)
-        this.triggerTypingChange()
+          // Trigger start of the new line
+          this.game.score.onLineStart(current_time)
+          this.triggerTypingChange()
+        }
       }
 
       // If typing has ended
@@ -199,9 +224,11 @@ export default class SongController {
 
   visibilityChanged () {
     if (document.hidden) {
+      this.auto_paused = true
       if (this.game.media)
         this.game.media.pause()
     } else {
+      this.auto_paused = false
       if (this.game.media && this.in_screen)
         this.game.media.play()
     }

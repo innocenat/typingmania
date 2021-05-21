@@ -9,6 +9,9 @@ export default class LoadingScreen extends Screen {
     this.create(100, [
       this.main_text = Txt(0, 420, 1920, 120).color(White).font(UIFont.size(96)).align(CENTER),
       this.sub_text = Txt(0, 580, 1920, 60).color(White).font(UIFont.size(48)).align(CENTER),
+
+      // Game mode banner
+      this.game_mode_banner = Txt(0, 0, 1920, 45).font(UIFont.size(30)).align(CENTER).color(White)
     ])
   }
 
@@ -18,5 +21,19 @@ export default class LoadingScreen extends Screen {
 
   setSubText (txt) {
     this.sub_text.text(txt)
+  }
+
+  updateGameMode(mode) {
+    switch (mode) {
+      case 'normal':
+        this.game_mode_banner.text('')
+        break
+      case 'easy':
+        this.game_mode_banner.text('-- EASY MODE --')
+        break
+      case 'auto':
+        this.game_mode_banner.text('-- AUTO MODE --')
+        break
+    }
   }
 }

@@ -31,6 +31,9 @@ export default class MenuScreen extends Screen {
 
       // Song List Container
       this.songs_list_container = Box(1300, 0, 620, 1080).layer(110),
+
+      // Game mode banner
+      this.game_mode_banner = Txt(350, 0, 1500, 60).font(UIFont.size(30)).color(White)
     ])
 
     this.empty = true
@@ -97,5 +100,19 @@ export default class MenuScreen extends Screen {
     this.song_list_item[position].el.style.transform = 'translate(-50px, 0)'
 
     this.current_position = position
+  }
+
+  updateGameMode(mode) {
+    switch (mode) {
+      case 'normal':
+        this.game_mode_banner.text('')
+        break
+      case 'easy':
+        this.game_mode_banner.text('EASY mode. F9 to cycle.')
+        break
+      case 'auto':
+        this.game_mode_banner.text('AUTO mode. F9 to cycle.')
+        break
+    }
   }
 }

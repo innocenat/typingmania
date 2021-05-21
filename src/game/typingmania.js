@@ -48,6 +48,8 @@ export default class TypingMania {
     this.result_controller = new ResultController(this)
 
     this.volume_controller = new VolumeController(this)
+
+    this.game_mode = 'normal'
   }
 
   reset () {

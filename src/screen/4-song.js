@@ -54,6 +54,8 @@ export default class SongScreen extends Screen {
       this.ui_combo_label = Txt(125, 767, 85, 20).text('Combo').color(White).font(UIFont.size(24)).align(RIGHT),
       this.ui_combo = Txt(30, 750, 95, 40).color(White).font(NumberFont.size(40)).align(RIGHT),
 
+      // Game mode banner
+      this.game_mode_banner = Txt(0, 0, 1920, 45).font(UIFont.size(30)).align(CENTER).color(White)
     ])
   }
 
@@ -71,5 +73,19 @@ export default class SongScreen extends Screen {
     // Append current ruby
     if (element)
       this.ui_ruby.el.appendChild(element)
+  }
+
+  updateGameMode(mode) {
+    switch (mode) {
+      case 'normal':
+        this.game_mode_banner.text('')
+        break
+      case 'easy':
+        this.game_mode_banner.text('-- EASY MODE --')
+        break
+      case 'auto':
+        this.game_mode_banner.text('-- AUTO MODE --')
+        break
+    }
   }
 }

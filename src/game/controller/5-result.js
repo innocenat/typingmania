@@ -7,7 +7,10 @@ export default class ResultController {
     this.game.background_screen.showResultUI(true)
     this.game.result_screen.show()
 
-    this.game.songs.current_song.saveHighScore(this.game.score.getClass(), this.game.score.score)
+    if (this.game.game_mode === 'normal') {
+      // Only save high score if in normal mode
+      this.game.songs.current_song.saveHighScore(this.game.score.getClass(), this.game.score.score)
+    }
     this.game.score.setToResultScreen(this.game.result_screen)
     this.game.result_screen.card_value[0].text(this.game.songs.current_song.title)
 

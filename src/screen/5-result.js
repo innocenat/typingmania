@@ -35,8 +35,25 @@ export default class ResultScreen extends Screen {
       Txt(1230, 375, 600, 75).align(CENTER).color(Black).font(NumberFont.size(36)).text('Score Card'),
       ...score_label,
       ...score_value,
+
+      // Game mode banner
+      this.game_mode_banner = Txt(0, 0, 1920, 45).font(UIFont.size(30)).align(CENTER).color(White)
     ])
 
     this.card_value = score_value
+  }
+
+  updateGameMode(mode) {
+    switch (mode) {
+      case 'normal':
+        this.game_mode_banner.text('')
+        break
+      case 'easy':
+        this.game_mode_banner.text('-- EASY MODE --')
+        break
+      case 'auto':
+        this.game_mode_banner.text('-- AUTO MODE --')
+        break
+    }
   }
 }

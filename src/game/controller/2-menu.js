@@ -195,6 +195,22 @@ export default class MenuController {
               // Empty
               this.game.sfx.play('error')
             }
+            break
+
+          case 'F9':
+            if (this.game.game_mode === 'normal')
+              this.game.game_mode = 'easy'
+            else if (this.game.game_mode === 'easy')
+              this.game.game_mode = 'auto'
+            else if (this.game.game_mode === 'auto')
+              this.game.game_mode = 'normal'
+
+            // Update all screen with message
+            this.game.menu_screen.updateGameMode(this.game.game_mode)
+            this.game.loading_screen.updateGameMode(this.game.game_mode)
+            this.game.song_screen.updateGameMode(this.game.game_mode)
+            this.game.result_screen.updateGameMode(this.game.game_mode)
+            break
         }
       } else {
         // Process dropped song
