@@ -203,6 +203,10 @@ export default class MenuController {
             else if (this.game.game_mode === 'easy')
               this.game.game_mode = 'auto'
             else if (this.game.game_mode === 'auto')
+              this.game.game_mode = 'blind'
+            else if (this.game.game_mode === 'blind')
+              this.game.game_mode = 'blank'
+            else if (this.game.game_mode === 'blank')
               this.game.game_mode = 'normal'
 
             // Update all screen with message

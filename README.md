@@ -123,6 +123,12 @@ Game mode is a hidden feature. You can cycle game mode in the menu screen using
   time is up, the line will repeat itself until you finish typing.
 - **Auto** Automatic typing. Sit and watch. Note that this does not block the
   input, so you can still mess up the score by also trying to type in this mode.
+- **Blind** Only the next character to type is visible. The lyrics line and
+  other typing characters are not visible.
+- **Blank** Similar to blind, but furthermore, the next character to type is also
+  invisible. Line interval are also not provided. Score information, including
+  the number of correct line and skipped character, is visible. Sound feedback
+  is also not changed.
 
 NOTE: Playing any game mode other than **Normal** will not save the high score
 for that play.

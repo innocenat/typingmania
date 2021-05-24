@@ -31,11 +31,16 @@ export default class SongController {
     this.animationFrame()
 
     // Set up split progressbar
-    const song_intervals = this.game.typing.getIntervals().map((x) => x / this.game.media.getDuration())
-    if (song_intervals[song_intervals.length - 1] < 1) {
-      song_intervals.push(1)
+    if (this.game.game_mode !== 'blank') {
+      // No interval info for BLANK mode
+      const song_intervals = this.game.typing.getIntervals().map((x) => x / this.game.media.getDuration())
+      if (song_intervals[song_intervals.length - 1] < 1) {
+        song_intervals.push(1)
+      }
+      this.game.song_screen.ui_progress_all.chapter(song_intervals)
+    } else {
+      this.game.song_screen.ui_progress_all.chapter([1])
     }
-    this.game.song_screen.ui_progress_all.chapter(song_intervals)
 
     // Play media
     this.game.media.play()
@@ -125,8 +130,9 @@ export default class SongController {
 
   updateTypingLine () {
     // This update the typing text at the bottom of the screen
-    if (this.current_line) {
-      this.game.song_screen.setTypingText(this.current_line.getRemainingText())
+    // Blind mode only shows 1 char, blank mode shows nothing.
+    if (this.current_line && this.game.game_mode !== 'blank') {
+      this.game.song_screen.setTypingText(this.current_line.getRemainingText(), this.game.game_mode === 'blind')
     } else {
       this.game.song_screen.setTypingText('')
     }
@@ -146,8 +152,10 @@ export default class SongController {
       if (this.current_typing !== this.game.typing.current_line) {
         // First time, create new typing
         this.current_typing = this.game.typing.current_line
-        this.typing_dom = new HTMLTypingLine(current_line)
-        this.game.song_screen.setTypingRuby(this.typing_dom.el)
+        if (this.game.game_mode !== 'blind' && this.game.game_mode !== 'blank') {
+          this.typing_dom = new HTMLTypingLine(current_line)
+          this.game.song_screen.setTypingRuby(this.typing_dom.el)
+        }
       }
       current_line.makeActive()
       this.updateTypingLine()
@@ -156,8 +164,10 @@ export default class SongController {
       if (this.current_typing !== this.game.typing.current_line + 1) {
         // First time, create new typing
         this.current_typing = this.game.typing.current_line + 1
-        this.typing_dom = new HTMLTypingLine(next_line)
-        this.game.song_screen.setTypingRuby(this.typing_dom.el)
+        if (this.game.game_mode !== 'blind' && this.game.game_mode !== 'blank') {
+          this.typing_dom = new HTMLTypingLine(next_line)
+          this.game.song_screen.setTypingRuby(this.typing_dom.el)
+        }
       }
       this.updateTypingLine()
     } else {
@@ -180,7 +190,7 @@ export default class SongController {
 
       // Interval progress bar
       const current_line = this.game.typing.getCurrentLine()
-      if (current_line) {
+      if (current_line && this.game.game_mode !== 'blank') {
         this.game.song_screen.ui_progress_int.progress((current_time - current_line.start_time) / (current_line.duration))
       } else {
         this.game.song_screen.ui_progress_int.progress(0)

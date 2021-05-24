@@ -54,6 +54,12 @@ export default class ResultScreen extends Screen {
       case 'auto':
         this.game_mode_banner.text('-- AUTO MODE --')
         break
+      case 'blind':
+        this.game_mode_banner.text('-- BLIND MODE --')
+        break
+      case 'blank':
+        this.game_mode_banner.text('-- BLANK MODE --')
+        break
     }
   }
 }

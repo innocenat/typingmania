@@ -59,20 +59,26 @@ export default class SongScreen extends Screen {
     ])
   }
 
-  setTypingText (text) {
+  setTypingText (text, blind_mode = false) {
     this.ui_typing_next.text(text.substr(0, 1))
-    this.ui_typing_line.text(text.substr(1))
+    if (!blind_mode) {
+      this.ui_typing_line.text(text.substr(1))
+    }
   }
 
   setTypingRuby (element) {
     // Clear existing ruby
-    while (this.ui_ruby.el.firstChild) {
-      this.ui_ruby.el.removeChild(this.ui_ruby.el.lastChild)
-    }
+    this.clearTypingRuby()
 
     // Append current ruby
     if (element)
       this.ui_ruby.el.appendChild(element)
+  }
+
+  clearTypingRuby() {
+    while (this.ui_ruby.el.firstChild) {
+      this.ui_ruby.el.removeChild(this.ui_ruby.el.lastChild)
+    }
   }
 
   updateGameMode(mode) {
@@ -85,6 +91,12 @@ export default class SongScreen extends Screen {
         break
       case 'auto':
         this.game_mode_banner.text('-- AUTO MODE --')
+        break
+      case 'blind':
+        this.game_mode_banner.text('-- BLIND MODE --')
+        break
+      case 'blank':
+        this.game_mode_banner.text('-- BLANK MODE --')
         break
     }
   }

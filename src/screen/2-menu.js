@@ -113,6 +113,12 @@ export default class MenuScreen extends Screen {
       case 'auto':
         this.game_mode_banner.text('AUTO mode. F9 to cycle.')
         break
+      case 'blind':
+        this.game_mode_banner.text('BLIND mode. F9 to cycle.')
+        break
+      case 'blank':
+        this.game_mode_banner.text('BLANK mode. F9 to cycle.')
+        break
     }
   }
 }
