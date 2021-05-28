@@ -110,6 +110,9 @@ export default class MenuScreen extends Screen {
       case 'easy':
         this.game_mode_banner.text('EASY mode. F9 to cycle.')
         break
+      case 'tempo':
+        this.game_mode_banner.text('TEMPO mode. F9 to cycle.')
+        break
       case 'auto':
         this.game_mode_banner.text('AUTO mode. F9 to cycle.')
         break

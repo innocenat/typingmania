@@ -121,6 +121,7 @@ Game mode is a hidden feature. You can cycle game mode in the menu screen using
 - **Normal** Normal game mode. Default. No indications.
 - **Easy** In easy mode, if you have not finished typing the line when the
   time is up, the line will repeat itself until you finish typing.
+- **Tempo** Just push any key, it will be considered as a correct key.
 - **Auto** Automatic typing. Sit and watch. Note that this does not block the
   input, so you can still mess up the score by also trying to type in this mode.
 - **Blind** Only the next character to type is visible. The lyrics line and

@@ -88,7 +88,13 @@ export default class SongController {
       // If it is typing key
       if (keyEvent.key.length === 1 && this.current_line && !this.current_line.isCompleted()) {
         const key = keyEvent.key
-        this.type(key)
+        if (this.game.game_mode === 'tempo') {
+          if (this.current_line && !this.current_line.isCompleted()) {
+            this.type(this.current_line.getRemainingText().substr(0, 1).replace('_', ' '))
+          }
+        } else {
+          this.type(key)
+        }
       }
     }
 

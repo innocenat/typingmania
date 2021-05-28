@@ -201,6 +201,8 @@ export default class MenuController {
             if (this.game.game_mode === 'normal')
               this.game.game_mode = 'easy'
             else if (this.game.game_mode === 'easy')
+              this.game.game_mode = 'tempo'
+            else if (this.game.game_mode === 'tempo')
               this.game.game_mode = 'auto'
             else if (this.game.game_mode === 'auto')
               this.game.game_mode = 'blind'

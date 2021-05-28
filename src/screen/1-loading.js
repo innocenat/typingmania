@@ -31,6 +31,9 @@ export default class LoadingScreen extends Screen {
       case 'easy':
         this.game_mode_banner.text('-- EASY MODE --')
         break
+      case 'tempo':
+        this.game_mode_banner.text('-- TEMPO MODE --')
+        break
       case 'auto':
         this.game_mode_banner.text('-- AUTO MODE --')
         break
