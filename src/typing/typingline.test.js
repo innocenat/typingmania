@@ -17,7 +17,7 @@ describe('Line tokenizer', () => {
       ['き', 'き', false], ['て', 'て', false], ['い', 'い', false], ['る', 'る', false],
     ])
   })
-  test('Kanji with no readding must throw', () => {
+  test('Kanji with no reading must throw', () => {
     expect(() => {
       new TypingLine('漢字', 0, 0, romanizer)
     }).toThrow()
@@ -30,17 +30,17 @@ describe('Line tokenizer', () => {
 describe('Line must accept correctly', () => {
   test('Test 1', () => {
     const line = new TypingLine('漢字[かんじ]|ある　なのに　ABC DEF', 0, 0, romanizer)
-    expect(line.getRemainingText()).toBe('KANJI ARU NANONI ABC_DEF')
+    expect(line.getRemainingText()).toBe('KANJI\xA0\xA0ARU\xA0\xA0NANONI\xA0\xA0ABC_DEF')
     expect(line.accept('k')).toBe(1)
     expect(line.accept('a')).toBe(1)
     expect(line.accept('n')).toBe(1)
-    expect(line.getRemainingText()).toBe('JI ARU NANONI ABC_DEF')
+    expect(line.getRemainingText()).toBe('JI\xA0\xA0ARU\xA0\xA0NANONI\xA0\xA0ABC_DEF')
     expect(line.accept('n')).toBe(0)
-    expect(line.getRemainingText()).toBe('JI ARU NANONI ABC_DEF')
+    expect(line.getRemainingText()).toBe('JI\xA0\xA0ARU\xA0\xA0NANONI\xA0\xA0ABC_DEF')
     expect(line.accept('j')).toBe(1)
-    expect(line.getRemainingText()).toBe('I ARU NANONI ABC_DEF')
+    expect(line.getRemainingText()).toBe('I\xA0\xA0ARU\xA0\xA0NANONI\xA0\xA0ABC_DEF')
     expect(line.accept('i')).toBe(1)
-    expect(line.getRemainingText()).toBe('ARU NANONI ABC_DEF')
+    expect(line.getRemainingText()).toBe('ARU\xA0\xA0NANONI\xA0\xA0ABC_DEF')
     expect(line.accept('i')).toBe(-1)
     expect(line.accept('a')).toBe(1)
     expect(line.accept('r')).toBe(1)
