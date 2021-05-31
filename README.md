@@ -173,6 +173,11 @@ Half-width space will require spacebar input during typing, but full-width
 space will be skipped automatically. Moreover, putting `|` character will
 create a little spacing in the typing romaji line to ease readability.
 
+If you want to specify reading for hiragana/kanataka directly, use `<< >>`
+for example:
+
+    今[いま]でも生[い]きている<<ストーリーズ>>[Stories]
+
 ### Using the visual editor
 
 *Visual editor is currently in development*

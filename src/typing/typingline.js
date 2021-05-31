@@ -1,5 +1,7 @@
 import TypingRuby from './typingruby.js'
 
+const TOK_SPECI = 0, TOK_CHAR = 1, TOK_NO_READING = 2
+
 export default class TypingLine {
   constructor (line, start_time, end_time, romanizer) {
     this.is_blank = line.length === 0
@@ -20,50 +22,104 @@ export default class TypingLine {
     this.makeRubies()
   }
 
-  tokenize () {
-    let start_pos = 0
-    let paren_pos = -1
-    let to_tokenize = ''
+  _preTokenize () {
+    let pretokens = []
+    let last_token = ''
+    let in_bracket = false
+    let has_reading = true
     for (let pos = 0; pos < this.line.length; pos++) {
       const c = this.line.charAt(pos)
-      if (c === '[') {
-        if (to_tokenize.length > 0) {
-          const tokens = this._romanizer.splitReading(to_tokenize)[1]
+      if (c === '<' && pos + 1 < this.line.length && this.line.charAt(pos + 1) === '<') {
+        if (last_token !== '') {
+          pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
+          last_token = ''
+        }
+        pretokens.push([TOK_SPECI, '<<'])
+        in_bracket = true
+        pos++
+      } else if (c === '>' && pos + 1 < this.line.length && this.line.charAt(pos + 1) === '>') {
+        if (last_token !== '') {
+          pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
+          last_token = ''
+        }
+        pretokens.push([TOK_SPECI, '>>'])
+        in_bracket = false
+        pos++
+      } else if (c === '[') {
+        if (last_token !== '') {
+          pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
+          last_token = ''
+        }
+        pretokens.push([TOK_SPECI, '['])
+        in_bracket = true
+      } else if (c === ']') {
+        if (last_token !== '') {
+          pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
+          last_token = ''
+        }
+        pretokens.push([TOK_SPECI, ']'])
+        in_bracket = false
+      } else if (in_bracket) {
+        last_token += c
+        has_reading = true
+      } else if (this._romanizer.isReadingAvailable(c)) {
+        if (last_token !== '' && !has_reading) {
+          pretokens.push([TOK_NO_READING, last_token])
+          last_token = ''
+        }
+        last_token += c
+        has_reading = true
+      } else {
+        if (last_token !== '' && has_reading) {
+          pretokens.push([TOK_CHAR, last_token])
+          last_token = ''
+        }
+        last_token += c
+        has_reading = false
+      }
+    }
+
+    if (last_token !== '') {
+      pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
+    }
+
+    return pretokens
+  }
+
+  tokenize () {
+    const pretokens = this._preTokenize()
+
+    for (let t = 0; t < pretokens.length; t++) {
+      switch (pretokens[t][0]) {
+        case TOK_SPECI:
+          switch (pretokens[t][1]) {
+            case '<<':
+              // Special reading with for readable base
+              // Must be in << base >> [ reading ]
+              if (t + 5 >= pretokens.length || pretokens[t + 1][0] !== TOK_CHAR || pretokens[t + 2][1] !== '>>' || pretokens[t + 3][1] !== '[' || pretokens[t + 4][0] !== TOK_CHAR || pretokens[t + 5][1] !== ']') {
+                throw new Error('Invalid << >> pattern, must be <<base>>[reading] (line:' + this.line + ')')
+              }
+              this.tokens.push([pretokens[t + 1][1], pretokens[t + 4][1], true])
+              t += 5
+              break
+          }
+          break
+        case TOK_NO_READING:
+          // Next token must be [ reading ]
+          if (t + 3 >= pretokens.length || pretokens[t + 1][1] !== '[' || pretokens[t + 2][0] !== TOK_CHAR || pretokens[t + 3][1] !== ']') {
+            throw new Error('No reading available for: ' + t[1] + ' (line:' + this.line + ')')
+          }
+
+          this.tokens.push([pretokens[t][1], pretokens[t + 2][1], true])
+          t += 3
+          break
+        case TOK_CHAR:
+          const tokens = this._romanizer.splitReading(pretokens[t][1])[1]
           for (const token of tokens) {
             this.tokens.push([token, token, false])
           }
-          to_tokenize = ''
-        }
-
-        paren_pos = pos
-      } else if (c === ']') {
-        const base = this.line.substring(start_pos, paren_pos)
-        const reading = this.line.substring(paren_pos + 1, pos)
-
-        this.tokens.push([base, reading, true])
-
-        start_pos = pos + 1
-        paren_pos = -1
-      } else if (paren_pos === -1 && this._romanizer.isReadingAvailable(c)) {
-        if (start_pos !== pos) {
-          throw new Error('No reading available for: ' + this.line.substring(start_pos, pos - 1) + ' (line:' + this.line + ':' + pos + ')')
-        }
-
-        to_tokenize += c
-        start_pos++
+          break
       }
-    }
-
-    if (to_tokenize.length > 0) {
-      const tokens = this._romanizer.splitReading(to_tokenize)[1]
-      for (const token of tokens) {
-        this.tokens.push([token, token, false])
-      }
-    }
-
-    // There should not be any leftover
-    if (start_pos !== this.line.length) {
-      throw new Error('No reading available for: ' + this.line.substring(start_pos))
     }
   }
 

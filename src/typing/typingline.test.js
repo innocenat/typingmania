@@ -12,9 +12,18 @@ describe('Line tokenizer', () => {
     ])
   })
   test('Japanese tokenization', () => {
-    expect(new TypingLine('今[いま]でも生[い]きている', 0, 0, romanizer).tokens).toEqual([
+    expect(new TypingLine('今[いま]でも生[い]きているストーリーズ', 0, 0, romanizer).tokens).toEqual([
       ['今', 'いま', true], ['で', 'で', false], ['も', 'も', false], ['生', 'い', true],
       ['き', 'き', false], ['て', 'て', false], ['い', 'い', false], ['る', 'る', false],
+      ['ス', 'ス', false], ['ト', 'ト', false], ['ー', 'ー', false],
+      ['リ', 'リ', false], ['ー', 'ー', false], ['ズ', 'ズ', false],
+    ])
+  })
+  test('Japanese tokenization with reading', () => {
+    expect(new TypingLine('今[いま]でも生[い]きている<<ストーリーズ>>[stories]', 0, 0, romanizer).tokens).toEqual([
+      ['今', 'いま', true], ['で', 'で', false], ['も', 'も', false], ['生', 'い', true],
+      ['き', 'き', false], ['て', 'て', false], ['い', 'い', false], ['る', 'る', false],
+      ['ストーリーズ', 'stories', true],
     ])
   })
   test('Kanji with no reading must throw', () => {
