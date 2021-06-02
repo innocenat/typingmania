@@ -61,7 +61,8 @@ export default class MenuController {
       }
     }
 
-    this.signal_drop(results)
+    if (results.length > 0)
+      this.signal_drop(results)
   }
 
   async importSong (filename, url) {
