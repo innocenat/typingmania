@@ -18,8 +18,6 @@ You can also contact me at typingmania (at) stdlib (dot) xyz.
 ### Roadmap
 
 - Visual editor for song
-- Song collection website
-- **GitHub release along with example data**.
 
 Table of Content
 ----------------
