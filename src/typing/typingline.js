@@ -95,13 +95,19 @@ export default class TypingLine {
           switch (pretokens[t][1]) {
             case '<<':
               // Special reading with for readable base
-              // Must be in << base >> [ reading ]
-              if (t + 5 >= pretokens.length || pretokens[t + 1][0] !== TOK_CHAR || pretokens[t + 2][1] !== '>>' || pretokens[t + 3][1] !== '[' || pretokens[t + 4][0] !== TOK_CHAR || pretokens[t + 5][1] !== ']') {
-                throw new Error('Invalid << >> pattern, must be <<base>>[reading] (line:' + this.line + ')')
+              if (t + 5 < pretokens.length && pretokens[t + 1][0] === TOK_CHAR && pretokens[t + 2][1] === '>>' && pretokens[t + 3][1] === '[' && pretokens[t + 4][0] === TOK_CHAR && pretokens[t + 5][1] === ']') {
+                // Must be in << base >> [ reading ]
+                this.tokens.push([pretokens[t + 1][1], pretokens[t + 4][1], true])
+                t += 5
+                break
+              } else if (t + 4 < pretokens.length && pretokens[t + 1][0] === TOK_CHAR && pretokens[t + 2][1] === '>>' && pretokens[t + 3][1] === '[' && pretokens[t + 4][1] === ']') {
+                // Or << base >> [ ] to remove some text from typing
+                this.tokens.push([pretokens[t + 1][1], '', false])
+                t += 4
+                break
+              } else {
+                throw new Error('Invalid << >> pattern, must be <<base>>[reading?] (line:' + this.line + ')')
               }
-              this.tokens.push([pretokens[t + 1][1], pretokens[t + 4][1], true])
-              t += 5
-              break
           }
           break
         case TOK_NO_READING:

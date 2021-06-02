@@ -178,6 +178,8 @@ for example:
 
     今[いま]でも生[い]きている<<ストーリーズ>>[Stories]
 
+You can also use `<<text>>[]` to make some part of lyrics non-typable.
+
 ### Using the visual editor
 
 *Visual editor is currently in development*
