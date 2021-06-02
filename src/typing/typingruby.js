@@ -10,6 +10,7 @@ export default class TypingRuby extends Observable {
     this.show_reading = show_reading
 
     this.current_char = 0
+    this.is_blank = true
 
     this.active = false
 
@@ -28,6 +29,8 @@ export default class TypingRuby extends Observable {
     if (this.previous !== null) {
       last_char = this.previous.typing_chars[this.previous.typing_chars.length - 1]
     }
+
+    this.empty = true
     for (let i = 0; i < this.typings[0].length; i++) {
       const typing_char = new TypingChar(this.typings[1][i], this.typings[0][i], last_char)
       last_char = typing_char
@@ -38,6 +41,9 @@ export default class TypingRuby extends Observable {
   initialize () {
     for (const t of this.typing_chars) {
       t.initialize()
+
+      if (!t.is_blank)
+        this.is_blank = false
     }
     this.advanceChar()
   }

@@ -50,6 +50,11 @@ export default class HTMLTypingRuby {
       this.el.appendChild(this.ruby_el)
     }
 
+    // If blank
+    if (ruby.is_blank) {
+      this.base_el.style.color = this.config.inactive_color
+    }
+
     ruby._observe(this.onNotify.bind(this))
   }
 
@@ -65,7 +70,8 @@ export default class HTMLTypingRuby {
         this.base_el.style.color = this.config.inactive_color
         break
       case 'active':
-        this.base_el.style.color = this.config.color
+        if (!this.ruby.is_blank)
+          this.base_el.style.color = this.config.color
         break
     }
   }
