@@ -42,6 +42,7 @@ There is no mouse interaction available.
 ### Selecting song
 
 ![TypingMania NEO Menu](docs/img/game-menu.png)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Finnocenat%2Ftypingmania.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Finnocenat%2Ftypingmania?ref=badge_shield)
 
 **Top-Left** is the master volume control. Use the `PageUp` and `PageDown` keys
 to change the volume level. Note that for YouTube, the volume is only 
@@ -528,3 +529,7 @@ TypingMania NEOは歌の歌詞に合わせてタイピングするタイピン�
 - 最新型のGoogle Chrome, Mozilla Firefox
 - Safariの音声はちょっと遅れて、歌詞のタイミングが合わない場合が多い。
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Finnocenat%2Ftypingmania.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Finnocenat%2Ftypingmania?ref=badge_large)
