@@ -13,6 +13,7 @@ export default class HTMLTypingLine {
       no_reading_height: '90px',
       no_reading_font: SongFont.size(60),
       color: 'white',
+      disabled_color: '#999',
       inactive_color: '#ccc',
       progress_color: '#fefe00',
       completed_color: '#00fefe',

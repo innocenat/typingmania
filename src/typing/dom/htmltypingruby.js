@@ -52,7 +52,7 @@ export default class HTMLTypingRuby {
 
     // If blank
     if (ruby.is_blank) {
-      this.base_el.style.color = this.config.inactive_color
+      this.base_el.style.color = this.config.disabled_color
     }
 
     ruby._observe(this.onNotify.bind(this))
