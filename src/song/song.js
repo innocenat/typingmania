@@ -67,13 +67,12 @@ export default class Song {
     }
   }
 
-  async load (progress_handler) {
+  async load (progress_handler, abort_signal) {
     if (this.loaded) {
       return this
     }
 
-    const raw_song = await FileLoader.load(this.url, progress_handler)
-
+    const raw_song = await FileLoader.load(this.url, progress_handler, abort_signal)
     const packed_song = new PackedFile()
     packed_song.unpackFromBuffer(raw_song)
     this.loadFromPackedFile(packed_song)

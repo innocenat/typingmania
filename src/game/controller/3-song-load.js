@@ -4,6 +4,13 @@ import Score from '../score.js'
 export default class SongLoadController {
   constructor (game) {
     this.game = game
+    this.abort_signal = null
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.abort_signal) {
+        this.abort_signal()
+      }
+    })
   }
 
   async run () {
@@ -18,19 +25,33 @@ export default class SongLoadController {
     let is_error = false
     try {
       if (!song.loaded) {
+        // Load abort controller
+        const abort_controller = new AbortController()
+        const abort_signal = abort_controller.signal
+        this.abort_signal = () => {
+          abort_controller.abort()
+        }
+
         // If song hasn't been load yet, then load song with progress
         await song.load((progress) => {
           if (!is_error) {
             const p = Math.floor(progress * 100)
             this.game.loading_screen.setSubText(`Downloading song ${p}%`)
           }
-        })
+        }, abort_signal)
+
+        this.abort_signal = null
       }
     } catch (error) {
       is_error = true
       console.log(error)
       this.game.loading_screen.setMainText('Error.')
       switch (error) {
+        case 'ABORTED':
+          // Exit to menu if aborted
+          this.game.loading_screen.hide()
+          this.game.reset()
+          return this.game.menu_controller
         case 'NETWORK_ERROR':
           this.game.loading_screen.setSubText('Unable to download song file.')
           break

@@ -54,8 +54,10 @@ export default class TypingMania {
 
   reset () {
     // Reset all song-dependant system
-    this.media.pause()
-    this.media.destroy()
+    if (this.media) {
+      this.media.pause()
+      this.media.destroy()
+    }
     this.typing = null
     this.score = null
     this.media = null

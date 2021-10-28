@@ -1,9 +1,13 @@
 export default class FileLoader {
   // This returns ArrayBuffer
   static load (url, on_progress = () => {
-  }) {
+  }, abortSignal = null) {
+    const fetchParam = {}
+    if (abortSignal) {
+      fetchParam.signal = abortSignal
+    }
     return new Promise((resolve, reject) => {
-      fetch(url).then(async (response) => {
+      fetch(url, fetchParam).then(async (response) => {
         // Handle HTTP error
         if (response.status === 404) {
           reject('NOT_FOUND')
@@ -40,8 +44,12 @@ export default class FileLoader {
 
         // Resolve promise to the file content array buffer
         resolve(file.buffer)
-      }).catch(() => {
-        reject('NETWORK_ERROR')
+      }).catch((e) => {
+        if (e.name === 'AbortError') {
+          reject('ABORTED')
+        } else {
+          reject('NETWORK_ERROR')
+        }
       })
     })
   }
