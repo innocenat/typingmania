@@ -1,0 +1,49 @@
+.lyrics-preview-table
+  border-collapse: collapse
+  width: 100%
+
+  th
+    text-align: left
+
+  td, th
+    padding: 0 0.5rem
+    border-bottom: 0.0625px solid #ccc
+
+  tbody
+    cursor: pointer
+
+  .start-time, .end-time
+    width: 100px
+
+  .hover td
+    background: rgb(167, 243, 208)
+
+  .active td
+    background: rgb(167, 243, 208)
+
+  .lyrics
+    font-size: 1.2rem
+    font-weight: 500
+
+  .typing
+    color: #666
+    font-size: 0.8rem
+
+.lyrics-ruby
+  display: flex
+  flex-direction: row
+  align-items: flex-end
+  justify-content: flex-start
+
+  .ruby-group
+    display: flex
+    flex-direction: column-reverse
+
+  .ruby-base
+    text-align: center
+
+  .ruby-ruby
+    text-align: center
+    font-size: 0.75em
+    margin-bottom: -0.75em
+    white-space: nowrap

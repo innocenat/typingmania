@@ -3,7 +3,7 @@ import TypingRuby from './typingruby.js'
 const TOK_SPECI = 0, TOK_CHAR = 1, TOK_NO_READING = 2
 
 export default class TypingLine {
-  constructor (line, start_time, end_time, romanizer) {
+  constructor (line, start_time, end_time, romanizer, initialize = true) {
     this.is_blank = line.length === 0
     this.line = line
     this.start_time = start_time
@@ -18,8 +18,10 @@ export default class TypingLine {
 
     this.active = false
 
-    this.tokenize()
-    this.makeRubies()
+    if (initialize) {
+      this.tokenize()
+      this.makeRubies()
+    }
   }
 
   _preTokenize () {
@@ -113,7 +115,7 @@ export default class TypingLine {
         case TOK_NO_READING:
           // Next token must be [ reading ]
           if (t + 3 >= pretokens.length || pretokens[t + 1][1] !== '[' || pretokens[t + 2][0] !== TOK_CHAR || pretokens[t + 3][1] !== ']') {
-            throw new Error('No reading available for: ' + t[1] + ' (line:' + this.line + ')')
+            throw new Error('No reading available for: ' + pretokens[t][1] + ' (line:' + this.line + ')')
           }
 
           this.tokens.push([pretokens[t][1], pretokens[t + 2][1], true])

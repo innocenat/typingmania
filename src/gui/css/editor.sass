@@ -1,0 +1,62 @@
+@use "color"
+@import "components/common"
+
+// Layout
+body
+  overflow: hidden
+
+.app
+  display: grid
+  grid-template-columns: 480px minmax(0, auto)
+  grid-template-rows: 48px 180px 180px minmax(0, auto)
+  grid-template-areas: "header header" "sidebar audio" "sidebar editor" "sidebar lyrics"
+  height: 100vh
+  width: 100vw
+
+.app-single
+  grid-column: 1 / -1
+  grid-row: 2 / -1
+
+.app-title
+  grid-area: header
+  display: flex
+  justify-content: space-between
+  color: #fff
+  background-color: color.$gray-800
+  padding: 0 16px
+  align-items: center
+
+.app-title-bar
+  white-space: nowrap
+  text-overflow: ellipsis
+  text-align: left
+  line-height: 48px
+
+.app-title-toolbar
+  :not(:first-child)
+    margin-left: 8px
+
+  button
+    background: color.$gray-700
+    border-radius: 4px
+    padding: 0 16px
+    line-height: 32px
+    color: white
+    border: 0
+    font-size: 16px
+    cursor: pointer
+
+    &:hover
+      background: color.$gray-600
+
+.app-editor
+  grid-area: editor
+  overflow: auto
+
+.app-lyrics
+  grid-area: lyrics
+  overflow: auto
+
+@import "components/editor"
+@import "components/lyrics"
+@import "components/single-page"

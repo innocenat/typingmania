@@ -8,10 +8,12 @@
   "type": "module",
   "devDependencies": {
     "esbuild": "^0.9.0",
-    "jest": "^26.6.3"
+    "jest": "^26.6.3",
+    "nodemon": "^2.0.15"
   },
   "scripts": {
     "test": "jest",
+    "build:editor:css:dev": "sass --watch . --style compressed --embed-source-map",
     "build-game": "node scripts/build-game.js",
     "build-assets": "node scripts/build-assets.js",
     "build-index": "node scripts/build-index.js",

@@ -1,0 +1,41 @@
+@use "../color"
+
+.lyrics-editor
+  --lyrics-text: color.$gray-900
+  --lyrics-base: #3730A3
+  --lyrics-reading: #166534
+  --lyrics-special: #9D174D
+
+  background: white
+  border: 1px solid color.$gray-900
+  border-radius: 5px
+
+  display: grid
+  grid-template-columns: 1fr
+  grid-template-rows: var(--height, 100px)
+  grid-template-areas: "main"
+
+  .highlight, .textarea
+    grid-area: main
+    white-space: pre-wrap
+
+    font-family: var(--font)
+    font-weight: 500
+
+    font-size: 22px
+    line-height: 1.5
+
+    padding: 10px
+
+    overflow: auto
+    word-break: break-word
+
+  .highlight
+    z-index: 1
+
+  .textarea
+    z-index: 2
+    background: transparent
+    color: transparent
+    caret-color: color.$gray-900
+    resize: none

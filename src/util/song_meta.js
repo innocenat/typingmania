@@ -7,11 +7,20 @@ const romanizer = new Romanizer(latinTable)
 export function song_meta_from_ass (ass_info) {
   const meta_list = ['title', 'subtitle', 'artist']
   const song_meta = {}
-  for (const meta of meta_list) {
-    if (!(meta in ass_info)) {
-      throw new Error(`Key ${meta} not found in .ass file`)
-    }
 
+  // Check for error first
+  let not_found = ''
+  for (const meta of meta_list) {
+    if (ass_info[meta] === undefined) {
+      not_found += `${meta} `
+    }
+  }
+  if (not_found !== '') {
+    throw new Error(`${not_found}field(s) not found in ASS file`)
+  }
+
+
+  for (const meta of meta_list) {
     const split = ass_info[meta].split('//')
     if (split.length === 1) {
       song_meta[meta] = split[0].trim()
