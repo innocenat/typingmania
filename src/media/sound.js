@@ -12,6 +12,11 @@ export default class Sound {
     this.gain = this.context.createGain()
     this.compressor = this.context.createDynamicsCompressor()
 
+    // For visualization
+    this.analyser = this.context.createAnalyser()
+    this.analyser.fftSize = 512
+
+    this.analyser.connect(this.gain)
     this.gain.connect(this.compressor)
     this.compressor.connect(this.context.destination)
 
@@ -90,7 +95,7 @@ export default class Sound {
   createMedia (song) {
     const connectAudioDestinationFunc = (media) => {
       this.media_source = this.context.createMediaElementSource(media)
-      this.media_source.connect(this.gain)
+      this.media_source.connect(this.analyser)
     }
     switch (song.media_type) {
       case 'video':

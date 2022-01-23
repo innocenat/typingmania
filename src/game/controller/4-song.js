@@ -10,6 +10,8 @@ export default class SongController {
     this.automode = null
     this.auto_paused = false
 
+    this.vis_bins = new Uint8Array(game.sound.analyser.frequencyBinCount)
+
     // To pause song when tab go out of focus
     // This is kinda important because the main loop use the requestAnimationFrame mechanism
     document.addEventListener('visibilitychange', this.visibilityChanged.bind(this))
@@ -233,6 +235,10 @@ export default class SongController {
       if (this.game.media.ended) {
         this.signal_end(true)
       }
+
+      // Visualization
+      this.game.sound.analyser.getByteFrequencyData(this.vis_bins)
+      this.game.song_screen.showVisualization(this.vis_bins)
 
       requestAnimationFrame(this.animationFrame.bind(this))
     }

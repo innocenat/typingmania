@@ -3,6 +3,15 @@ import { Box, Group, ProgressBar, Txt } from '../graphics/elements.js'
 import { Black, BtnBorder, Gray2, NumberFont, SongFont, UIColor, UIFont, White } from './0-common.js'
 import { CENTER, RIGHT } from '../graphics/styles.js'
 
+const VIS_BOXES = 192
+const VIS_ALL = 512
+
+function a (f) {
+  const f2 = f * f
+  return 1.2588966 * 148840000 * f2 * f2 /
+    ((f2 + 424.36) * Math.sqrt((f2 + 11599.29) * (f2 + 544496.41)) * (f2 + 148840000))
+}
+
 export default class SongScreen extends Screen {
   constructor (viewport) {
     super(viewport, 0, 0, 1920, 1080)
@@ -55,8 +64,31 @@ export default class SongScreen extends Screen {
       this.ui_combo = Txt(30, 750, 95, 40).color(White).font(NumberFont.size(40)).align(RIGHT),
 
       // Game mode banner
-      this.game_mode_banner = Txt(0, 0, 1920, 45).font(UIFont.size(30)).align(CENTER).color(White)
+      this.game_mode_banner = Txt(0, 0, 1920, 45).font(UIFont.size(30)).align(CENTER).color(White),
+
+      // Visualization box
+      this.vis_box = Group(240, 810, 1920 - 240, 100).layer(-1),
     ])
+
+    this.vis_box.el.style.display = 'grid'
+    this.vis_box.el.style.gridTemplateColumns = `repeat(${VIS_BOXES}, 1fr)`
+    this.vis_box.el.style.gridTemplateRows = '100px'
+    this.vis_box.el.style.opacity = '0.5'
+    this.vis_box.el.style.filter = 'blur(5px)'
+    this.vis_box.el.style.contain = 'strict style'
+
+    this.vis_boxes = []
+    this.vis_factor = []
+
+    for (let i = 0; i < VIS_BOXES; i++) {
+      const el = document.createElement('div')
+      el.style.height = '100px'
+      el.style.background = '#ccc'
+      this.vis_boxes.push(el)
+      this.vis_box.el.appendChild(el)
+
+      this.vis_factor.push(a(48000 * (i + 0.5) / VIS_ALL)) // Assume 48k samples
+    }
   }
 
   setTypingText (text, blind_mode = false) {
@@ -75,13 +107,13 @@ export default class SongScreen extends Screen {
       this.ui_ruby.el.appendChild(element)
   }
 
-  clearTypingRuby() {
+  clearTypingRuby () {
     while (this.ui_ruby.el.firstChild) {
       this.ui_ruby.el.removeChild(this.ui_ruby.el.lastChild)
     }
   }
 
-  updateGameMode(mode) {
+  updateGameMode (mode) {
     switch (mode) {
       case 'normal':
         this.game_mode_banner.text('')
@@ -101,6 +133,13 @@ export default class SongScreen extends Screen {
       case 'blank':
         this.game_mode_banner.text('-- BLANK MODE --')
         break
+    }
+  }
+
+  showVisualization (bins) {
+    for (let i = 0; i < VIS_BOXES; i++) {
+      const el = this.vis_boxes[i]
+      el.style.opacity = `${Math.min(1, this.vis_factor[i] * (bins[i] / 256))}`
     }
   }
 }
