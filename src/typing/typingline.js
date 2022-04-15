@@ -86,6 +86,19 @@ export default class TypingLine {
     return pretokens
   }
 
+  _splitReadingBlock(base, reading) {
+    const readings = reading.split('|')
+    const blocks = []
+    if (readings.length > 1 && readings.length === base.length) {
+      for (let i = 0; i < base.length; i++) {
+        blocks.push([base[i], readings[i], true])
+      }
+    } else {
+      blocks.push([base, readings.join(''), true])
+    }
+    return blocks
+  }
+
   tokenize () {
     const pretokens = this._preTokenize()
 
@@ -97,7 +110,7 @@ export default class TypingLine {
               // Special reading with for readable base
               if (t + 5 < pretokens.length && pretokens[t + 1][0] === TOK_CHAR && pretokens[t + 2][1] === '>>' && pretokens[t + 3][1] === '[' && pretokens[t + 4][0] === TOK_CHAR && pretokens[t + 5][1] === ']') {
                 // Must be in << base >> [ reading ]
-                this.tokens.push([pretokens[t + 1][1], pretokens[t + 4][1], true])
+                this.tokens.push(...this._splitReadingBlock(pretokens[t + 1][1], pretokens[t + 4][1]))
                 t += 5
                 break
               } else if (t + 4 < pretokens.length && pretokens[t + 1][0] === TOK_CHAR && pretokens[t + 2][1] === '>>' && pretokens[t + 3][1] === '[' && pretokens[t + 4][1] === ']') {
@@ -116,7 +129,7 @@ export default class TypingLine {
             throw new Error('No reading available for: ' + t[1] + ' (line:' + this.line + ')')
           }
 
-          this.tokens.push([pretokens[t][1], pretokens[t + 2][1], true])
+          this.tokens.push(...this._splitReadingBlock(pretokens[t][1], pretokens[t + 2][1]))
           t += 3
           break
         case TOK_CHAR:

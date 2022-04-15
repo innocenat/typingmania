@@ -26,6 +26,16 @@ describe('Line tokenizer', () => {
       ['ストーリーズ', 'stories', true],  ['?', '', false],
     ])
   })
+  test('Japanese ruby with split reading', () => {
+    expect(new TypingLine('先生[せん|せい]', 0, 0, romanizer).tokens).toEqual([
+      ['先', 'せん', true], ['生', 'せい', true]
+    ])
+  })
+  test('Japanese ruby with extra split reading should be ignored', () => {
+    expect(new TypingLine('先生[せ|ん|せい]', 0, 0, romanizer).tokens).toEqual([
+      ['先生', 'せんせい', true]
+    ])
+  })
   test('Kanji with no reading must throw', () => {
     expect(() => {
       new TypingLine('漢字', 0, 0, romanizer)

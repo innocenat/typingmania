@@ -34,7 +34,7 @@ export default class TypingMania {
     this.score = null
     this.media = null
 
-    this.background_screen = new BackgroundScreen(this.viewport, '1.1.1')
+    this.background_screen = new BackgroundScreen(this.viewport, '1.1.2')
     this.songinfo_screen = new SongInfoScreen(this.viewport)
     this.loading_screen = new LoadingScreen(this.viewport)
     this.menu_screen = new MenuScreen(this.viewport)
