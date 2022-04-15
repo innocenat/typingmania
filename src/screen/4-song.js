@@ -3,8 +3,8 @@ import { Box, Group, ProgressBar, Txt } from '../graphics/elements.js'
 import { Black, BtnBorder, Gray2, NumberFont, SongFont, UIColor, UIFont, White } from './0-common.js'
 import { CENTER, RIGHT } from '../graphics/styles.js'
 
-const VIS_BOXES = 192
-const VIS_ALL = 512
+const VIS_BOXES = 32
+const VIS_ALL = 64
 
 function a (f) {
   const f2 = f * f
@@ -67,7 +67,7 @@ export default class SongScreen extends Screen {
       this.game_mode_banner = Txt(0, 0, 1920, 45).font(UIFont.size(30)).align(CENTER).color(White),
 
       // Visualization box
-      this.vis_box = Group(240, 810, 1920 - 240, 100).layer(-1),
+      this.vis_box = Group(250, 810, 1920 - 250, 100).layer(-1),
     ])
 
     this.vis_box.el.style.display = 'grid'
@@ -139,7 +139,7 @@ export default class SongScreen extends Screen {
   showVisualization (bins) {
     for (let i = 0; i < VIS_BOXES; i++) {
       const el = this.vis_boxes[i]
-      el.style.opacity = `${Math.min(1, this.vis_factor[i] * (bins[i] / 256))}`
+      el.style.opacity = `${Math.max(0, Math.min( this.vis_factor[i] * ((bins[i] / 256)), 1))}`
     }
   }
 }
