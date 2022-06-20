@@ -4,7 +4,7 @@ import { Black, BtnBorder, Gray2, NumberFont, SongFont, UIColor, UIFont, White }
 import { CENTER, RIGHT } from '../graphics/styles.js'
 
 const VIS_BOXES = 32
-const VIS_ALL = 64
+const VIS_ALL = 2048
 
 function a (f) {
   const f2 = f * f
@@ -80,6 +80,9 @@ export default class SongScreen extends Screen {
     this.vis_boxes = []
     this.vis_factor = []
 
+    const MAX_FREQ = Math.log2(24000) // Assume 48kHz
+    const FREQ_STEP = MAX_FREQ / VIS_BOXES
+
     for (let i = 0; i < VIS_BOXES; i++) {
       const el = document.createElement('div')
       el.style.height = '100px'
@@ -87,7 +90,18 @@ export default class SongScreen extends Screen {
       this.vis_boxes.push(el)
       this.vis_box.el.appendChild(el)
 
-      this.vis_factor.push(a(48000 * (i + 0.5) / VIS_ALL)) // Assume 48k samples
+      // Make visualisation matrix
+      const f_min = i * FREQ_STEP
+      const f_max = (i+1) * FREQ_STEP
+      const fft_min = VIS_ALL * Math.pow(2, f_min) / 24000
+      const fft_max = VIS_ALL * Math.pow(2, f_max) / 24000
+      const fft_min_rounded = Math.floor(0.5 + fft_min)
+      const fft_max_rounded = Math.floor(0.5 + fft_max)
+      const current_factor = new Array(VIS_ALL).fill(0)
+      for (let j = fft_min_rounded; j <= fft_max_rounded; j++) {
+        current_factor[j] = a(24000 * (j + 0.5) / VIS_ALL) / (fft_max - fft_min)
+      }
+      this.vis_factor.push(current_factor)
     }
   }
 
@@ -137,9 +151,17 @@ export default class SongScreen extends Screen {
   }
 
   showVisualization (bins) {
+    const vis_value = []
+    for (let i = 0; i < VIS_BOXES; i++) {
+      let val = 0
+      for (let j = 0; j < VIS_ALL; j++) {
+        val += bins[j] * this.vis_factor[i][j]
+      }
+      vis_value.push(val)
+    }
     for (let i = 0; i < VIS_BOXES; i++) {
       const el = this.vis_boxes[i]
-      el.style.opacity = `${Math.max(0, Math.min( this.vis_factor[i] * ((bins[i] / 256)), 1))}`
+      el.style.opacity = `${Math.max(0, Math.min(vis_value[i] / 256, 1))}`
     }
   }
 }

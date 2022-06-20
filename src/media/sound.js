@@ -14,10 +14,10 @@ export default class Sound {
 
     // For visualization
     this.analyser = this.context.createAnalyser()
-    this.analyser.fftSize = 64
-    this.analyser.smoothingTimeConstant = 0.8
-    this.analyser.minDecibels = -60
-    this.analyser.maxDecibels = -20
+    this.analyser.fftSize = 4096
+    // this.analyser.smoothingTimeConstant = 0.8
+    // this.analyser.minDecibels = -60
+    // this.analyser.maxDecibels = -20
 
     this.analyser.connect(this.gain)
     this.gain.connect(this.compressor)
