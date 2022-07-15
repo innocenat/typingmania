@@ -26,6 +26,13 @@ describe('Line tokenizer', () => {
       ['ストーリーズ', 'stories', true],  ['?', '', false],
     ])
   })
+  test('Japanese tokenization with reading (new syntax)', () => {
+    expect(new TypingLine('今[いま]でも生[い]きている<ストーリーズ>[stories]<?>[]', 0, 0, romanizer).tokens).toEqual([
+      ['今', 'いま', true], ['で', 'で', false], ['も', 'も', false], ['生', 'い', true],
+      ['き', 'き', false], ['て', 'て', false], ['い', 'い', false], ['る', 'る', false],
+      ['ストーリーズ', 'stories', true],  ['?', '', false],
+    ])
+  })
   test('Japanese ruby with split reading', () => {
     expect(new TypingLine('先生[せん|せい]', 0, 0, romanizer).tokens).toEqual([
       ['先', 'せん', true], ['生', 'せい', true]
@@ -42,6 +49,20 @@ describe('Line tokenizer', () => {
     }).toThrow()
     expect(() => {
       new TypingLine('漢字ある', 0, 0, romanizer)
+    }).toThrow()
+  })
+  test('Escaped character', () => {
+    expect(new TypingLine('a\\bcd', 0, 0, romanizer).tokens).toEqual([
+      ['a', 'a', false], ['b', 'b', false], ['c', 'c', false], ['d', 'd', false],
+    ])
+    expect(new TypingLine('a\\\\bcd', 0, 0, romanizer).tokens).toEqual([
+      ['a', 'a', false], ['\\', '\\', false], ['b', 'b', false], ['c', 'c', false], ['d', 'd', false],
+    ])
+    expect(new TypingLine('a\\<b\\>cd', 0, 0, romanizer).tokens).toEqual([
+      ['a', 'a', false], ['<', '<', false], ['b', 'b', false], ['>', '>', false], ['c', 'c', false], ['d', 'd', false],
+    ])
+    expect(() => {
+      new TypingLine('先生\\[せ|ん|せい\\]', 0, 0, romanizer)
     }).toThrow()
   })
 })

@@ -27,9 +27,12 @@ export default class TypingLine {
     let last_token = ''
     let in_bracket = false
     let has_reading = true
+    let escaped = false
     for (let pos = 0; pos < this.line.length; pos++) {
       const c = this.line.charAt(pos)
-      if (c === '<' && pos + 1 < this.line.length && this.line.charAt(pos + 1) === '<') {
+      if (!escaped && c === '\\') {
+        escaped = true
+      } else if (!escaped && c === '<' && pos + 1 < this.line.length && this.line.charAt(pos + 1) === '<') {
         if (last_token !== '') {
           pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
           last_token = ''
@@ -37,7 +40,7 @@ export default class TypingLine {
         pretokens.push([TOK_SPECI, '<<'])
         in_bracket = true
         pos++
-      } else if (c === '>' && pos + 1 < this.line.length && this.line.charAt(pos + 1) === '>') {
+      } else if (!escaped && c === '>' && pos + 1 < this.line.length && this.line.charAt(pos + 1) === '>') {
         if (last_token !== '') {
           pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
           last_token = ''
@@ -45,14 +48,35 @@ export default class TypingLine {
         pretokens.push([TOK_SPECI, '>>'])
         in_bracket = false
         pos++
-      } else if (c === '[') {
+      } else if (!escaped && c === '[') {
         if (last_token !== '') {
           pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
           last_token = ''
         }
         pretokens.push([TOK_SPECI, '['])
         in_bracket = true
-      } else if (c === ']') {
+      } else if (!escaped && c === '<') {
+        if (last_token !== '') {
+          pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
+          last_token = ''
+        }
+        pretokens.push([TOK_SPECI, '<<'])
+        in_bracket = true
+      } else if (!escaped && c === '>') {
+        if (last_token !== '') {
+          pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
+          last_token = ''
+        }
+        pretokens.push([TOK_SPECI, '>>'])
+        in_bracket = false
+      } else if (!escaped && c === '[') {
+        if (last_token !== '') {
+          pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
+          last_token = ''
+        }
+        pretokens.push([TOK_SPECI, '['])
+        in_bracket = true
+      } else if (!escaped && c === ']') {
         if (last_token !== '') {
           pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
           last_token = ''
@@ -62,6 +86,7 @@ export default class TypingLine {
       } else if (in_bracket) {
         last_token += c
         has_reading = true
+        escaped = false
       } else if (this._romanizer.isReadingAvailable(c)) {
         if (last_token !== '' && !has_reading) {
           pretokens.push([TOK_NO_READING, last_token])
@@ -69,6 +94,7 @@ export default class TypingLine {
         }
         last_token += c
         has_reading = true
+        escaped = false
       } else {
         if (last_token !== '' && has_reading) {
           pretokens.push([TOK_CHAR, last_token])
@@ -76,17 +102,19 @@ export default class TypingLine {
         }
         last_token += c
         has_reading = false
+        escaped = false
       }
     }
 
     if (last_token !== '') {
-      pretokens.push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
+      pretokens
+        .push([has_reading ? TOK_CHAR : TOK_NO_READING, last_token])
     }
 
     return pretokens
   }
 
-  _splitReadingBlock(base, reading) {
+  _splitReadingBlock (base, reading) {
     const readings = reading.split('|')
     const blocks = []
     if (readings.length > 1 && readings.length === base.length) {
@@ -126,7 +154,7 @@ export default class TypingLine {
         case TOK_NO_READING:
           // Next token must be [ reading ]
           if (t + 3 >= pretokens.length || pretokens[t + 1][1] !== '[' || pretokens[t + 2][0] !== TOK_CHAR || pretokens[t + 3][1] !== ']') {
-            throw new Error('No reading available for: ' + t[1] + ' (line:' + this.line + ')')
+            throw new Error('No reading available for: ' + pretokens[t][1] + ' (line: ' + this.line + ')')
           }
 
           this.tokens.push(...this._splitReadingBlock(pretokens[t][1], pretokens[t + 2][1]))
