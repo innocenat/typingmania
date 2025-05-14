@@ -27,5 +27,5 @@ const files = walk(input)
 
 for (let f of files) {
   console.log(`node ${BUILD_SONG_PATH} ${f}`)
-  child_process.execSync(`node ${BUILD_SONG_PATH} ${f}`)
+  child_process.execSync(`node ${BUILD_SONG_PATH} ${f}`, {stdio: 'inherit'})
 }
